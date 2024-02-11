@@ -133,7 +133,7 @@ def process_one(scholar_reg, db, collection, empty_work, verbose=0):
     # register has doi
     if scholar_reg["doi"]:
         if isinstance(scholar_reg["doi"], str):
-            doi = doi_processor(scholar_reg["doi"]).lower()
+            doi = doi_processor(scholar_reg["doi"])
     if doi:
         # is the doi in colavdb?
         colav_reg = collection.find_one({"external_ids.id": doi})
