@@ -11,8 +11,15 @@ def process_one(source, client, db_name, empty_source):
     source_db = None
     if "issn" in source.keys():
         if source["issn"]:
-            source_db = collection.find_one(
-                {"external_ids.id": source["issn"]})
+            if isinstance(source["issn"], list) and len(source["issn"]) > 1:
+                source_db = collection.find_one(
+                    {"external_ids.id": source["issn"][0]})
+                if not source_db:
+                    source_db = collection.find_one(
+                        {"external_ids.id": source["issn"][1]})
+            else:
+                source_db = collection.find_one(
+                    {"external_ids.id": source["issn"]})
     if not source_db:
         if "issn_l" in source.keys():
             if source["issn_l"]:
@@ -93,7 +100,7 @@ def process_one(source, client, db_name, empty_source):
         if "publisher" in source.keys():
             if source["publisher"]:
                 entry["publisher"] = {
-                    "name": source["publisher"], "country_code": ""}
+                    "name": source["publisher"], "country_code": source["country_code"] if "country_code" in source.keys() else ""}
         if "apc_usd" in source.keys():
             if source["apc_usd"]:
                 entry["apc"] = {"currency": "USD",
