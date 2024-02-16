@@ -86,7 +86,7 @@ def main():
             'Kahi_scienti_affiliations==0.1.2b0',
             'Kahi_scienti_person==0.1.2b0',
             'Kahi_scienti_sources==0.1.1b0',
-            'Kahi_scienti_works==0.1.2b0',
+            'Kahi_scienti_works==0.1.3b0',
             'Kahi_scimago_sources==0.1.0b0',
             'Kahi_scopus_works==0.1.2b0',
             'Kahi_staff_udea_affiliations==0.1.1b0',
