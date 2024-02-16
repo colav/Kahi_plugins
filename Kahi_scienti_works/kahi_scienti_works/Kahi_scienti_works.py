@@ -16,7 +16,7 @@ def parse_scienti(reg, empty_work, verbose=0):
         {"source": "COD_PRODUCTO", "id": reg["COD_PRODUCTO"]})
     if "TXT_DOI" in reg.keys():
         entry["external_ids"].append(
-            {"source": "doi", "id": doi_processor(reg["TXT_DOI"]).lower()})
+            {"source": "doi", "id": doi_processor(reg["TXT_DOI"])})
     if "TXT_WEB_PRODUCTO" in reg.keys():
         entry["external_urls"].append(
             {"source": "scienti", "url": reg["TXT_WEB_PRODUCTO"]})
@@ -142,8 +142,7 @@ def process_one(scienti_reg, client, url, db_name, empty_work, verbose=0, multip
     # register has doi
     if "TXT_DOI" in scienti_reg.keys():
         if scienti_reg["TXT_DOI"]:
-            if doi_processor(scienti_reg["TXT_DOI"]):
-                doi = doi_processor(scienti_reg["TXT_DOI"])
+            doi = doi_processor(scienti_reg["TXT_DOI"])
     if doi:
         # is the doi in colavdb?
         colav_reg = collection.find_one({"external_ids.id": doi})
