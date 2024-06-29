@@ -197,7 +197,13 @@ def process_one_insert(oa_reg, db, collection, empty_work, es_handler, verbose=0
                 {"external_ids.id": ext["id"], "updated.source": "scienti"})
             if author_db:
                 break
-        if not author_db:  # if not found ids with scienti, let search it with other sources
+        if not author_db:  # if not found ids with scienti, let search it with openalex
+            for ext in author["external_ids"]:
+                author_db = db["person"].find_one(
+                    {"external_ids.id": ext["id"], "updated.source": "openalex"})
+                if author_db:
+                    break
+        if not author_db:  # if not found ids with scienti/openalex, let search it with other sources
             for ext in author["external_ids"]:
                 author_db = db["person"].find_one(
                     {"external_ids.id": ext["id"]})

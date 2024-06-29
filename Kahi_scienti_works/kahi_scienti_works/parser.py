@@ -26,12 +26,14 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
         {"provenance": "scienti", "source": "scienti", "id": {"COD_RH": reg["COD_RH"], "COD_PRODUCTO": reg["COD_PRODUCTO"]}})
     if doi:
         entry["external_ids"].append(
-            {"source": "doi", "id": doi})
+            {"provenance": "scienti", "source": "doi", "id": doi})
     else:
         if "TXT_DOI" in reg.keys():
             if reg["TXT_DOI"]:
-                entry["external_ids"].append(
-                    {"source": "doi", "id": doi_processor(reg["TXT_DOI"])})
+                doi = doi_processor(reg["TXT_DOI"])
+                if doi:
+                    entry["external_ids"].append(
+                        {"provenance": "scienti", "source": "doi", "id": doi})
             else:
                 if "TXT_WEB_PRODUCTO" in reg.keys() and reg["TXT_WEB_PRODUCTO"] and "10." in reg["TXT_WEB_PRODUCTO"]:
                     doi = doi_processor(reg["TXT_WEB_PRODUCTO"])
@@ -45,10 +47,10 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
                                     f'/{keyword}')[0] if keyword in doi else doi
                 if doi:
                     entry["external_ids"].append(
-                        {"source": "doi", "id": doi})
+                        {"provenance": "scienti", "source": "doi", "id": doi})
     if "TXT_WEB_PRODUCTO" in reg.keys():
         entry["external_urls"].append(
-            {"source": "scienti", "url": reg["TXT_WEB_PRODUCTO"]})
+            {"provenance": "scienti", "source": "scienti", "url": reg["TXT_WEB_PRODUCTO"]})
     if "NRO_ANO_PRESENTA" in reg.keys():
         year = reg["NRO_ANO_PRESENTA"]
     if "NRO_MES_PRESENTA" in reg.keys():
@@ -123,19 +125,19 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
             source["title"] = journal["TXT_NME_REVISTA"]
             if "TXT_ISSN_REF_SEP" in journal.keys():
                 source["external_ids"].append(
-                    {"source": "issn", "id": journal["TXT_ISSN_REF_SEP"]})
+                    {"provenance": "scienti", "source": "issn", "id": journal["TXT_ISSN_REF_SEP"]})
             if "COD_REVISTA" in journal.keys():
                 source["external_ids"].append(
-                    {"source": "scienti", "id": journal["COD_REVISTA"]})
+                    {"provenance": "scienti", "source": "scienti", "id": journal["COD_REVISTA"]})
         elif "journal_others" in details.keys():
             journal = details["journal_others"][0]
             source["title"] = journal["TXT_NME_REVISTA"]
             if "TXT_ISSN_REF_SEP" in journal.keys():
                 source["external_ids"].append(
-                    {"source": "issn", "id": journal["TXT_ISSN_REF_SEP"]})
+                    {"provenance": "scienti", "source": "issn", "id": journal["TXT_ISSN_REF_SEP"]})
             if "COD_REVISTA" in journal.keys():
                 source["external_ids"].append(
-                    {"source": "scienti", "id": journal["COD_REVISTA"]})
+                    {"provenance": "scienti", "source": "scienti", "id": journal["COD_REVISTA"]})
 
         entry["source"] = source
 

@@ -103,11 +103,14 @@ class Kahi_minciencias_opendata_works(KahiBase):
         Method to process the minciencias_opendata database.
         Checks if the task is "doi" or "all" and processes the records accordingly.
         """
-        client = MongoClient(self.config["minciencias_opendata_works"]["database_url"])
+        client = MongoClient(
+            self.config["minciencias_opendata_works"]["database_url"])
         db = client[self.config["minciencias_opendata_works"]["database_name"]]
-        opendata = db[self.config["minciencias_opendata_works"]["collection_name"]]
+        opendata = db[self.config["minciencias_opendata_works"]
+                      ["collection_name"]]
 
-        categories = ['ART-00', 'ART-ART_A1', 'ART-ART_A2', 'ART-ART_B', 'ART-ART_C', 'ART-ART_D', 'ART-GC_ART']
+        categories = ['ART-00', 'ART-ART_A1', 'ART-ART_A2',
+                      'ART-ART_B', 'ART-ART_C', 'ART-ART_D', 'ART-GC_ART']
 
         pipeline = [
             {'$match': {'id_tipo_pd_med': {'$in': categories}}},
@@ -119,7 +122,7 @@ class Kahi_minciencias_opendata_works(KahiBase):
             raise RuntimeError(
                 f'''{self.config["minciencias_opendata_works"]["task"]} is not a valid task for the minciencias_opendata database''')
         else:
-            paper_cursor = opendata.aggregate(pipeline, allowDiskUse=True)
+            paper_list = list(opendata.aggregate(pipeline, allowDiskUse=True))
             Parallel(
                 n_jobs=self.n_jobs,
                 verbose=self.verbose,
@@ -133,7 +136,7 @@ class Kahi_minciencias_opendata_works(KahiBase):
                     insert_all=self.insert_all,
                     thresholds=self.thresholds,
                     verbose=self.verbose
-                ) for work in paper_cursor
+                ) for work in paper_list
             )
         client.close()
 

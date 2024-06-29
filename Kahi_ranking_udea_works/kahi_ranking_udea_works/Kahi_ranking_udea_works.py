@@ -66,7 +66,15 @@ class Kahi_ranking_udea_works(KahiBase):
             print("WARNING: No elasticsearch configuration provided")
 
         self.ranking = read_excel(config["ranking_udea_works"]["file_path"], dtype={
-                                  "cedula": str, "DOI": str}).to_dict(orient="records")
+                                  "cedula": str, "DOI": str})
+        # adding index column for external_ids
+        index = []
+        for i, rec in enumerate(self.ranking["cedula"]):
+            # row index - cedula - timestamp
+            index.append(f"{str(i)}-{rec}-{str(time())}")
+        self.ranking['index'] = index
+        self.ranking = self.ranking.to_dict(orient="records")
+
         self.task = config["ranking_udea_works"]["task"]
         self.n_jobs = config["ranking_udea_works"]["num_jobs"] if "num_jobs" in config["ranking_udea_works"].keys(
         ) else 1

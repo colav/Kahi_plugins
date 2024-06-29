@@ -4,36 +4,18 @@ import importlib
 import re
 import os
 import sys
-from git import Repo
+from glob import glob
+try:
+    from git import Repo
+except ImportError:
+    print("Please run: pip install git-python")
+    sys.exit(1)
+
 upstream_url = "git@github.com:colav/Kahi_plugins.git"
 upstream_name = "origin"
 
 
-plugins = ['Kahi_minciencias_opendata_person',
-           'Kahi_scopus_works',
-           'Kahi_scienti_affiliations',
-           'Kahi_scienti_works',
-           'Kahi_staff_udea_person',
-           'Kahi_openalex_subjects',
-           'Kahi_openalex_sources',
-           'Kahi_wos_works',
-           'Kahi_scholar_works',
-           'Kahi_ranking_udea_works',
-           'Kahi_openalex_works',
-           'Kahi_scimago_sources',
-           'Kahi_wikipedia_affiliations',
-           'Kahi_openalex_person',
-           'Kahi_ror_affiliations',
-           'Kahi_scienti_sources',
-           'Kahi_minciencias_opendata_affiliations',
-           'Kahi_scienti_person',
-           'Kahi_doaj_sources',
-           'Kahi_openalex_affiliations',
-           'Kahi_staff_udea_affiliations',
-           'Kahi_impactu']
-
-
-def bump_kahi_impactu(repo, repo_path):
+def bump_kahi_impactu(repo, repo_path, plugins):
     file = open(os.path.join(repo_path, 'Kahi_impactu/setup.py'), 'r+')
     setup = file.read()
     for plugin in plugins:
@@ -57,7 +39,7 @@ def bump_kahi_impactu(repo, repo_path):
     repo.git.push(upstream_name, 'main')
 
 
-def bump_plugin_tags(repo, repo_path):
+def bump_plugin_tags(repo, repo_path, plugins):
 
     for plugin in plugins:
         plugin_file = os.path.join(
@@ -84,11 +66,13 @@ if __name__ == "__main__":
 
     # initialize the repository
     repo = Repo(repo_path)
+    plugins = glob(f"{glob}/Kahi_*")
+    plugins.remove("Kahi_template")
 
     # adding the remote upstream if it does not exist
     if upstream_url != repo.remotes.origin.url:
         print(f"ERROR: The origin remote is not the same as the {upstream_url} remote")
         print(f"Plese use the main repository {upstream_url} to run this script and try again.")
         sys.exit(1)
-    bump_kahi_impactu(repo, repo_path)
-    bump_plugin_tags(repo,repo_path)
+    bump_kahi_impactu(repo, repo_path, plugins)
+    bump_plugin_tags(repo,repo_path, plugins)

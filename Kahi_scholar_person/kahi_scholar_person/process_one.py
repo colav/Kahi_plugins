@@ -9,7 +9,8 @@ def process_one(paper, db, collection, empty_person, verbose):
         for author in authors:
             if author["external_ids"]:
                 if "profile" in [idx.values() for idx in author["external_ids"]][0]:
-                    author_db = collection.find_one({"external_ids.id": author["external_ids"][0]["id"]})
+                    author_db = collection.find_one(
+                        {"external_ids.id": author["external_ids"][0]["id"]})
                 if author_db:
                     already_updated = False
                     # Update existing
@@ -17,14 +18,13 @@ def process_one(paper, db, collection, empty_person, verbose):
                         if upd["source"] == "scholar":
                             already_updated = True
                     if not already_updated:
-                        author_db["updated"].append({"source": "scholar", "time": int(time())})
+                        author_db["updated"].append(
+                            {"source": "scholar", "time": int(time())})
                     if author["related_works"]:
-                        db_author_set = set(tuple(d.items()) for d in author_db["related_works"])
-                        author_set = set(tuple(d.items()) for d in author["related_works"])
-                        combined_set = db_author_set.union(author_set)
-                        author_db["related_works"] = [dict(t) for t in combined_set]
+                        for work in author["related_works"]:
+                            if work not in author_db["related_works"]:
+                                author_db["related_works"].append(work)
 
-                    # print(f"Updated {author_db['_id']}")
                     collection.update_one({"_id": author_db["_id"]}, {"$set": {
                         "updated": author_db["updated"],
                         "external_ids": author_db["external_ids"],

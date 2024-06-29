@@ -9,88 +9,50 @@ def process_one(oa_author, client, db_name, empty_person, related_works, max_tri
     db = client[db_name]
     collection = db["person"]
 
-    author = None
+    entry = empty_person.copy()
+    entry["updated"].append({"source": "openalex", "time": int(time())})
+
+    entry["full_name"] = oa_author["display_name"]
+
+    for name in oa_author["display_name_alternatives"]:
+        if not name.lower() in entry["aliases"]:
+            entry["aliases"].append(name.lower())
     for source, idx in oa_author["ids"].items():
-        if source != "openalex":
-            idx = get_id_from_url(idx)
-        author = collection.find_one({"external_ids.id": idx})
-    if author:
-        already_updated = False
-        for upd in author["updated"]:
-            if upd["source"] == "openalex":
-                already_updated = True
-                break
-        if already_updated:
-            return None
-        ext_sources = [ext["source"] for ext in author["external_ids"]]
-        for key, val in oa_author["ids"].items():
-            if key not in ext_sources:
-                if key != "openalex":
-                    val = get_id_from_url(val)
-                if val:
-                    rec = {"provenance": "openalex", "source": key, "id": val}
-                    if rec not in author["external_ids"]:
-                        author["external_ids"].append(rec)
-        author["updated"].append({"source": "openalex", "time": int(time())})
+        idx = get_id_from_url(idx)
+        if idx:
+            entry["external_ids"].append(
+                {"provenance": "openalex", "source": source, "id": idx})
 
-        for rwork in related_works:
-            for key in rwork["ids"].keys():
-                rec = {"provenance": "openalex",
-                       "source": key, "id": rwork["ids"][key]}
-                if rec not in author["related_works"]:
-                    author["related_works"].append(rec)
-
-        collection.update_one({"_id": author["_id"]}, {"$set": {
-            "updated": author["updated"],
-            "external_ids": author["external_ids"],
-            "related_works": author["related_works"]
-        }})
-    else:
-        entry = empty_person.copy()
-        entry["updated"].append({"source": "openalex", "time": int(time())})
-
-        entry["full_name"] = oa_author["display_name"]
-
-        for name in oa_author["display_name_alternatives"]:
-            if not name.lower() in entry["aliases"]:
-                entry["aliases"].append(name.lower())
-        for source, idx in oa_author["ids"].items():
-            if source != "openalex":
-                idx = get_id_from_url(idx)
-            if idx:
-                entry["external_ids"].append(
-                    {"provenance": "openalex", "source": source, "id": idx})
-
-        if "last_known_institution" in oa_author.keys():
-            if oa_author["last_known_institution"]:
-                aff_reg = None
-                for source, idx in oa_author["last_known_institution"].items():
-                    aff_reg = db["affiliations"].find_one(
-                        {"external_ids.id": idx})
-                    if aff_reg:
-                        break
+    if "last_known_institution" in oa_author.keys():
+        if oa_author["last_known_institution"]:
+            aff_reg = None
+            for source, idx in oa_author["last_known_institution"].items():
+                aff_reg = db["affiliations"].find_one(
+                    {"external_ids.id": idx})
                 if aff_reg:
-                    name = aff_reg["names"][0]["name"]
-                    for n in aff_reg["names"]:
-                        if n["lang"] == "es":
-                            name = n["name"]
-                            break
-                        elif n["lang"] == "en":
-                            name = n["name"]
-                    entry["affiliations"].append({
-                        "id": aff_reg["_id"],
-                        "name": name,
-                        "types": aff_reg["types"],
-                        "start_date": -1,
-                        "end_date": -1
-                    })
-        for rwork in related_works:
-            for key in rwork["ids"].keys():
-                rec = {"provenance": "openalex",
-                       "source": key, "id": rwork["ids"][key]}
-                if rec not in entry["related_works"]:
-                    entry["related_works"].append(rec)
-        collection.insert_one(entry)
+                    break
+            if aff_reg:
+                name = aff_reg["names"][0]["name"]
+                for n in aff_reg["names"]:
+                    if n["lang"] == "es":
+                        name = n["name"]
+                        break
+                    elif n["lang"] == "en":
+                        name = n["name"]
+                entry["affiliations"].append({
+                    "id": aff_reg["_id"],
+                    "name": name,
+                    "types": aff_reg["types"],
+                    "start_date": -1,
+                    "end_date": -1
+                })
+    for rwork in related_works:
+        for key in rwork["ids"].keys():
+            rec = {"provenance": "openalex",
+                   "source": key, "id": rwork["ids"][key]}
+            if rec not in entry["related_works"]:
+                entry["related_works"].append(rec)
+    collection.insert_one(entry)
 
 
 class Kahi_openalex_person(KahiBase):
@@ -147,7 +109,8 @@ class Kahi_openalex_person(KahiBase):
                 self.config["database_name"],
                 self.empty_person(),
                 list(self.openalex_collection_works.find(
-                    {"authorships.author.id": author["id"]}, {"ids": 1, "_id": 0}))  # related works
+                    # related works
+                    {"authorships.author.id": author["id"]}, {"ids": 1, "_id": 0}))
             ) for author in author_cursor
         )
         client.close()

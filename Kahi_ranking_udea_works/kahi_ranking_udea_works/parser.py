@@ -17,7 +17,7 @@ def parse_ranking_udea(reg, affiliation, empty_work):
         A template for the work entry.
     """
     entry = empty_work.copy()
-    entry["updated"] = [{"source": "ranking_udea", "time": int(time())}]
+    entry["updated"] = [{"source": "ranking", "time": int(time())}]
     title = reg["titulo"].strip().replace('""', '')
     if title.count('"') == 1:
         title = title.replace('"', '')
@@ -25,13 +25,13 @@ def parse_ranking_udea(reg, affiliation, empty_work):
         title = title.replace('"', '')
     lang = lang_poll(reg["titulo"])
     entry["titles"].append(
-        {"title": title, "lang": lang, "source": "ranking_udea"})
+        {"title": title, "lang": lang, "source": "ranking", "provenance": "ranking"})
     if reg["DOI"]:
         if not isna(reg["DOI"]):
             doi = doi_processor(reg["DOI"])
             if doi:
                 entry["external_ids"].append(
-                    {"source": "doi", "id": doi})
+                    {"provenance": "ranking", "source": "doi", "id": doi})
     if reg["issn"]:
         if isinstance(reg["issn"], str):
             for issn in reg["issn"].strip().split():
@@ -39,7 +39,7 @@ def parse_ranking_udea(reg, affiliation, empty_work):
                     continue
                 issn = issn.strip()
                 entry["source"] = {"name": reg["nombre rev o premio"],
-                                   "external_ids": [{"source": "issn", "id": issn}]}
+                                   "external_ids": [{"provenance": "ranking", "source": "issn", "id": issn}]}
     if not entry["source"]:
         entry["source"] = {
             "name": reg["nombre rev o premio"], "external_ids": []}
@@ -59,9 +59,11 @@ def parse_ranking_udea(reg, affiliation, empty_work):
         elif affname["source"] == "ror":
             aff["name"] = affname["name"]
     entry["authors"].append({
-        "external_ids": [{"source": "Cédula de Ciudadanía", "id": reg["cedula"]}],
+        "external_ids": [{"provenance": "ranking", "source": "Cédula de Ciudadanía", "id": reg["cedula"]}],
         "full_name": name["full_name"],
         "types": [],
         "affiliations": [aff]
     })
+    entry["external_ids"].append(
+        {"provenance": "ranking", "source": "ranking", "id": reg["index"]})
     return entry

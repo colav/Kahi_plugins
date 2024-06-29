@@ -68,7 +68,7 @@ def process_one_update(scienti_reg, colav_reg, db, collection, empty_work, verbo
             author_db = None
             for ext in author["external_ids"]:
                 author_db = db["person"].find_one(
-                    {"external_ids.id": ext["id"]})
+                    {"external_ids.id": ext["id"]}, {"_id": 1, "external_ids": 1, "full_name": 1})
                 if author_db:
                     break
             if author_db:
@@ -210,7 +210,7 @@ def process_one_update(scienti_reg, colav_reg, db, collection, empty_work, verbo
         if 'external_ids' in scienti_author.keys():
             author_ids = scienti_author['external_ids']
             author_db = db['person'].find_one(
-                {'external_ids': {'$elemMatch': {'$or': author_ids}}})
+                {'external_ids': {'$elemMatch': {'$or': author_ids}}}, {"_id": 1, "full_name": 1, "affiliations": 1, "first_names": 1, "last_names": 1, "initials": 1, "external_ids": 1})
 
         if author_db:
             name_match = None
@@ -218,8 +218,15 @@ def process_one_update(scienti_reg, colav_reg, db, collection, empty_work, verbo
             for i, author in enumerate(colav_reg['authors']):
                 if author['id'] == author_db['_id']:
                     continue
-                name_match = compare_author(
-                    author['id'], author['full_name'], author_db['full_name'])
+                if author['id'] == "":
+                    if verbose >= 4:
+                        print(
+                            f"WARNING: author with id '' found in colav register: {author}")
+                    continue
+                author_reg = db['person'].find_one(
+                    # this is required to get  first_names and last_names
+                    {'_id': author['id']}, {"_id": 1, "full_name": 1, "first_names": 1, "last_names": 1, "initials": 1, "external_ids": 1})
+                name_match = compare_author(author_reg, author_db)
                 doi1 = get_doi(entry)
                 doi2 = get_doi(colav_reg)
                 if doi1 and doi2:
@@ -251,16 +258,22 @@ def process_one_update(scienti_reg, colav_reg, db, collection, empty_work, verbo
         for i, author in enumerate(scienti_reg["author_others"][1:]):
             if author["COD_RH_REF"]:
                 author_db = db["person"].find_one(
-                    {"external_ids.id.COD_RH": author["COD_RH_REF"]})
+                    {"external_ids.id.COD_RH": author["COD_RH_REF"]}, {"_id": 1, "full_name": 1, "affiliations": 1, "first_names": 1, "last_names": 1, "initials": 1, "external_ids": 1})
                 if author_db:
                     found = False
                     for author_rec in colav_reg["authors"]:
                         if author_db["_id"] == author_rec["id"]:
                             found = True
                         else:
+                            if author_rec['id'] == "":
+                                continue
                             # only the name can be compared, because we dont have the affiliation of the author from the paper in author_others
-                            name_match = compare_author(
-                                author_rec['id'], author_rec['full_name'], author_db['full_name'])
+                            author_reg = db['person'].find_one(
+                                # this is required to get  first_names and last_names
+                                {'_id': author_rec['id']}, {"_id": 1, "full_name": 1, "first_names": 1, "last_names": 1, "initials": 1})
+
+                            # author_reg is only needed here
+                            name_match = compare_author(author_reg, author_db)
                             if name_match:
                                 found = True
                                 author_rec["id"] = author_db["_id"]
@@ -396,7 +409,7 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler, doi=
     author_db = None
     for ext in author["external_ids"]:
         author_db = db["person"].find_one(
-            {"external_ids.id": ext["id"]})
+            {"external_ids.id": ext["id"]}, {"_id": 1, "full_name": 1, "affiliations": 1, "external_ids": 1, "first_names": 1, "last_names": 1})
         if author_db:
             break
     if author_db:
@@ -489,7 +502,7 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler, doi=
         for author in scienti_reg["author_others"][1:]:
             if author["COD_RH_REF"]:
                 author_db = db["person"].find_one(
-                    {"external_ids.id.COD_RH": author["COD_RH_REF"]})
+                    {"external_ids.id.COD_RH": author["COD_RH_REF"]}, {"_id": 1, "full_name": 1})
                 if author_db:
                     rec = {"id": author_db["_id"],
                            "full_name": author_db["full_name"],

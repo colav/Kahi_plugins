@@ -20,7 +20,8 @@ class Kahi_elasticsearch_works(KahiBase):
         self.collection = self.db["works"]
 
         if "es_index" not in config["elasticsearch_works"].keys():
-            raise Exception("[Kahi_elasticsearch_works] ERROR: Please specify an es_index")
+            raise Exception(
+                "[Kahi_elasticsearch_works] ERROR: Please specify an es_index")
 
         self.index = config["elasticsearch_works"]["es_index"]
 
@@ -123,3 +124,4 @@ class Kahi_elasticsearch_works(KahiBase):
             self.delete()
         else:
             raise Exception("Please specify a task to execute")
+        return 0

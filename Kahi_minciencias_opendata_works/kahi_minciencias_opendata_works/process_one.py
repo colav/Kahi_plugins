@@ -102,8 +102,18 @@ def process_one_update(openadata_reg, colav_reg, db, collection, empty_work, ver
                         if not author_found:
                             affiliation_match = False
                             for i, author in enumerate(colav_reg["authors"]):
+                                if author['id'] == "":
+                                    if verbose >= 4:
+                                        print(
+                                            f"WARNING: author with id '' found in colav register: {author}")
+                                    continue
+                                # only the name can be compared, because we dont have the affiliation of the author from the paper in author_others
+                                author_reg = db['person'].find_one(
+                                    # this is required to get  first_names and last_names
+                                    {'_id': author['id']}, {"_id": 1, "full_name": 1, "first_names": 1, "last_names": 1, "initials": 1})
+
                                 name_match = compare_author(
-                                    author['id'], author['full_name'], author_db['full_name'])
+                                    author_reg, author_db)
                                 if author['affiliations']:
                                     affiliations_person = [str(aff['id'])
                                                            for aff in author_db['affiliations']]

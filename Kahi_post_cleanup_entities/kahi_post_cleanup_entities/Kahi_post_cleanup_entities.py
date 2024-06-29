@@ -97,3 +97,4 @@ class Kahi_post_cleanup_entities(KahiBase):
             ) for affiliation in affiliations
         )
         print("INFO: Removed {} affiliations".format(sum(out)))
+        return 0

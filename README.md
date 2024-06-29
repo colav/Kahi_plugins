@@ -72,16 +72,20 @@ but the version in the `Kahi_impactu/setup.py` package is going to be updated au
 to use this script you have to run the next command using the main repository as working directory. **(Kahi_plugins)**
 USE THIS CAREFULLY!!
 
-Check list before running the script:
+**Check list before running the script:**
+* pip install git-python
+* Clone the repository in your local `git clone git@github.com:colav/Kahi_plugins.git`
+* Make your changes
 * Update the version of your plugin in `Kahi_myplugin/kahi_myplugin/_version.py`
 * Update the version of the package kahi_impactu in `Kahi_impactu/kahi_impactu/_version.py`
-* Clone the repository in your local `git clone git@github.com:colav/Kahi_plugins.git`
 Then run the next commands:
 
 ```sh
 cd Kahi_plugins
 .github/scripts/bump_kahi_impactu $PWD
 ```
+
+It is still a bit manually but it will be more automatic in the future.
 
 # Final remarks <a name="remarks"></a>
 * You can take a look in the already developed plugins to have examples or get inspiration for your plugins.
