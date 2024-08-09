@@ -1,10 +1,10 @@
 <center><img src="https://raw.githubusercontent.com/colav/colav.github.io/master/img/Logo.png"/></center>
 
-# Kahi works plugin 
-Kahi will use this plugin to do an author unicity process based on the ORCIDs and DOIs of your works.
+# Kahi unicity for person 
+Kahi will use this plugin to do an author unicity process based on the ORCID, scholar, scopus, researchgate ids  and DOIs of your works.
 
 # Description
-This plugin will analyze the person collection and based on the ORCIDs and DOIs of their works, it will merge records of authors that correspond to the same person.
+This plugin will analyze the person collection and based on the ORCID, scholar, scopus, researchgate ids and DOIs of their works, it will merge records of authors that correspond to the same person.
 
 # Installation
 You could download the repository from github. Go into the folder where the setup.py is located and run
@@ -13,7 +13,7 @@ pip3 install .
 ```
 From the package you can install by running
 ```shell
-pip3 install kahi_authors_unicity
+pip3 install kahi_unicity_person
 ```
 
 ## Dependencies
@@ -29,7 +29,7 @@ config:
   log_database: kahi
   log_collection: log
 workflow:
-  authors_unicity:
+  unicity_person:
     collection_name: person
     max_authors_threshold: 0
     num_jobs: 20

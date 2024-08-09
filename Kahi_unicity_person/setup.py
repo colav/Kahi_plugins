@@ -51,10 +51,10 @@ if os.name in ('nt', 'dos'):
 def main():
     setup(
         # Application name:
-        name="Kahi_authors_unicity",
+        name="Kahi_unicity_person",
 
         # Version number (initial):
-        version=get_version('kahi_authors_unicity/_version.py'),
+        version=get_version('kahi_unicity_person/_version.py'),
 
         # Application author details:
         author="Colav",

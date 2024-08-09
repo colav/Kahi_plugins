@@ -1,2 +1,0 @@
-recursive-include kahi_authors_unicity/ *.py
-recursive-include kahi_authors_unicity/ *.*

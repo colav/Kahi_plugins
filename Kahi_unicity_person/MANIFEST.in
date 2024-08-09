@@ -1,0 +1,2 @@
+recursive-include kahi_unicity_person/ *.py
+recursive-include kahi_unicity_person/ *.*

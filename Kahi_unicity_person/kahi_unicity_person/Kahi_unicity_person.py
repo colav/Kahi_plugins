@@ -7,7 +7,7 @@ from time import time
 import copy
 
 
-class Kahi_authors_unicity(KahiBase):
+class Kahi_unicity_person(KahiBase):
 
     config = {}
 
@@ -19,30 +19,30 @@ class Kahi_authors_unicity(KahiBase):
         self.client = MongoClient(config["database_url"])
         self.db = self.client[config["database_name"]]
 
-        if config["authors_unicity"]["collection_name"] not in self.db.list_collection_names():
+        if config["unicity_person"]["collection_name"] not in self.db.list_collection_names():
             raise Exception("Collection {} not found in {}".format(
-                config["authors_unicity"]['collection_name'], config["authors_unicity"]["database_url"]))
-        self.collection = self.db[config["authors_unicity"]["collection_name"]]
-        self.collection_merged = self.db[config["authors_unicity"]
+                config["unicity_person"]['collection_name'], config["unicity_person"]["database_url"]))
+        self.collection = self.db[config["unicity_person"]["collection_name"]]
+        self.collection_merged = self.db[config["unicity_person"]
                                          ["collection_name"] + self.merged_suffix]
-        self.collection_merged_sets = self.db[config["authors_unicity"]
+        self.collection_merged_sets = self.db[config["unicity_person"]
                                               ["collection_name"] + self.merged_suffix + self.sets_suffix]
 
         self.collection.create_index("external_ids.id")
         self.collection.create_index("affiliations.id")
         self.collection.create_index([("full_name", TEXT)])
 
-        self.authors_threshold = config["authors_unicity"]["max_authors_threshold"] if "max_authors_threshold" in config["authors_unicity"].keys(
+        self.authors_threshold = config["unicity_person"]["max_authors_threshold"] if "max_authors_threshold" in config["unicity_person"].keys(
         ) else 0
 
-        self.task = config["authors_unicity"]["task"] if "task" in config["authors_unicity"].keys(
+        self.task = config["unicity_person"]["task"] if "task" in config["unicity_person"].keys(
         ) else None
 
-        self.n_jobs = config["authors_unicity"]["num_jobs"] if "num_jobs" in config["authors_unicity"].keys(
+        self.n_jobs = config["unicity_person"]["num_jobs"] if "num_jobs" in config["unicity_person"].keys(
         ) else 1
 
-        self.verbose = config["authors_unicity"][
-            "verbose"] if "verbose" in config["authors_unicity"].keys() else 0
+        self.verbose = config["unicity_person"][
+            "verbose"] if "verbose" in config["unicity_person"].keys() else 0
 
     # Function to merge affiliations
 
