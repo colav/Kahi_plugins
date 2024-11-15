@@ -49,12 +49,15 @@ def parse_minciencias_opendata(reg, empty_work, verbose=0):
                 {"provenance": "minciencias", "date": date, "rank": reg["id_tipo_pd_med"], "source": "minciencias"})
     if "nme_tipologia_pd" in reg.keys():
         if reg["nme_tipologia_pd"]:
+            typ = reg["nme_tipologia_pd"]
             entry["types"].append(
-                {"provenance": "minciencias", "source": "minciencias", "type": reg["nme_tipologia_pd"], "level": 1})
+                {"provenance": "minciencias", "source": "minciencias", "type": typ, "level": 1, "parent": reg["nme_clase_pd"]})
     if "nme_clase_pd" in reg.keys():
         if reg["nme_clase_pd"]:
+            typ = reg["nme_clase_pd"]
             entry["types"].append(
-                {"provenance": "minciencias", "source": "minciencias", "type": reg["nme_clase_pd"], "level": 0})
+                {"provenance": "minciencias", "source": "minciencias", "type": typ, "level": 0, "parent": None
+                 })
     if 'id_persona_pd' in reg.keys():
         if reg["id_persona_pd"]:
             minciencias_id = reg["id_persona_pd"]
