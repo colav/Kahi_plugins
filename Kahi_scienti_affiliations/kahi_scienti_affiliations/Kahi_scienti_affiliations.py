@@ -263,7 +263,7 @@ class Kahi_scienti_affiliations(KahiBase):
                                 "name": name, "id": db_inst["_id"], "types": db_inst["types"]}
                             if rel_entry not in entry["relations"]:
                                 entry["relations"].append(rel_entry)
-
+                entry["_id"] = group_id
                 self.collection.insert_one(entry)
 
     def run(self):

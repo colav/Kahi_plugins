@@ -109,6 +109,10 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
                 "country_code": oa_aff["geo"]["country_code"]
             }
         ]
+        if oa_aff["ror"]:
+            entry["_id"] = oa_aff["ror"].split("/")[-1]
+        else:
+            entry["_id"] = oa_aff["id"].split("/")[-1]
         collection.insert_one(entry)
 
 

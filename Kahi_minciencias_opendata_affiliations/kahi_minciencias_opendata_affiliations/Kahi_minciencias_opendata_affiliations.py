@@ -275,6 +275,7 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             }
             entry["ranking"].append(entry_rank)
             # END CLASSIFICATION SECTION
+            entry["_id"] = idgr
             self.collection.insert_one(entry)
             if verbose > 4:
                 print("Inserted group {}".format(idgr))
@@ -283,7 +284,7 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
         # Pipeline to find duplicate documents and keep the one with the highest edad_anos_gr in each group
         pipeline = [
             {
-                "$sort": {"edad_anos_gr": -1}  # Sort documents by edad_anos_gr in descending order
+                "$sort": {"ano_convo": -1}  # Sort documents by edad_anos_gr in descending order
             },
             {
                 "$group": {

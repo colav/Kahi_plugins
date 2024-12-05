@@ -55,6 +55,9 @@ def process_one_update(scholar_reg, colav_reg, collection, empty_work, verbose=0
     if "issue" not in colav_reg["bibliographic_info"].keys():
         if "issue" in entry["bibliographic_info"].keys():
             colav_reg["bibliographic_info"]["issue"] = entry["bibliographic_info"]["issue"]
+    # bibtex
+    if "bibtex" in entry["bibliographic_info"].keys():
+        colav_reg["bibliographic_info"]["bibtex"] = entry["bibliographic_info"]["bibtex"]
 
     # external urls
     urls_sources = [url["source"]

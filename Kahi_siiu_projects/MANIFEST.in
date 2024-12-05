@@ -1,0 +1,2 @@
+recursive-include kahi_siiu_projects/ *.py
+recursive-include kahi_siiu_projects/ *.*

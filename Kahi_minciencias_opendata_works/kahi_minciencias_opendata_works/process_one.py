@@ -110,7 +110,7 @@ def process_one_update(openadata_reg, colav_reg, db, collection, empty_work, ver
         if "external_ids" in minciencias_author.keys() and minciencias_author["affiliations"]:
             for ext in minciencias_author["external_ids"]:
                 author_db = db["person"].find_one(
-                    {"external_ids.id.COD_RH": ext["id"]})
+                    {"external_ids.id": ext["id"]})
                 if author_db:
                     group_id = minciencias_author["affiliations"][0]['external_ids'][0]['id']
 
@@ -158,7 +158,7 @@ def process_one_update(openadata_reg, colav_reg, db, collection, empty_work, ver
                                     {'_id': author['id']}, {"_id": 1, "full_name": 1, "first_names": 1, "last_names": 1, "initials": 1})
 
                                 name_match = compare_author(
-                                    author_reg, author_db)
+                                    author_reg, author_db, len(colav_reg["authors"]))
                                 # If the author matches, replace the id and full_name of the record in process so as not to break the aggregation of affiliations.
                                 if name_match:
                                     author["id"] = author_db["_id"]

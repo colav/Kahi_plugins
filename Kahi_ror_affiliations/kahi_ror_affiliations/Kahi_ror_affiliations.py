@@ -60,6 +60,7 @@ def process_one(inst, collection, empty_affiliations):
                         entry["external_ids"].append(ext_entry)
         entry["external_ids"].append(
             {"source": "ror", "id": inst["id"]})
+        entry["_id"] = inst["id"].split("/")[-1]
         collection.insert_one(entry)
 
 

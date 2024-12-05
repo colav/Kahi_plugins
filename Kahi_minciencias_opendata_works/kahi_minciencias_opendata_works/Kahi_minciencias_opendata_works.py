@@ -162,37 +162,6 @@ class Kahi_minciencias_opendata_works(KahiBase):
                 verbose=self.verbose
             ) for work in paper_list
         )
-
-        exclude = ["Evento científico", "Eventos artísticos, de arquitectura o de diseño con componentes de apropiación", "Eventos artísticos",
-                   "Patente de invención", "Patente modelo de utilidad",
-                   "Proyecto ID+I con Formación", "Proyecto de Investigacion y Desarrollo", "Proyecto de Investigación y Creación",
-                   "Proyecto de extensión", "Proyecto de extensión y responsabilidad social en CTI"]
-        exclude.extend(biblio)
-        pipeline = [
-            {'$match': {"nme_producto_pd": {"$exists": True}}},
-            {'$match': {'nme_tipologia_pd': {'$nin': exclude}}},
-            {'$group': {'_id': '$id_producto_pd', 'originalDoc': {'$first': '$$ROOT'}}},
-            {'$replaceRoot': {'newRoot': '$originalDoc'}}
-        ]
-
-        paper_list = list(opendata.aggregate(pipeline, allowDiskUse=True))
-        print(
-            f"INFO: Processing non-bibliographic production {len(paper_list)} excluding {exclude}")
-        Parallel(
-            n_jobs=self.n_jobs,
-            verbose=self.verbose,
-            backend="threading")(
-            delayed(process_one)(
-                work,
-                self.db,
-                self.collection,
-                self.empty_work(),
-                None,
-                insert_all=self.insert_all,
-                thresholds=self.thresholds,
-                verbose=self.verbose
-            ) for work in paper_list
-        )
         client.close()
 
     def run(self):
