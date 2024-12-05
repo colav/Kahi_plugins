@@ -12,7 +12,7 @@ def process_one(oa_author, client, db_name, empty_person, related_works, max_tri
     entry = empty_person.copy()
     entry["updated"].append({"source": "openalex", "time": int(time())})
 
-    entry["full_name"] = oa_author["display_name"]
+    entry["full_name"] = " ".join(oa_author["display_name"].replace(".", " ").split())
 
     for name in oa_author["display_name_alternatives"]:
         if not name.lower() in entry["aliases"]:

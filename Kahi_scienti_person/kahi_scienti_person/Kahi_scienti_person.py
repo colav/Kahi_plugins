@@ -104,7 +104,8 @@ class Kahi_scienti_person(KahiBase):
                             title_case(author["TXT_SEG_APELL"]))
                 initials = "".join([p[0].upper()
                                    for p in person["first_names"]])
-                person["full_name"] = title_case(person["full_name"])
+                full_name = " ".join(person["first_names"]) + " " + " ".join(person["last_names"])
+                person["full_name"] = " ".join(full_name.replace(".", " ").split())
 
                 marital = None
                 if "TPO_ESTADO_CIVIL" in author.keys():
@@ -239,7 +240,7 @@ class Kahi_scienti_person(KahiBase):
                     "first_names": person["first_names"],
                     "last_names": person["last_names"],
                     "initials": initials,
-                    "full_name": " ".join(person["first_names"]) + " " + " ".join(person["last_names"]),
+                    "full_name": person["full_name"],
                     "updated": person["updated"],
                     "affiliations": person["affiliations"],
                     "ranking": rank,
@@ -350,8 +351,8 @@ class Kahi_scienti_person(KahiBase):
                         if author["TXT_SEG_APELL"] is not None:
                             entry["last_names"].append(
                                 title_case(author["TXT_SEG_APELL"]))
-                    entry["full_name"] = " ".join(
-                        entry["first_names"]) + " " + " ".join(entry["last_names"])
+                    full_name = " ".join(entry["first_names"]) + " " + " ".join(entry["last_names"])
+                    entry["full_name"] = " ".join(full_name.replace(".", " ").split())
                     entry["initials"] = "".join(
                         [p[0].upper() for p in entry["first_names"]])
                     if "TXT_CITACION_BIBLIO" in author.keys():
@@ -688,8 +689,8 @@ class Kahi_scienti_person(KahiBase):
                     if author["TXT_SEG_APELL"] is not None:
                         entry["last_names"].append(
                             title_case(author["TXT_SEG_APELL"]))
-                entry["full_name"] = " ".join(
-                    entry["first_names"]) + " " + " ".join(entry["last_names"])
+                full_name = " ".join(entry["first_names"]) + " " + " ".join(entry["last_names"])
+                entry["full_name"] = " ".join(full_name.replace(".", " ").split())
                 entry["initials"] = "".join(
                     [p[0].upper() for p in entry["first_names"]])
 
