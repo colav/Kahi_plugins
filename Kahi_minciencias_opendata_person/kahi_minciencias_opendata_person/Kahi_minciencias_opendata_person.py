@@ -292,7 +292,8 @@ def process_one(author, db, collection, empty_person, cvlac_profile, groups_prod
 
         if "datos_generales" in cvlac_profile.keys() and cvlac_profile["datos_generales"]:
             full_name = split_names(cvlac_profile["datos_generales"]["Nombre"])
-            entry["full_name"] = full_name["full_name"]
+            full_name_clean = " ".join(full_name.replace(".", " ").split())
+            entry["full_name"] = full_name_clean
             entry["first_names"] = full_name["first_names"]
             entry["last_names"] = full_name["last_names"]
             entry["initials"] = full_name["initials"]

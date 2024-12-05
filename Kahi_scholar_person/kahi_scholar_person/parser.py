@@ -79,14 +79,14 @@ def process_authors(s_work, verbose=0):
             if author_found and fixed_ln:
                 full_name = " ".join(elm.strip().capitalize() for elm in raw_first_names) + " " + " ".join(
                     elm.strip().capitalize().replace(ln, fixed_ln) for elm in last_names)
-                authors_work.append({"full_name": full_name, "author": author_raw,
+                authors_work.append({"full_name": " ".join(full_name.replace(".", " ").split()), "author": author_raw,
                                     "alias": profile_name, "scholar_id": profile_id})
                 match_profiles += 1
             elif author_found:
                 full_name = " ".join(elm.strip().capitalize() for elm in raw_first_names) + \
                     " " + " ".join(elm.strip().capitalize()
                                    for elm in raw_last_names)
-                authors_work.append({"full_name": full_name, "author": author_raw,
+                authors_work.append({"full_name": " ".join(full_name.replace(".", " ").split()), "author": author_raw,
                                     "alias": profile_name, "scholar_id": profile_id})
                 match_profiles += 1
             if author_raw in authors:
@@ -100,7 +100,7 @@ def process_authors(s_work, verbose=0):
         full_name = " ".join(elm.strip().capitalize() for elm in raw_first_names) + \
             " " + " ".join(elm.strip().capitalize() for elm in raw_last_names)
         authors_work.append(
-            {"full_name": full_name, "author": author, "alias": "", "scholar_id": ""})
+            {"full_name": " ".join(full_name.replace(".", " ").split()), "author": author, "alias": "", "scholar_id": ""})
     return authors_work
 
 
