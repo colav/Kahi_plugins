@@ -1,57 +1,20 @@
 from time import time
 from kahi_impactu_utils.Utils import doi_processor
-from kahi_ranking_udea_works.parser import parse_ranking_udea
+from kahi_ciarp_works.parser import parse_ciarp
 from bson import ObjectId
 from pandas import isna
 
 
-def get_units_affiations(db, author_db, affiliation):
+def process_one_update(ciarp_reg, colav_reg, db, collection, affiliation, empty_work):
     """
-    Method to get the units of an author in a register. ex: faculty, department and group.
-
-    Parameters:
-    ----------
-    db : pymongo.database.Database
-        Database connection to colav database.
-    author_db : dict
-        record from person
-    affiliation : dict
-        affiliation of the author
-
-    Returns:
-    -------
-    list
-        list of units of an author (entries from using affiliations)
-    """
-    institution_id = None
-    # verifiying univeristy
-    count = db["person"].count_documents(
-        {"_id": author_db["_id"], "affiliations.id": affiliation["_id"]})
-    if count > 0:
-        institution_id = affiliation["_id"]
-    units = []
-    for aff in author_db["affiliations"]:
-        if aff["id"] == institution_id:
-            continue
-        count = db["affiliations"].count_documents(
-            {"_id": aff["id"], "relations.id": institution_id})
-        if count > 0:
-            types = [i["type"] for i in aff["types"]]
-            if "department" in types or "faculty" in types:
-                units.append(aff)
-    return units
-
-
-def process_one_update(ranking_udea_reg, colav_reg, collection, affiliation, empty_work):
-    """
-    Method to update a register in the kahi database from ranking database if it is found.
+    Method to update a register in the kahi database from ciarp database if it is found.
     This means that the register is already on the kahi database and it is being updated with new information.
 
 
     Parameters
     ----------
-    ranking_udea_reg : dict
-        Register from the ranking database
+    ciarp_reg : dict
+        Register from the ciarp database
     colav_reg : dict
         Register from the colav database (kahi database for impactu)
     collection : pymongo.collection.Collection
@@ -62,14 +25,11 @@ def process_one_update(ranking_udea_reg, colav_reg, collection, affiliation, emp
         Empty dictionary with the structure of a register in the database
     """
     # updated
-    for upd in colav_reg["updated"]:
-        if upd["source"] == "ranking_udea":
-            return None  # Register already on db
-            # Could be updated with new information when ranking file updates
-    entry = parse_ranking_udea(
-        ranking_udea_reg, affiliation, empty_work.copy())
+    entry = parse_ciarp(
+        ciarp_reg, affiliation, empty_work.copy())
+    # Add updated time
     colav_reg["updated"].append(
-        {"source": "ranking_udea", "time": int(time())})
+        {"source": "ciarp", "time": int(time())})
     # titles
     colav_reg["titles"].extend(entry["titles"])
     # external_ids
@@ -78,18 +38,62 @@ def process_one_update(ranking_udea_reg, colav_reg, collection, affiliation, emp
         if ext["id"] not in ext_ids:
             colav_reg["external_ids"].append(ext)
             ext_ids.append(ext["id"])
+    # Process author
+    author = entry["authors"][0]
+    author_db = None
+    for ext in author["external_ids"]:
+        author_db = db["person"].find_one(
+            {"external_ids.id": ext["id"]})
+        if author_db:
+            break
+    if author_db:
+        author["id"] = author_db["_id"]
+        author["full_name"] = author_db["full_name"]
+    # Process affiliations
+    for j, aff in enumerate(author["affiliations"]):
+        aff_db = None
+        if "external_ids" in aff.keys():
+            for ext in aff["external_ids"]:
+                aff_db = db["affiliations"].find_one(
+                    {"external_ids.id": ext["id"]})
+                if aff_db:
+                    break
+            aff.pop("external_ids", None)
+        if aff_db:
+            name = aff_db["names"][0]["name"]
+            for n in aff_db["names"]:
+                if n["source"] == "ror":
+                    name = n["name"]
+                    break
+                if n["lang"] == "en":
+                    name = n["name"]
+                if n["lang"] == "es":
+                    name = n["name"]
+            author["affiliations"][j] = {
+                "id": aff_db["_id"],
+                "name": name,
+                "types": aff_db["types"]
+            }
+    # Check if author is already in the register
+    colav_reg_author_ids = [auth["id"] for auth in colav_reg["authors"]]
+    for author in entry["authors"]:
+        for key in ["external_ids", "types"]:
+            author.pop(key, None)
+        if author["id"] not in colav_reg_author_ids:
+            colav_reg["authors"].append(author)
 
     collection.update_one(
         {"_id": colav_reg["_id"]},
         {"$set": {
             "updated": colav_reg["updated"],
             "titles": colav_reg["titles"],
-            "external_ids": colav_reg["external_ids"]
+            "external_ids": colav_reg["external_ids"],
+            "authors": colav_reg["authors"]
         }}
     )
 
 
-def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work, es_handler, verbose=0):
+def process_one_insert(ciarp_reg, db, collection, affiliation, empty_work, es_handler, verbose=0):
     """
     Function to insert a new register in the database if it is not found in the colav(kahi works) database.
     This means that the register is not on the database and it is being inserted.
@@ -100,8 +104,8 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
 
     Parameters:
     ----------
-    ranking_udea_reg: dict
-        Register from the ranking database
+    ciarp_reg: dict
+        Register from the ciarp database
     db: pymongo.database.Database
         Database where the collection is stored (kahi database)
     collection: pymongo.collection.Collection
@@ -116,8 +120,8 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
         Verbosity level
     """
     # parse
-    entry = parse_ranking_udea(
-        ranking_udea_reg, affiliation, empty_work.copy())
+    entry = parse_ciarp(
+        ciarp_reg, affiliation, empty_work.copy())
     # link
     source_db = None
     if "external_ids" in entry["source"].keys():
@@ -142,7 +146,7 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
         if len(entry["source"]["external_ids"]) == 0:
             if verbose > 4:
                 print(
-                    f'Register with doi: {ranking_udea_reg["DOI"]} does not provide a source')
+                    f'Register with doi: {ciarp_reg["doi"]} does not provide a source')
         else:
             if verbose > 4:
                 print("No source found for\n\t",
@@ -154,7 +158,6 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
                 "id": "",
                 "name": entry["source"]["name"]
             }
-
     # search authors and affiliations in db
     for i, author in enumerate(entry["authors"]):
         author_db = None
@@ -172,11 +175,6 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
                     author_db["external_ids"].append(ext)
                     sources.append(ext["source"])
                     ids.append(ext["id"])
-            aff_units = get_units_affiations(
-                db, author_db, affiliation)
-            for aff_unit in aff_units:
-                if aff_unit not in author["affiliations"]:
-                    author["affiliations"].append(aff_unit)
             entry["authors"][i] = {
                 "id": author_db["_id"],
                 "full_name": author_db["full_name"],
@@ -196,12 +194,6 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
                         author_db["external_ids"].append(ext)
                         sources.append(ext["source"])
                         ids.append(ext["id"])
-                aff_units = get_units_affiations(
-                    db, author_db, affiliation)
-                for aff_unit in aff_units:
-                    if aff_unit not in author["affiliations"]:
-                        author["affiliations"].append(aff_unit)
-
                 entry["authors"][i] = {
                     "id": author_db["_id"],
                     "full_name": author_db["full_name"],
@@ -215,10 +207,6 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
                 }
         for j, aff in enumerate(author["affiliations"]):
             aff_db = None
-            if "types" in aff.keys():  # if not types it not group, department or faculty
-                types = [i["type"] for i in aff["types"]]
-                if "group" in types or "department" in types or "faculty" in types:
-                    continue
             if "external_ids" in aff.keys():
                 for ext in aff["external_ids"]:
                     aff_db = db["affiliations"].find_one(
@@ -285,7 +273,7 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
             if "full_name" in author.keys():
                 authors.append(author["full_name"])
         work["authors"] = authors
-        work["provenance"] = "ranking_udea"
+        work["provenance"] = "ciarp"
 
         es_handler.insert_work(_id=str(response.inserted_id), work=work)
     else:
@@ -293,15 +281,15 @@ def process_one_insert(ranking_udea_reg, db, collection, affiliation, empty_work
             print("No elasticsearch index provided")
 
 
-def process_one(ranking_udea_reg, db, collection, affiliation, empty_work, similarity, es_handler, verbose=0):
+def process_one(ciarp_reg, db, collection, affiliation, empty_work, similarity, es_handler, verbose=0):
     """
-    Function to process a single register from the ranking database.
+    Function to process a single register from the ciarp database.
     This function is used to insert or update a register in the colav(kahi works) database.
 
     Parameters:
     ----------
-    ranking_udea_reg: dict
-        Register from the ranking database
+    ciarp_reg: dict
+        Register from the ciarp database
     db: pymongo.database.Database
         Database where the collection is stored (kahi database)
     collection: pymongo.collection.Collection
@@ -319,21 +307,21 @@ def process_one(ranking_udea_reg, db, collection, affiliation, empty_work, simil
     """
     doi = None
     # register has doi
-    if ranking_udea_reg["DOI"]:
-        if isinstance(ranking_udea_reg["DOI"], str):
-            doi = doi_processor(ranking_udea_reg["DOI"])
+    if ciarp_reg["doi"]:
+        if isinstance(ciarp_reg["doi"], str):
+            doi = doi_processor(ciarp_reg["doi"])
     if doi:
         # is the doi in colavdb?
         colav_reg = collection.find_one({"external_ids.id": doi})
         if colav_reg:  # update the register
-            process_one_update(ranking_udea_reg, colav_reg,
+            process_one_update(ciarp_reg, colav_reg, db,
                                collection, affiliation, empty_work)
         else:  # insert a new register
-            process_one_insert(ranking_udea_reg, db, collection,
+            process_one_insert(ciarp_reg, db, collection,
                                affiliation, empty_work, es_handler, verbose)
     elif similarity:  # does not have a doi identifier
         # elasticsearch section
-        entry = parse_ranking_udea(ranking_udea_reg, affiliation, empty_work)
+        entry = parse_ciarp(ciarp_reg, affiliation, empty_work)
         if es_handler:
             work = {}
             work["title"] = entry["titles"][0]["title"]
@@ -348,6 +336,11 @@ def process_one(ranking_udea_reg, db, collection, affiliation, empty_work, simil
                 if len(authors) >= 5:
                     break
                 if "full_name" in author.keys():
+                    # Find author in person collection
+                    author_db = db["person"].find_one({
+                        "external_ids.id": author["external_ids"][0]["id"]})
+                    if author_db:
+                        author["full_name"] = author_db["full_name"]
                     authors.append(author["full_name"])
             work["authors"] = authors
             response = es_handler.search_work(
@@ -366,15 +359,15 @@ def process_one(ranking_udea_reg, db, collection, affiliation, empty_work, simil
                     {"_id": ObjectId(response["_id"])})
                 if colav_reg:
                     process_one_update(
-                        ranking_udea_reg, colav_reg, collection, affiliation, empty_work)
+                        ciarp_reg, colav_reg, db, collection, affiliation, empty_work)
                 else:
                     if verbose > 4:
                         print("Register with {} not found in mongodb".format(
                             response["_id"]))
-                        print(response)
             else:  # insert new register
+                # print("Inserting new register")
                 process_one_insert(
-                    ranking_udea_reg, db, collection, affiliation, empty_work, es_handler, verbose)
+                    ciarp_reg, db, collection, affiliation, empty_work, es_handler, verbose)
         else:
             if verbose > 4:
                 print("No elasticsearch index provided")
