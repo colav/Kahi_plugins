@@ -66,7 +66,7 @@ class Kahi_staff_person(KahiBase):
                 name = title_case(name)
                 udea_aff = {"id": self.staff_reg["_id"], "name": name,
                             "types": self.staff_reg["types"], "start_date": aff_time, "end_date": end_date if end_date else -1}
-                if udea_aff not in entry["affiliations"]:
+                if udea_aff["id"] not in [aff["id"] for aff in entry["affiliations"]]:
                     entry["affiliations"].append(udea_aff)
                 if reg["tipo_documento"].strip() == "cédula de ciudadanía":
                     id_entry = {"provenance": "staff",
@@ -102,7 +102,7 @@ class Kahi_staff_person(KahiBase):
                     name = title_case(name)
                     dep_affiliation = {
                         "id": dep["_id"], "name": name, "types": dep["types"], "start_date": aff_time, "end_date": end_date if end_date else -1}
-                    if dep_affiliation not in entry["affiliations"]:
+                    if dep_affiliation["id"] not in [aff["id"] for aff in entry["affiliations"]]:
                         entry["affiliations"].append(dep_affiliation)
                 fac = self.db["affiliations"].find_one(
                     {"names.name": title_case(reg["unidad_académica"]), "relations.id": self.staff_reg["_id"]})
@@ -117,7 +117,7 @@ class Kahi_staff_person(KahiBase):
                     name = title_case(name)
                     fac_affiliation = {
                         "id": fac["_id"], "name": name, "types": fac["types"], "start_date": aff_time, "end_date": end_date if end_date else -1}
-                    if fac_affiliation not in entry["affiliations"]:
+                    if fac_affiliation["id"] not in [aff["id"] for aff in entry["affiliations"]]:
                         entry["affiliations"].append(fac_affiliation)
 
                 if reg["fecha_nacimiento"] != "":
