@@ -1,6 +1,6 @@
 from kahi.KahiBase import KahiBase
 from pymongo import MongoClient, TEXT
-from pandas import read_excel, isna, to_datetime
+from pandas import read_excel, to_datetime
 from time import time
 from kahi_impactu_utils.String import title_case
 from datetime import datetime as dt
@@ -35,6 +35,8 @@ class Kahi_staff_person(KahiBase):
     def process_staff(self):
         for idx in list(self.cedula_dep.keys()):
             check_db = self.collection.find_one({"external_ids.id": idx})
+            if not check_db:
+                check_db = self.collection.find_one({"external_ids.id.COD_RH": idx})
             if check_db:
                 continue
             entry = self.empty_person()
@@ -68,27 +70,33 @@ class Kahi_staff_person(KahiBase):
                             "types": self.staff_reg["types"], "start_date": aff_time, "end_date": end_date if end_date else -1}
                 if udea_aff["id"] not in [aff["id"] for aff in entry["affiliations"]]:
                     entry["affiliations"].append(udea_aff)
-                if reg["tipo_documento"].strip() == "cédula de ciudadanía":
-                    id_entry = {"provenance": "staff",
-                                "source": "Cédula de Ciudadanía", "id": idx}
-                    if id_entry not in entry["external_ids"]:
-                        entry["external_ids"].append(id_entry)
-                elif reg["tipo_documento"].strip() == "cédula de extranjería":
-                    id_entry = {"provenance": "staff",
-                                "source": "Cédula de Extranjería", "id": idx}
-                    if id_entry not in entry["external_ids"]:
-                        entry["external_ids"].append(id_entry)
-                elif reg["tipo_documento"].strip() == "pasaporte":
-                    id_entry = {"provenance": "staff",
-                                "source": "Pasaporte", "id": idx}
+                # Define a mapping between document types and their respective sources
+                document_types = {
+                    "cédula de ciudadanía": "Cédula de Ciudadanía",
+                    "cédula de extranjería": "Cédula de Extranjería",
+                    "pasaporte": "Pasaporte",
+                    "código rh de scienti": "scienti"
+                }
+                # Get the document type from the record
+                doc_type = reg["tipo_documento"]
+                # Check if the document type is in the predefined mapping
+                if reg["tipo_documento"] in document_types:
+                    # Construct the ID entry
+                    id_entry = {
+                        "provenance": "staff",
+                        "source": document_types[doc_type],  # Get corresponding source name
+                        "id": idx if doc_type != "código rh de scienti" else {"COD_RH": idx}
+                    }
+
+                    # Add the entry only if it's not already in the list
                     if id_entry not in entry["external_ids"]:
                         entry["external_ids"].append(id_entry)
                 else:
-                    print(
-                        f"ERROR: tipo_documento have to be cédula de ciudadanía, cédula de extranjería or pasaporte not {reg['tipo_documento']}")
+                    # Print an error message if the document type is invalid
+                    print(f"ERROR: tipo_documento must be one of {', '.join(document_types.keys())}, not '{doc_type}'")
+
                 if reg["nombres"].lower() not in entry["aliases"]:
                     entry["aliases"].append(reg["nombres"].lower())
-
                 dep = self.db["affiliations"].find_one(
                     {"names.name": title_case(reg["subunidad_académica"]), "relations.id": self.staff_reg["_id"]})
                 if dep:
@@ -125,22 +133,22 @@ class Kahi_staff_person(KahiBase):
                 else:
                     entry["birthdate"] = None
                 entry["sex"] = reg["sexo"].lower()
-                if not isna(reg["nivel_académico"]):
+                if reg["nivel_académico"]:
                     degree = {"date": -1, "degree": reg["nivel_académico"], "id": "", "institutions": [
                     ], "source": "nivel_académico", "provenance": "staff"}
                     if degree not in entry["degrees"]:
                         entry["degrees"].append(degree)
-                if not isna(reg["tipo_contrato"]):
+                if reg["tipo_contrato"]:
                     ranking = {"date": aff_time,
                                "rank": reg["tipo_contrato"], "source": "tipo_contrato", "provenace": "staff"}
                     if ranking not in entry["ranking"]:
                         entry["ranking"].append(ranking)
-                if not isna(reg["jornada_laboral"]):
+                if reg["jornada_laboral"]:
                     ranking = {"date": aff_time,
                                "rank": reg["jornada_laboral"], "source": "jornada_laboral", "provenace": "staff"}
                     if ranking not in entry["ranking"]:
                         entry["ranking"].append(ranking)
-                if not isna(reg["categoría_laboral"]):
+                if reg["categoría_laboral"]:
                     ranking = {"date": aff_time,
                                "rank": reg["categoría_laboral"], "source": "categoría_laboral", "provenace": "staff"}
                     if ranking not in entry["ranking"]:

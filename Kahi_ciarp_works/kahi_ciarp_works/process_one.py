@@ -2,7 +2,6 @@ from time import time
 from kahi_impactu_utils.Utils import doi_processor, compare_author, split_names, split_names_fix
 from kahi_ciarp_works.parser import parse_ciarp
 from bson import ObjectId
-from pandas import isna
 
 
 def get_doi(reg):
@@ -227,7 +226,7 @@ def process_one_update(ciarp_reg, colav_reg, db, collection, affiliation, empty_
     colav_reg["updated"].append(
         {"source": "ciarp", "time": int(time())})
     # titles
-    colav_reg["titles"].extend(entry["titles"])
+    colav_reg["titles"].extend(title for title in entry["titles"] if title not in colav_reg["titles"])
     # external_ids
     ext_ids = [ext["id"] for ext in colav_reg["external_ids"]]
     for ext in entry["external_ids"]:
@@ -323,7 +322,7 @@ def process_one_insert(ciarp_reg, db, collection, affiliation, empty_work, es_ha
     """
     # parse
     entry = parse_ciarp(
-        ciarp_reg, affiliation, empty_work.copy())
+        ciarp_reg, affiliation, empty_work)
     # link
     source_db = None
     if "external_ids" in entry["source"].keys():
@@ -353,7 +352,7 @@ def process_one_insert(ciarp_reg, db, collection, affiliation, empty_work, es_ha
             if verbose > 4:
                 print("No source found for\n\t",
                       entry["source"]["external_ids"])
-        if isna(entry["source"]["name"]):
+        if entry["source"]["name"]:
             entry["source"] = {}
         else:
             entry["source"] = {
@@ -366,6 +365,9 @@ def process_one_insert(ciarp_reg, db, collection, affiliation, empty_work, es_ha
         for ext in author["external_ids"]:
             author_db = db["person"].find_one(
                 {"external_ids.id": ext["id"]})
+            if not author_db:
+                author_db = db["person"].find_one(
+                    {"external_ids.id.COD_RH": ext["id"]})
             if author_db:
                 break
         if author_db:
@@ -413,8 +415,9 @@ def process_one_insert(ciarp_reg, db, collection, affiliation, empty_work, es_ha
                 for ext in aff["external_ids"]:
                     aff_db = db["affiliations"].find_one(
                         {"external_ids.id": ext["id"]})
-                    if aff_db:
-                        break
+                    if not aff_db:
+                        aff_db = db["affiliations"].find_one(
+                            {"_id": ext["id"]})
             if aff_db:
                 name = aff_db["names"][0]["name"]
                 for n in aff_db["names"]:

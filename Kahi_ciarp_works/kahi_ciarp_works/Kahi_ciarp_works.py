@@ -2,7 +2,7 @@ from kahi.KahiBase import KahiBase
 from pymongo import MongoClient, TEXT
 from time import time
 from joblib import Parallel, delayed
-from pandas import read_excel, isna
+from pandas import read_excel
 from kahi_ciarp_works.process_one import process_one
 from kahi_impactu_utils.Utils import doi_processor
 from kahi_impactu_utils.Mapping import ciarp_mapping
@@ -144,7 +144,7 @@ class Kahi_ciarp_works(KahiBase):
             if self.task == "doi":
                 papers = []
                 for par in self.filtered_ciarp:
-                    if not isna(par["doi"]):
+                    if par["doi"]:
                         if doi_processor(par["doi"]):
                             papers.append(par)
                 self.filtered_ciarp = papers
@@ -152,7 +152,7 @@ class Kahi_ciarp_works(KahiBase):
                 # TODO: implement similarity task and a default task that runs all
                 papers = []
                 for par in self.filtered_ciarp:
-                    if isna(par["doi"]):
+                    if par["doi"]:
                         papers.append(par)
                     elif not doi_processor(par["doi"]):
                         papers.append(par)
