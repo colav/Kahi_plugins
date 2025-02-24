@@ -5,6 +5,87 @@ from time import time
 from bson import ObjectId
 
 
+def cod_product_mismatch(list1, list2):
+    """
+    check if the COD_PRODUCTO of the registers are different for the same COD_RH
+
+    Parameters
+    ----------
+    list1 : list
+        List of external_ids from the first register
+    list2 : list
+        List of external_ids from the second register
+
+    Returns
+    -------
+    bool
+        True if the COD_PRODUCTO are different, False otherwise.
+    """
+    # Extract COD_RH and their respective COD_PRODUCTO in list1
+    rh_to_product1 = {
+        entry["id"]["COD_RH"]: entry["id"]["COD_PRODUCTO"]
+        for entry in list1 if isinstance(entry["id"], dict) and "COD_RH" in entry["id"] and "COD_PRODUCTO" in entry["id"]
+    }
+
+    # Extract COD_RH and their respective COD_PRODUCTO in list2
+    rh_to_product2 = {
+        entry["id"]["COD_RH"]: entry["id"]["COD_PRODUCTO"]
+        for entry in list2 if isinstance(entry["id"], dict) and "COD_RH" in entry["id"] and "COD_PRODUCTO" in entry["id"]
+    }
+
+    # Identify the COD_RH that exist in both lists but have different COD_PRODUCTO
+    mismatched_cod_rh = {
+        rh: (rh_to_product1[rh], rh_to_product2[rh])
+        # Only COD_RH that exist in both lists
+        for rh in rh_to_product1.keys() & rh_to_product2.keys()
+        if rh_to_product1[rh] != rh_to_product2[rh]  # Different COD_PRODUCTO
+    }
+    return False if len(list(mismatched_cod_rh)) == 0 else True
+
+
+def has_scienti_source(lst):
+    """
+    Checks if scienti in field source is available
+
+    Parameters
+    ----------
+    lst : list
+        List of types/external_ids from register
+
+    Returns
+    -------
+    bool
+        True if the scienti type is available, False otherwise.
+    """
+    return any(item.get("source") == "scienti" for item in lst)
+
+
+def check_first_level_type(list1, list2):
+    """
+    Function to check if the first level types of two registers are different.
+
+    Parameters
+    ----------
+    list1 : list
+        List of types from the first register
+    list2 : list
+        List of types from the second register
+
+    Returns
+    -------
+    bool
+        True if the first level types are equal, False otherwise.
+    """
+    # Extraer los tipos donde source='scienti' y level=0
+    types1 = {item["type"] for item in list1 if item.get(
+        "source") == "scienti" and item.get("level") == 0}
+    types2 = {item["type"] for item in list2 if item.get(
+        "source") == "scienti" and item.get("level") == 0}
+
+    # Comparar conjuntos de tipos
+    return types1 == types2
+
+
 def get_doi(reg):
     """
     Method to get the doi of a register.
@@ -705,8 +786,26 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler, similarity,
                 colav_reg = collection.find_one(
                     {"_id": ObjectId(response["_id"])})
                 if colav_reg:
-                    process_one_update(scienti_reg, colav_reg, db,
-                                       collection, empty_work, verbose)
+                    # TODO: add author check here before to do the update
+                    if has_scienti_source(entry["external_ids"]) and has_scienti_source(colav_reg["external_ids"]):
+                        if cod_product_mismatch(entry["external_ids"], colav_reg["external_ids"]):
+                            # if they have the same COD_RH  but different COD_PRODUCTO
+                            # then insert the new register
+                            process_one_insert(scienti_reg, db, collection,
+                                               empty_work, es_handler, doi=None, verbose=verbose)
+                            return
+                    if has_scienti_source(entry["types"]) and has_scienti_source(colav_reg["types"]):
+                        # if type is equal, then update the register
+                        if check_first_level_type(entry["types"], colav_reg["types"]):
+                            process_one_update(scienti_reg, colav_reg, db,
+                                               collection, empty_work, verbose)
+                        else:
+                            process_one_insert(scienti_reg, db, collection,
+                                               empty_work, es_handler, doi=None, verbose=verbose)
+                    else:  # there is not scienti types to compare, then update them
+                        process_one_update(scienti_reg, colav_reg, db,
+                                           collection, empty_work, verbose)
+
                 else:
                     if verbose > 4:
                         print("Register with {} not found in mongodb".format(

@@ -86,7 +86,8 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
         tpo_base["level"] = level
         tpo_base["class"] = tpo_class
         tpo_base["code"] = code
-        entry["types"].append(tpo_base)
+        if tpo_base not in entry["types"]:
+            entry["types"].append(tpo_base)
         if "product_type" in tpo_obj.keys():
             tpo_obj = tpo_obj["product_type"][0]
         else:
