@@ -56,7 +56,7 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
                     self.inserted_cod_grupo.append(ext["id"])
 
     def rename_institution(self, name):
-        if name == "Colegio Mayor Nuestra Señora del Rosario".lower() or name == "Colegio Mayor de Nuestra Señora del Rosario".lower():
+        if name == "Colegio Mayor Nuestra Señora del Rosario".lower() or name == "Colegio Mayor de Nuestra Señora del Rosario".lower() or name == 'Colegio Mayor Nuestra Senora Del Rosario'.lower():
             return "universidad del rosario"
         elif name == "universidad de la guajira":
             return "guajira"
@@ -67,7 +67,7 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
         elif "icesi" in name:
             return "icesi"
         elif "sede" in name:
-            return name.split("sede")[0].strip()
+            return name.split("sede")[0].strip()  # Keep only the first part of the name if it contains "sede"
         elif name == "universidad militar nueva granada":
             return "nueva granada"
         elif "pamplona" in name:
