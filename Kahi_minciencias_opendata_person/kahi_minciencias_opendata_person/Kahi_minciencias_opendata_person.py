@@ -109,43 +109,49 @@ def process_info_from_works(db, author, entry, groups_production_list):
             ids = parse_ids(reg["id_producto_pd"], r'(\d{9,11})-(\d{1,7})-(\d{1,7})', [
                 "COD_RH", "COD_PRODUCTO", "SEQ_PRODUCTO"])
             if ids:
-                entry["related_works"].append(
-                    {"provenance": "minciencias", "source": "scienti", "id": ids})
+                new_item = {"provenance": "minciencias", "source": "scienti", "id": ids}
+                if new_item not in entry["related_works"]:
+                    entry["related_works"].append(new_item)
 
         elif reg["nme_tipologia_pd"] in ['Registro general', 'Registros de acuerdos de licencia para la explotación de obras']:
             ids = parse_ids(reg["id_producto_pd"], r'(\d{9,11})-(\d{1,7})-(\d{1,7})', [
                             "COD_RH", "COD_PRODUCTO", "COD_REGISTRO"])
             if ids:
-                entry["related_works"].append(
-                    {"provenance": "minciencias", "source": "scienti", "id": ids})
+                new_item = {"provenance": "minciencias", "source": "scienti", "id": ids}
+                if new_item not in entry["related_works"]:
+                    entry["related_works"].append(new_item)
 
         elif reg["nme_tipologia_pd"] in ['Secreto empresarial']:
             ids = parse_ids(reg["id_producto_pd"], r'(\d{9,11})-(\d{1,7})-(\d{1,7})', [
                 "COD_RH", "COD_PRODUCTO", "COD_SECRETO_INDUSTRIAL"])
             if ids:
-                entry["related_works"].append(
-                    {"provenance": "minciencias", "source": "scienti", "id": ids})
+                new_item = {"provenance": "minciencias", "source": "scienti", "id": ids}
+                if new_item not in entry["related_works"]:
+                    entry["related_works"].append(new_item)
 
         elif reg["nme_tipologia_pd"] in patents:
             ids = parse_ids(reg["id_producto_pd"], r'(\d{9,11})-(\d{1,7})-(\d{1,7})$', [
                 "COD_RH", "COD_PRODUCTO", " COD_PATENTE"])
             if ids:
-                entry["related_works"].append(
-                    {"provenance": "minciencias", "source": "scienti", "id": ids})
+                new_item = {"provenance": "minciencias", "source": "scienti", "id": ids}
+                if new_item not in entry["related_works"]:
+                    entry["related_works"].append(new_item)
 
         elif reg["nme_tipologia_pd"] in events:
             ids = parse_ids(reg["id_producto_pd"], r'(\d{9,11})-(\d{1,7})$', [
                 "COD_RH", "COD_EVENTO"])
             if ids:
-                entry["related_works"].append(
-                    {"provenance": "minciencias", "source": "scienti", "id": ids})
+                new_item = {"provenance": "minciencias", "source": "scienti", "id": ids}
+                if new_item not in entry["related_works"]:
+                    entry["related_works"].append(new_item)
 
         else:
             ids = parse_ids(
                 reg["id_producto_pd"], r'(\d{9,11})-(\d{1,7})$', ["COD_RH", "COD_PRODUCTO"])
             if ids:
-                entry["related_works"].append(
-                    {"provenance": "minciencias", "source": "scienti", "id": ids})
+                new_item = {"provenance": "minciencias", "source": "scienti", "id": ids}
+                if new_item not in entry["related_works"]:
+                    entry["related_works"].append(new_item)
 
 
 def process_one(author_entry, db, collection, empty_person, cvlac_profile, groups_production_list, privates, verbose):
@@ -232,7 +238,7 @@ def process_one(author_entry, db, collection, empty_person, cvlac_profile, group
                     reg_db["ranking"].append(entry_rank)
 
             # Affiliations and related_works
-            # process_info_from_works(db, author, reg_db, groups_production_list)
+            process_info_from_works(db, author, reg_db, groups_production_list)
             # Update the record
             collection.update_one(
                 {"_id": reg_db["_id"]},
