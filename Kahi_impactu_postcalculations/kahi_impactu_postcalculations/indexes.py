@@ -14,7 +14,7 @@ def create_indexes(db):
     db["works"].create_index(
         {"citations_count.source": 1, "citations_count.count": 1})
     db["works"].create_index({"titles.source": 1, "titles.title": 1})
-    db["afilliations"].create_index({"products_count": -1})
+    db["affilliations"].create_index({"products_count": -1})
     db["person"].create_index({"products_count": -1})
     db["works"].create_index(
         {"types.source": 1, "types.type": 1, "types.code": 1})
