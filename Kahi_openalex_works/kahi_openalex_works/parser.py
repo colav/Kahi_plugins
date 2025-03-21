@@ -133,4 +133,7 @@ def parse_openalex(reg, empty_work, verbose=0):
         subjects.append(sub_entry)
     entry["subjects"].append({"source": "openalex", "subjects": subjects})
 
+    # topics section
+    entry["primary_topic"] = reg["primary_topic"]
+    entry["topics"] = reg["topics"]
     return entry
