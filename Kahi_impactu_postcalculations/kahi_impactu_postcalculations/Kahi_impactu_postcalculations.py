@@ -7,6 +7,7 @@ from kahi_impactu_postcalculations.process_one import network_creation_process_o
 from kahi_impactu_postcalculations.indexes import create_indexes
 from kahi_impactu_postcalculations.denormalization import denormalize
 from kahi_impactu_postcalculations.typing import process_type
+from kahi_impactu_postcalculations.topics import process_topic
 from pathlib import Path
 import pandas as pd
 
@@ -35,6 +36,10 @@ class Kahi_impactu_postcalculations(KahiBase):
         self.backend = self.config["impactu_postcalculations"]["backend"]
         self.verbose = self.config["impactu_postcalculations"]["verbose"]
         self.n_jobs = self.config["impactu_postcalculations"]["n_jobs"]
+        self.openalex_database_url = self.config["impactu_postcalculations"]["openalex_database_url"]
+        self.openalex_database_name = self.config["impactu_postcalculations"]["openalex_database_name"]
+        self.inference_endpoint = self.config["impactu_postcalculations"]["inference_endpoint"]
+
         self.author_count = self.config["impactu_postcalculations"][
             "author_count"] if "author_count" in self.config["impactu_postcalculations"] else 6
         self._check_and_install_spacy_models()
@@ -110,6 +115,15 @@ class Kahi_impactu_postcalculations(KahiBase):
         db = client[self.database_name]
 
         impactu_client = MongoClient(self.impactu_database_url)
+
+        openalex_client = MongoClient(self.openalex_database_url)
+        openalex_db = openalex_client[self.openalex_database_name]
+
+        print("INFO: Setting up topics for works")
+        works_cursor = db["works"].find({"primary_topic": {}}, {
+                                        "titles": 1, "abstracts": 1, "source": 1, "primary_topic": 1, "topics": 1})
+        Parallel(n_jobs=self.n_jobs, verbose=10, backend="threading")(delayed(process_topic)(
+            db["works"], openalex_db["topics"], work, self.inference_endpoint) for work in works_cursor)
 
         print("INFO: Setting up impactu types for works")
         self.process_types(db)

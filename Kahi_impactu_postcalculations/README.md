@@ -37,6 +37,9 @@ workflow:
   impactu_postcalculations:
     database_url: localhost:27017
     database_name: kahi_calculations
+    openalex_database_url: localhost:27017
+    openalex_database_name: openalexco
+    inference_endpoint: http://localhost:8080/invocations
     backend: multiprocessing
     n_jobs: 6
     verbose: 5
