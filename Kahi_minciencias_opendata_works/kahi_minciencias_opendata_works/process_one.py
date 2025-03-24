@@ -196,6 +196,14 @@ def process_one_update(openadata_reg, colav_reg, db, collection, empty_work, ver
         else:
             if verbose > 4:
                 print("No author data")
+    # Adding advisor type to author if the work is a thesis
+    if author_db:
+        for type in entry["types"]:
+            if type["level"] == 1 and type["type"] in ["Tesis de pregrado", "Tesis de maestria", "Tesis de doctorado"]:
+                for author in colav_reg["authors"]:
+                    if author["id"] == author_db["_id"]:
+                        author["type"] = "advisor"
+                        break
     # groups
     group_id = openadata_reg["cod_grupo_gr"]
     rgroup = db["affiliations"].find_one({"external_ids.id": group_id})
@@ -285,6 +293,12 @@ def process_one_insert(openadata_reg, db, collection, empty_work, es_handler, ve
                 if author_db:
                     entry["authors"][0]["id"] = author_db["_id"]
                     entry["authors"][0]["full_name"] = author_db["full_name"]
+                    # Adding advisor type to author if the work is a thesis
+                    for type in entry["types"]:
+                        if type["level"] == 1 and type["type"] in ["Tesis de pregrado", "Tesis de maestria", "Tesis de doctorado"]:
+                            entry["authors"][0]["type"] = "advisor"
+                            break
+                    # Adding affiliations to author
                     if minciencias_author["affiliations"]:
                         group_id = minciencias_author["affiliations"][0]['external_ids'][0]['id']
                         affiliations_db = db["affiliations"].find_one(
@@ -316,6 +330,7 @@ def process_one_insert(openadata_reg, db, collection, empty_work, es_handler, ve
     if entry["authors"][0]["full_name"] == "":
         del entry["authors"][0]  # this is an empty author, so it is removed
 
+    # authors count
     entry["author_count"] = len(entry["authors"])
 
     # group
