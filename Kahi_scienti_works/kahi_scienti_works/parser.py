@@ -29,8 +29,9 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
         lang = lang_poll(abstract, verbose=verbose)
         entry["abstracts"].append(
             {"abstract": text_to_inverted_index(abstract), "lang": lang, "source": "scienti", 'provenance': 'scienti'})
-    entry["external_ids"].append(
-        {"provenance": "scienti", "source": "scienti", "id": {"COD_RH": reg["COD_RH"], "COD_PRODUCTO": reg["COD_PRODUCTO"]}})
+    ext_ids_reg = {"provenance": "scienti", "source": "scienti", "id": {"COD_RH": reg["COD_RH"], "COD_PRODUCTO": reg["COD_PRODUCTO"]}}
+    if ext_ids_reg not in entry["external_ids"]:
+        entry["external_ids"].append(ext_ids_reg)
     if doi:
         entry["doi"] = doi
         entry["external_ids"].append(
@@ -128,6 +129,12 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
                 print(
                     f'Error parsing issue on RH:{reg["COD_RH"]} and COD_PROD:{reg["COD_PRODUCTO"]}')
                 print(e)
+    elif "details" in reg.keys() and len(reg["details"]) > 0 and "oriented_thesis" in reg["details"][0].keys():
+        details = None
+        details = reg["details"][0]["oriented_thesis"][0]
+        if details and details["NRO_PAGINAS"]:
+            entry["bibliographic_info"]["start_page"] = "1"
+            entry["bibliographic_info"]["end_page"] = str(details["NRO_PAGINAS"])
 
         # source section
         source = {"external_ids": [], "title": ""}
@@ -173,7 +180,6 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
     author = reg["author"][0]
     author_entry = {
         "full_name": author["TXT_TOTAL_NAMES"],
-        "types": [],
         "affiliations": affiliations,
         "external_ids": [{"provenance": "scienti", "source": "scienti", "id": {"COD_RH": author["COD_RH"]}}]
     }

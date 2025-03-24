@@ -1,5 +1,5 @@
 from kahi_scienti_works.parser import parse_scienti
-from kahi_impactu_utils.Utils import lang_poll, doi_processor, compare_author, split_names, split_names_fix
+from kahi_impactu_utils.Utils import lang_poll, doi_processor, compare_author, split_names, split_names_fix, check_date_format
 import re
 from time import time
 from bson import ObjectId
@@ -437,6 +437,9 @@ def process_one_update(scienti_reg, colav_reg, db, collection, empty_work, verbo
             if not group_reg:
                 print(
                     f'WARNING: group with ids {scienti_reg["group"]["COD_ID_GRUPO"]} and {scienti_reg["group"]["NRO_ID_GRUPO"]} not found in affiliation')
+
+    colav_reg["author_count"] = len(colav_reg["authors"])
+
     collection.update_one(
         {"_id": colav_reg["_id"]},
         {"$set": {
@@ -448,6 +451,7 @@ def process_one_update(scienti_reg, colav_reg, db, collection, empty_work, verbo
             # scienti provides poor quality data, so it is better to keep the data from colav
             "bibliographic_info": colav_reg["bibliographic_info"],
             "external_urls": colav_reg["external_urls"],
+            "author_count": colav_reg["author_count"],
             "authors": colav_reg["authors"],
             "subjects": colav_reg["subjects"],
             "groups": colav_reg["groups"]
@@ -645,21 +649,66 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler, doi=
                     "types": []
                 }
     entry["authors"][0] = author
-    # the first author is the original one always (already inserted)
-    if "author_others" in scienti_reg.keys():
-        for author in scienti_reg["author_others"][1:]:
-            if author["COD_RH_REF"]:
-                author_db = db["person"].find_one(
-                    {"external_ids.id.COD_RH": author["COD_RH_REF"]}, {"_id": 1, "full_name": 1})
-                if author_db:
-                    rec = {"id": author_db["_id"],
-                           "full_name": author_db["full_name"],
-                           # we dont have affiliation of the author from the paper, we can´t assume one.
-                           "affiliations": []
-                           }
-                    entry["authors"].append(rec)
+
+    # Inserting other authors
+    directed_work = False
+    other_authors = scienti_reg.get("re_author_others", [])
+    primary_cod_rh = scienti_reg["COD_RH"]
+
+    for other_author in other_authors:
+        author_others = other_author.get("author_others")
+        if not author_others:
+            author_others = other_author.get("author")
+            if author_others:
+                directed_work = True
+            if not author_others:
+                continue
+
+        if directed_work:
+            cod_rh_ref = author_others[0].get("COD_RH")
+        else:
+            cod_rh_ref = author_others[0].get("COD_RH_REF")
+        if not cod_rh_ref:
+            continue
+
+        author_role = other_author.get("TPO_PARTICIPACION", "")
+
+        if author_role and cod_rh_ref == primary_cod_rh:
+            entry["authors"][0]["type"] = "advisor" if author_role in ["TUT", "ASE", "COT"] else ""
+            continue  # first author is already inserted
+
+        author_db = db["person"].find_one(
+            {"external_ids.id.COD_RH": cod_rh_ref}, {"_id": 1, "full_name": 1})
+
+        if not author_db:
+            continue
+
+        # Add author to the list of authors only if it is not already in the list
+        if not any(author["id"] == author_db["_id"] for author in entry["authors"]):
+            entry["authors"].append({
+                "id": author_db["_id"],
+                "full_name": author_db["full_name"],
+                "affiliations": []
+            })
 
     entry["author_count"] = len(entry["authors"])
+
+    # Update date_published if oriented_thesis is available
+    details = scienti_reg.get("details", [])
+    if details and "oriented_thesis" in details[0].keys():
+        oriented_tesis = details[0].get("oriented_thesis")[0] if details else None
+        if oriented_tesis:
+            if "NRO_ANO_FIN" in oriented_tesis.keys():
+                year = oriented_tesis["NRO_ANO_FIN"]
+            if "NRO_MES_FIN" in oriented_tesis.keys():
+                month = oriented_tesis["NRO_MES_FIN"]
+                if len(str(month)) == 1:
+                    month = f'0{month}'
+            if year and month:
+                entry["date_published"] = check_date_format(
+                    f'{month}-{year}')
+                entry["year_published"] = int(year)
+
     # scienti group
     if "group" in scienti_reg.keys():
         for group in scienti_reg["group"]:
