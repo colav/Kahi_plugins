@@ -34,7 +34,16 @@ def process_one_insert(person_db, oa_author, client, db_name, empty_person, rela
 
     entry["full_name"] = sub(
         r'\s+', ' ', oa_author["display_name"].replace(".", " ")).strip()
-    author_data = split_names(entry["full_name"])
+    try:
+        author_data = split_names(entry["full_name"])
+    except Exception as e:
+        print("Error splitting names: ", e,
+              "Full name: ", entry["full_name"], entry)
+        author_data = {
+            "last_names": [],
+            "first_names": [],
+            "initials": []
+        }
     entry["last_names"] = author_data["last_names"]
     entry["first_names"] = author_data["first_names"]
     entry["initials"] = author_data["initials"]
