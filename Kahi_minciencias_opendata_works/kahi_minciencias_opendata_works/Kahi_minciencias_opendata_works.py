@@ -116,37 +116,20 @@ class Kahi_minciencias_opendata_works(KahiBase):
             raise RuntimeError(
                 f'''{self.config["minciencias_opendata_works"]["task"]} is not a valid task for the minciencias_opendata database''')
 
-        # bibliography production requires a search in elasticsearch,
-        # there will be a cut in openalex for those products.
-        biblio = ["Publicaciones editoriales no especializadas",
-                  "Notas científica",
-                  "Informe Final de Investigación",
-                  "Capítulos de libro de investigación",
-                  "Libros de investigación",
-                  "Artículos de investigación",
-                  "Libros de Formación",
-                  "Libros",
-                  "Tesis de doctorado",
-                  "Capítulos de libro",
-                  "Documento de trabajo",
-                  "Tesis de pregrado",
-                  "Informe técnico final",
-                  "Artículos",
-                  "Manuales y Guías Especializadas",
-                  "Boletín divulgativo de resultado de investigación",
-                  "Libros de Divulgación de investigación y/o Compilación de Divulgación",
-                  "Tesis de maestria",
-                  "Generación de contenido impresa"]
+        exclude = ["Evento científico", "Eventos artísticos, de arquitectura o de diseño con componentes de apropiación", "Eventos artísticos",
+                   "Patente de invención", "Patente modelo de utilidad",
+                   "Proyecto ID+I con Formación", "Proyecto de Investigacion y Desarrollo", "Proyecto de Investigación y Creación",
+                   "Proyecto de extensión", "Proyecto de extensión y responsabilidad social en CTI"]
 
         pipeline = [
             {'$match': {"nme_producto_pd": {"$exists": True}}},
-            {'$match': {'nme_tipologia_pd': {'$in': biblio}}},
+            {'$match': {'nme_tipologia_pd': {'$nin': exclude}}},
             {'$group': {'_id': '$id_producto_pd', 'originalDoc': {'$first': '$$ROOT'}}},
             {'$replaceRoot': {'newRoot': '$originalDoc'}}
         ]
         paper_list = list(opendata.aggregate(pipeline, allowDiskUse=True))
         print(
-            f"INFO: Processing bibliographic production {len(paper_list)} catgories {biblio}")
+            f"INFO: Processing  production {len(paper_list)} other than catgories {exclude}")
         Parallel(
             n_jobs=self.n_jobs,
             verbose=self.verbose,

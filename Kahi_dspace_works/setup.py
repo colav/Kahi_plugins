@@ -51,40 +51,26 @@ if os.name in ('nt', 'dos'):
 def main():
     setup(
         # Application name:
-        name="Kahi_minciencias_opendata_works_misc",
-
+        name="Kahi_dspace_works",
         # Version number (initial):
-        version=get_version('kahi_minciencias_opendata_works_misc/_version.py'),
-
+        version=get_version("kahi_dspace_works/_version.py"),
         # Application author details:
         author="Colav",
         author_email="colav@udea.edu.co",
-
         # Packages
-        packages=find_packages(exclude=['tests']),
-
+        packages=find_packages(exclude=["tests"]),
         # Include additional files into the package
         include_package_data=True,
-
         # Details
         url="https://github.com/colav/Kahi_plugins",
         #
         license="BSD",
-
-        description="Kahi plugin to insert and update works misc from minciencias opendata",
-
+        description="Kahi plugin dspace_works",
         long_description=open("README.md").read(),
-
         long_description_content_type="text/markdown",
-
         # Dependent packages (distributions)
         # put you packages here
-        install_requires=[
-            'kahi',
-            'pymongo',
-            'joblib',
-            'kahi_impactu_utils',
-            'mohan'],
+        install_requires=["kahi", "kahi_impactu_utils"],
     )
 
 
