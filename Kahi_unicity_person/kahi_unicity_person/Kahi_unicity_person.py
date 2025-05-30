@@ -1,4 +1,4 @@
-from kahi_impactu_utils.Utils import compare_author, split_names, split_names_fix
+from kahi_impactu_utils.Utils import compare_author
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 from kahi.KahiBase import KahiBase
@@ -138,21 +138,6 @@ class Kahi_unicity_person(KahiBase):
                     if source["source"] not in target_update_sources:
                         target_doc["updated"].append(
                             {"source": source["source"], "time": int(time())})
-
-                # full_name
-                if len(doc["full_name"]) > len(target_doc["full_name"]):
-                    target_doc["full_name"] = doc["full_name"]
-                    sname = split_names(doc["full_name"])
-                    target_doc["first_names"] = sname["first_names"]
-                    target_doc["last_names"] = sname["last_names"]
-                    target_doc["initials"] = sname["initials"]
-
-                    # check if fix is neeeded
-                    fname = split_names_fix(target_doc, doc)
-                    if fname:
-                        target_doc["first_names"] = fname["first_names"]
-                        target_doc["last_names"] = fname["last_names"]
-                        target_doc["initials"] = fname["initials"]
 
                 # first_names, last_names, initials, sex, marital_status, birthplace, birthdate
                 self.merge_fields(target_doc, doc, [
