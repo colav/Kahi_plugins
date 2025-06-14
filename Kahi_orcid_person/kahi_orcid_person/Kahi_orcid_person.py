@@ -175,14 +175,19 @@ class Kahi_orcid_person(KahiBase):
         family_name = name_data.get("personal-details:family-name", "")
 
         # Extract other names if available
+        alias = ""
         other_name = person.get("other-name:other-names", {})
         other_names = other_name.get("other-name:other-name", [])
-        other_name = other_names[0] if other_names else ""
-        alias = other_name.get("other-name:content", "")
+        if isinstance(other_names, list):
+            other_name_val = other_names[0] if other_names else ""
+            if other_name_val:
+                alias = other_name_val.get("other-name:content", "")
+        elif isinstance(other_names, dict):
+            alias = other_names.get("other-name:content", "")
 
         # Process the names: split into lists, build full_name, and calculate initials
-        given_names = given_names.replace(".", "").replace("-", "") if given_names else ""
-        family_name = family_name.replace(".", "").replace("-", "") if family_name else ""
+        given_names = given_names.replace(".", "").replace("-", " ").replace("  ", " ").strip() if given_names else ""
+        family_name = family_name.replace(".", "").replace("-", " ").replace("  ", " ").strip() if family_name else ""
         first_names_list = split_name_part(given_names) if given_names else []
         last_names_list = split_name_part(family_name) if family_name else []
         full_name = f"{given_names} {family_name}".strip()

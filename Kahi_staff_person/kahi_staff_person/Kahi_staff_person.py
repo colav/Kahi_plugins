@@ -83,11 +83,11 @@ class Kahi_staff_person(KahiBase):
             entry = self.empty_person()
             entry["updated"].append({"time": int(time()), "source": "staff", "provenance": "staff"})
             entry["first_names"] = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["nombres"].split()
-            entry["last_names"].append(self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["primer_apellido"])
-            second_lastname = None
+            first_lastname = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["primer_apellido"]
+            entry["last_names"].append(first_lastname.strip())
             second_lastname = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["segundo_apellido"]
-            if second_lastname != "":
-                entry["last_names"].append(second_lastname)
+            if second_lastname.strip() != "":
+                entry["last_names"].append(second_lastname.strip())
             entry["full_name"] = " ".join(entry["first_names"] + entry["last_names"])
             entry["initials"] = "".join([name[0] for name in entry["first_names"]])
 
