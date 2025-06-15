@@ -85,6 +85,7 @@ def main():
             'spacy',
             'joblib',
             'datetime',
+            'openpyxl',
         ],
     )
 
