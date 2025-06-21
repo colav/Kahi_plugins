@@ -29,6 +29,9 @@ def process_one(paper, db, collection, empty_person, verbose):
             # Merge the full name (use the longest one)
             if len(author["full_name"]) > len(author_db["full_name"]):
                 author_db["full_name"] = author["full_name"]
+                author_db["first_names"] = author["first_names"]
+                author_db["last_names"] = author["last_names"]
+                author_db["initials"] = author["initials"]
                 # Merge the aliases (only add new ones)
                 if author_db["full_name"] not in author_db["aliases"]:
                     author_db["aliases"].append(author_db["full_name"])
@@ -43,6 +46,9 @@ def process_one(paper, db, collection, empty_person, verbose):
                 {"$set": {
                     "updated": author_db["updated"],
                     "full_name": author_db["full_name"],
+                    "first_names": author_db["first_names"],
+                    "last_names": author_db["last_names"],
+                    "initials": author_db["initials"],
                     "aliases": author_db["aliases"],
                     "related_works": author_db["related_works"]
                 }}

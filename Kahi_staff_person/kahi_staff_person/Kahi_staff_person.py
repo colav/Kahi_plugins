@@ -4,7 +4,7 @@ from pandas import read_excel, to_datetime, DataFrame
 from time import time
 from kahi_impactu_utils.Mapping import ciarp_mapping
 from kahi_impactu_utils.String import title_case
-from kahi_impactu_utils.Utils import parse_sex, doi_processor
+from kahi_impactu_utils.Utils import parse_sex, doi_processor, split_name_part
 from datetime import datetime as dt
 from datetime import datetime, timezone
 
@@ -82,7 +82,7 @@ class Kahi_staff_person(KahiBase):
                 continue
             entry = self.empty_person()
             entry["updated"].append({"time": int(time()), "source": "staff", "provenance": "staff"})
-            entry["first_names"] = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["nombres"].split()
+            entry["first_names"] = split_name_part(self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["nombres"])
             first_lastname = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["primer_apellido"]
             entry["last_names"].append(first_lastname.strip())
             second_lastname = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["segundo_apellido"]

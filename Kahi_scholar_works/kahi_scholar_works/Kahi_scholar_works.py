@@ -115,8 +115,9 @@ class Kahi_scholar_works(KahiBase):
                 False if self.task == "doi" else True,
                 es_handler=self.es_handler,
                 verbose=self.verbose
-            ) for paper in paper_cursor
+            ) for paper in list(paper_cursor)
         )
+        paper_cursor.close()
         client.close()
 
     def run(self):
