@@ -43,12 +43,17 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
             ]
 
         # names
-        langs = [name["lang"] for name in db_reg["names"]]
-        for lang, name in oa_aff["international"]["display_name"].items():
-            if lang not in langs:
-                langs.append(lang)
-                db_reg["names"].append(
-                    {"source": "openalex", "lang": lang, "name": name})
+        international = oa_aff.get("international")
+        if international:
+            langs = [name["lang"] for name in db_reg["names"]]
+            for lang, name in international["display_name"].items():
+                if lang not in langs:
+                    langs.append(lang)
+                    db_reg["names"].append(
+                        {"source": "openalex", "lang": lang, "name": name})
+        elif oa_aff.get("display_name"):
+            db_reg["names"].append(
+                {"source": "openalex", "lang": "", "name": oa_aff.get("display_name")})
         # types
         types_source = [typ["source"] for typ in db_reg["types"]]
         if "openalex" not in types_source:
@@ -74,9 +79,14 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
         entry = empty_affiliations.copy()
         entry["updated"].append({"time": int(time()), "source": "openalex"})
         # names
-        for lang, name in oa_aff["international"]["display_name"].items():
+        international = oa_aff.get("international")
+        if international:
+            for lang, name in international["display_name"].items():
+                entry["names"].append(
+                    {"source": "openalex", "lang": lang, "name": name})
+        elif oa_aff.get("display_name"):
             entry["names"].append(
-                {"source": "openalex", "lang": lang, "name": name})
+                {"source": "openalex", "lang": "", "name": oa_aff.get("display_name")})
         # external_ids
         for source, idx in oa_aff["ids"].items():
             if isinstance(idx, str):
