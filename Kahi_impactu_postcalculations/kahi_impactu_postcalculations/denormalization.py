@@ -435,6 +435,11 @@ def set_works_authors_full_data(collection) -> None:
     collection : pymongo.collection.Collection
         Collection where the works are stored
     """
+    db = collection.database
+    db.person.create_index([("_id", 1)], background=True)    
+    db.works.create_index([("authors.id", 1)], background=True)
+    db.person.create_index([("affiliations.id", 1)], background=True)
+
     pipeline = [
         {
             "$lookup": {
