@@ -2338,6 +2338,56 @@ def normalize_source_topics(collection) -> None:
     )
 
 
+def set_person_citations_count_openalex(collection) -> None:
+    """
+    Function to set the OpenAlex citations count in person documents
+
+    Parameters
+    ----------
+    collection : pymongo.collection.Collection
+        Collection where the person documents are stored
+    """
+    pipeline = [
+        {
+            "$set": {
+                "citations_count_openalex": {
+                    "$let": {
+                        "vars": {
+                            "openalexCitation": {
+                                "$arrayElemAt": [
+                                    {
+                                        "$filter": {
+                                            "input": {
+                                                "$ifNull": [
+                                                    "$citations_count",
+                                                    []
+                                                ]
+                                            },
+                                            "as": "citation",
+                                            "cond": {
+                                                "$eq": [
+                                                    "$$citation.source",
+                                                    "openalex"
+                                                ]
+                                            }
+                                        }
+                                    },
+                                    0
+                                ]
+                            }
+                        },
+                        "in": {
+                            "$ifNull": ["$$openalexCitation.count", 0]
+                        }
+                    }
+                }
+            }
+        }
+    ]
+
+    collection.update_many({}, pipeline)
+
+
 DENORMALIZATION_PIPELINES = {
     "works": [
         set_works_authors_affiliations_country,
@@ -2367,6 +2417,7 @@ DENORMALIZATION_PIPELINES = {
     "person": [
         set_person_affiliations_relations,
         clean_person_empty_affiliations_array,
+        set_person_citations_count_openalex
     ],
     "affiliations": [
         set_affiliations_citations_count_openalex,
