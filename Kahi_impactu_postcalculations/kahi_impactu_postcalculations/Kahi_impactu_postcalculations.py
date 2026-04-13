@@ -41,6 +41,8 @@ class Kahi_impactu_postcalculations(KahiBase):
         self.openalex_database_url = self.config["impactu_postcalculations"]["openalex_database_url"]
         self.openalex_database_name = self.config["impactu_postcalculations"]["openalex_database_name"]
         self.inference_endpoint = self.config["impactu_postcalculations"]["inference_endpoint"]
+        self.parallel_collections = True
+        self.collection_jobs = 3
 
         self.author_count = self.config["impactu_postcalculations"][
             "author_count"] if "author_count" in self.config["impactu_postcalculations"] else 6
@@ -167,9 +169,12 @@ class Kahi_impactu_postcalculations(KahiBase):
 
         print("INFO: Setting up impactu types for works")
         self.process_types(db)
-
         print(f"INFO: Denormalizing data in {self.database_name}")
-        denormalize(db)
+        denormalize(
+            db,
+            parallel_collections=self.parallel_collections,
+            max_parallel_jobs=self.collection_jobs,
+        )
 
         print(f"INFO: Creating indexes in db {self.database_name} for backend")
         db["works"].create_index("authors.id")
@@ -200,112 +205,131 @@ class Kahi_impactu_postcalculations(KahiBase):
             for work in works_cursor
         )
 
-        # Getting the list of institutions ids with works
         print("INFO: Getting authors and affiliations ids")
         institutions_ids = []
-        for aff in db["affiliations"].find({"types.type": {"$nin": ["faculty", "department", "group"]}}, {"_id": 1}):
+        for aff in db["affiliations"].find(
+            {"types.type": {"$nin": ["faculty", "department", "group"]}},
+            {"_id": 1},
+        ):
             count = db["works"].count_documents(
-                {"authors.affiliations.id": aff["_id"]})
+                {"authors.affiliations.id": aff["_id"]}
+            )
             if count != 0:
                 institutions_ids.append(aff["_id"])
 
-        # Creating the networks of coauthorship for each affiliation
         print("INFO: Creating affiliations networks")
         if institutions_ids:
             Parallel(
                 n_jobs=self.n_jobs,
                 verbose=10,
-                backend=self.backend)(
-                    delayed(network_creation_process_one)(
-                        self.config,
-                        client if self.backend == "threading" else None,
-                        impactu_client if self.backend == "threading" else None,
-                        idx,
-                        self.author_count,
-                        "affiliations",
-                        self.backend
-                    ) for idx in institutions_ids)
+                backend=self.backend,
+            )(
+                delayed(network_creation_process_one)(
+                    self.config,
+                    client if self.backend == "threading" else None,
+                    impactu_client if self.backend == "threading" else None,
+                    idx,
+                    self.author_count,
+                    "affiliations",
+                    self.backend,
+                )
+                for idx in institutions_ids
+            )
 
-        # Getting the list of authors ids with works
         print("INFO: Checking authors with works")
         authors_ids = [x["_id"] for x in db["person"].find({}, {"_id": 1})]
 
-        # this could be threads, is a basic thing.
-        authors_ids = Parallel(n_jobs=self.n_jobs, backend="threading", verbose=1)(
-            delayed(count_works_one)(
-                db,
-                author
-            ) for author in authors_ids)
+        authors_ids = Parallel(
+            n_jobs=self.n_jobs,
+            backend="threading",
+            verbose=1,
+        )(
+            delayed(count_works_one)(db, author)
+            for author in authors_ids
+        )
 
-        # remove Nones
         authors_ids = [x for x in authors_ids if x is not None]
 
         print(f"INFO: total authors {len(authors_ids)}")
-        # Creating the networks of coauthorship for each author
         print("INFO: Creating authors networks")
         if authors_ids:
             Parallel(
                 n_jobs=self.n_jobs,
                 verbose=10,
-                backend=self.backend)(
-                    delayed(network_creation_process_one)(
-                        self.config,
-                        client if self.backend == "threading" else None,
-                        impactu_client if self.backend == "threading" else None,
-                        idx,
-                        self.author_count,
-                        "person",
-                        self.backend
-                    ) for idx in authors_ids)
-        # Getting the top words for each institution
+                backend=self.backend,
+            )(
+                delayed(network_creation_process_one)(
+                    self.config,
+                    client if self.backend == "threading" else None,
+                    impactu_client if self.backend == "threading" else None,
+                    idx,
+                    self.author_count,
+                    "person",
+                    self.backend,
+                )
+                for idx in authors_ids
+            )
+
         print("INFO: Creating top words for institutions")
         affiliations_cursor = list(db["affiliations"].find({}, {"_id": 1}))
         Parallel(
             n_jobs=self.n_jobs,
             verbose=10,
-            backend=self.backend)(
-                delayed(top_words_process_one)(
-                    self.config,
-                    client if self.backend == "threading" else None,
-                    impactu_client if self.backend == "threading" else None,
-                    aff,
-                    self.stopwords,
-                    "affiliations",
-                    self.backend
-                ) for aff in affiliations_cursor)
+            backend=self.backend,
+        )(
+            delayed(top_words_process_one)(
+                self.config,
+                client if self.backend == "threading" else None,
+                impactu_client if self.backend == "threading" else None,
+                aff,
+                self.stopwords,
+                "affiliations",
+                self.backend,
+            )
+            for aff in affiliations_cursor
+        )
 
-        # Getting the top words for others organizations
-        print("INFO: Creating top words for others affiliations such as faculty, department, group")
+        print(
+            "INFO: Creating top words for others affiliations such as faculty, "
+            "department, group"
+        )
         affiliations_cursor = list(db["affiliations"].find(
-            {"types.type": {"$in": ["faculty", "department", "group"]}}, {"_id": 1}))
+            {"types.type": {"$in": ["faculty", "department", "group"]}},
+            {"_id": 1},
+        ))
         Parallel(
             n_jobs=self.n_jobs,
             verbose=10,
-            backend=self.backend)(
-                delayed(top_words_process_one)(
-                    self.config,
-                    client if self.backend == "threading" else None,
-                    impactu_client if self.backend == "threading" else None,
-                    aff,
-                    self.stopwords,
-                    "affiliations",
-                    self.backend
-                ) for aff in affiliations_cursor)
+            backend=self.backend,
+        )(
+            delayed(top_words_process_one)(
+                self.config,
+                client if self.backend == "threading" else None,
+                impactu_client if self.backend == "threading" else None,
+                aff,
+                self.stopwords,
+                "affiliations",
+                self.backend,
+            )
+            for aff in affiliations_cursor
+        )
 
-        # Getting the top words for each author
         print("INFO: Creating top words for person")
         authors_cursor = list(db["person"].find({}, {"_id": 1}))
 
         Parallel(
             n_jobs=self.n_jobs,
             verbose=10,
-            backend=self.backend)(
-                delayed(top_words_process_one)(
-                    self.config,
-                    client if self.backend == "threading" else None,
-                    impactu_client if self.backend == "threading" else None,
-                    author,
-                    self.stopwords,
-                    "person",
-                    self.backend
-                ) for author in authors_cursor)
+            backend=self.backend,
+        )(
+            delayed(top_words_process_one)(
+                self.config,
+                client if self.backend == "threading" else None,
+                impactu_client if self.backend == "threading" else None,
+                author,
+                self.stopwords,
+                "person",
+                self.backend,
+            )
+            for author in authors_cursor
+        )

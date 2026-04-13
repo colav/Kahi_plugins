@@ -1,3 +1,108 @@
+from joblib import Parallel, delayed
+
+
+PARALLEL_SAFE_COLLECTIONS = {"sources", "person", "affiliations"}
+WORKS_DATES_CHUNK_BUCKETS = 16
+WORKS_DATES_CHUNK_WORKERS = 4
+WORKS_DATES_MIN_DOCS_TO_CHUNK = 100000
+
+
+def _build_objectid_ranges(collection, match_query, buckets):
+    """
+    Build contiguous _id ranges using bucketAuto over matching documents.
+    """
+    return list(collection.aggregate(
+        [
+            {"$match": match_query},
+            {
+                "$bucketAuto": {
+                    "groupBy": "$_id",
+                    "buckets": buckets,
+                    "output": {
+                        "min_id": {"$min": "$_id"},
+                        "max_id": {"$max": "$_id"},
+                        "count": {"$sum": 1},
+                    },
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "min_id": 1,
+                    "max_id": 1,
+                    "count": 1,
+                }
+            },
+            {"$sort": {"min_id": 1}},
+        ],
+        allowDiskUse=True,
+    ))
+
+
+def _run_chunked_aggregate_by_id(
+    collection,
+    base_match,
+    pipeline_tail,
+    pipeline_name,
+    chunk_buckets,
+    chunk_workers,
+    min_docs_to_chunk,
+):
+    """
+    Run one aggregation pipeline in parallel chunks over non-overlapping _id ranges.
+    """
+    docs_to_process = collection.count_documents(base_match)
+    if docs_to_process == 0:
+        print(f"INFO: {pipeline_name}: no matching docs")
+        return
+
+    full_pipeline = [{"$match": base_match}] + pipeline_tail
+    if docs_to_process < min_docs_to_chunk or chunk_buckets <= 1 or chunk_workers <= 1:
+        print(
+            f"INFO: {pipeline_name}: running sequentially "
+            f"for {docs_to_process} docs"
+        )
+        collection.aggregate(full_pipeline, allowDiskUse=True)
+        return
+
+    ranges = _build_objectid_ranges(collection, base_match, chunk_buckets)
+    if len(ranges) <= 1:
+        print(
+            f"INFO: {pipeline_name}: single range detected, "
+            "running sequentially"
+        )
+        collection.aggregate(full_pipeline, allowDiskUse=True)
+        return
+
+    workers = min(chunk_workers, len(ranges))
+    print(
+        f"INFO: {pipeline_name}: running in {len(ranges)} chunks "
+        f"with {workers} workers ({docs_to_process} docs)"
+    )
+
+    def _run_one_range(range_info):
+        range_match = {
+            "$and": [
+                base_match,
+                {
+                    "_id": {
+                        "$gte": range_info["min_id"],
+                        "$lte": range_info["max_id"],
+                    }
+                },
+            ]
+        }
+        collection.aggregate(
+            [{"$match": range_match}] + pipeline_tail,
+            allowDiskUse=True,
+        )
+
+    Parallel(n_jobs=workers, prefer="threads", backend="threading")(
+        delayed(_run_one_range)(range_info)
+        for range_info in ranges
+    )
+
+
 def set_works_authors_affiliations_country(collection) -> None:
     """
     Method to set the country of the affiliations of the authors of the works
@@ -8,6 +113,11 @@ def set_works_authors_affiliations_country(collection) -> None:
         Collection where the works are stored
     """
     pipeline = [
+        {
+            "$match": {
+                "authors.affiliations.id": {"$exists": True}
+            }
+        },
         {
             "$lookup": {
                 "from": "affiliations",
@@ -104,6 +214,11 @@ def set_works_authors_affiliations_country_code(collection) -> None:
     """
     pipeline = [
         {
+            "$match": {
+                "authors.affiliations.id": {"$exists": True}
+            }
+        },
+        {
             "$lookup": {
                 "from": "affiliations",
                 "localField": "authors.affiliations.id",
@@ -198,6 +313,11 @@ def set_works_groups_ranking(collection) -> None:
         Collection where the works are stored
     """
     pipeline = [
+        {
+            "$match": {
+                "groups.id": {"$exists": True}
+            }
+        },
         {
             "$lookup": {
                 "from": "affiliations",
@@ -297,6 +417,11 @@ def set_works_authors_ranking(collection) -> None:
         Collection where the works are stored
     """
     pipeline = [
+        {
+            "$match": {
+                "authors.id": {"$exists": True}
+            }
+        },
         {
             "$lookup": {
                 "from": "person",
@@ -423,7 +548,15 @@ def set_works_citations_count_openalex(collection) -> None:
         }
     ]
 
-    collection.update_many({}, pipeline)
+    collection.update_many(
+        {
+            "$or": [
+                {"citations_count.source": "openalex"},
+                {"citations_count_openalex": {"$exists": False}},
+            ]
+        },
+        pipeline,
+    )
 
 
 def set_works_authors_full_data(collection) -> None:
@@ -436,6 +569,11 @@ def set_works_authors_full_data(collection) -> None:
         Collection where the works are stored
     """
     pipeline = [
+        {
+            "$match": {
+                "authors.id": {"$exists": True}
+            }
+        },
         {
             "$lookup": {
                 "from": "person",
@@ -520,7 +658,10 @@ def set_works_authors_affiliations_dates(collection) -> None:
     collection : pymongo.collection.Collection
         Collection where the works are stored
     """
-    pipeline = [
+    base_match = {
+        "authors.affiliations.id": {"$exists": True}
+    }
+    pipeline_tail = [
         {
             "$lookup": {
                 "from": "person",
@@ -653,7 +794,15 @@ def set_works_authors_affiliations_dates(collection) -> None:
         },
     ]
 
-    collection.aggregate(pipeline)
+    _run_chunked_aggregate_by_id(
+        collection=collection,
+        base_match=base_match,
+        pipeline_tail=pipeline_tail,
+        pipeline_name="set_works_authors_affiliations_dates",
+        chunk_buckets=WORKS_DATES_CHUNK_BUCKETS,
+        chunk_workers=WORKS_DATES_CHUNK_WORKERS,
+        min_docs_to_chunk=WORKS_DATES_MIN_DOCS_TO_CHUNK,
+    )
 
 
 def set_works_source_full_data(collection) -> None:
@@ -666,6 +815,11 @@ def set_works_source_full_data(collection) -> None:
         Collection where the works are stored
     """
     pipeline = [
+        {
+            "$match": {
+                "source.id": {"$exists": True}
+            }
+        },
         {
             "$lookup": {
                 "from": "sources",
@@ -823,6 +977,11 @@ def set_works_authors_affiliations_external_data(collection) -> None:
         Collection where the works are stored
     """
     pipeline = [
+        {
+            "$match": {
+                "authors.affiliations.id": {"$exists": True}
+            }
+        },
         {
             "$lookup": {
                 "from": "affiliations",
@@ -1067,6 +1226,11 @@ def set_works_groups_ranking_to_works_collection(collection) -> None:
     """
     pipeline = [
         {
+            "$match": {
+                "groups.id": {"$exists": True}
+            }
+        },
+        {
             "$lookup": {
                 "from": "affiliations",
                 "let": {
@@ -1221,7 +1385,15 @@ def clean_works_authors_affiliations_country_fields(collection) -> None:
         }
     ]
 
-    collection.update_many({}, pipeline)
+    collection.update_many(
+        {
+            "$or": [
+                {"authors.affiliations.country": {"$exists": True}},
+                {"authors.affiliations.country_code": {"$exists": True}},
+            ]
+        },
+        pipeline,
+    )
 
 
 def normalize_works_authors_ranking_empty_list(collection) -> None:
@@ -1325,8 +1497,30 @@ def set_sources_products_count(collection) -> None:
     """
     pipeline = [
         {
+            "$set": {
+                "_source_ids": {
+                    "$cond": [
+                        {"$isArray": "$source.id"},
+                        "$source.id",
+                        ["$source.id"],
+                    ]
+                }
+            }
+        },
+        {"$unwind": "$_source_ids"},
+        {
+            "$match": {
+                "$expr": {
+                    "$and": [
+                        {"$ne": ["$_source_ids", None]},
+                        {"$not": [{"$isArray": "$_source_ids"}]},
+                    ]
+                }
+            }
+        },
+        {
             "$group": {
-                "_id": "$source.id",
+                "_id": "$_source_ids",
                 "products_count": {"$sum": 1},
             }
         },
@@ -1388,8 +1582,30 @@ def set_sources_citations_count_openalex(collection) -> None:
             }
         },
         {
+            "$set": {
+                "_source_ids": {
+                    "$cond": [
+                        {"$isArray": "$source.id"},
+                        "$source.id",
+                        ["$source.id"],
+                    ]
+                }
+            }
+        },
+        {"$unwind": "$_source_ids"},
+        {
+            "$match": {
+                "$expr": {
+                    "$and": [
+                        {"$ne": ["$_source_ids", None]},
+                        {"$not": [{"$isArray": "$_source_ids"}]},
+                    ]
+                }
+            }
+        },
+        {
             "$group": {
-                "_id": "$source.id",
+                "_id": "$_source_ids",
                 "total_citations": {
                     "$sum": "$citations_count.count"
                 },
@@ -2369,7 +2585,15 @@ DENORMALIZATION_PIPELINES = {
 }
 
 
-def denormalize(db):
+def _run_collection_pipelines(db, collection_name, pipelines):
+    collection = db[collection_name]
+    print(f"INFO: Denormalizing data in {collection_name}")
+    for pipeline_func in pipelines:
+        print(f"INFO: Running pipeline {pipeline_func.__name__}")
+        pipeline_func(collection)
+
+
+def denormalize(db, parallel_collections=None, max_parallel_jobs=None):
     """
     Denormalize the data in all configured collections
 
@@ -2378,10 +2602,53 @@ def denormalize(db):
     db : pymongo.database.Database
         Database object to denormalize
     """
-    for collection_name, pipelines in DENORMALIZATION_PIPELINES.items():
-        collection = db[collection_name]
+    if parallel_collections is None:
+        parallel_collections = False
+    if max_parallel_jobs is None:
+        max_parallel_jobs = 2
+    max_parallel_jobs = max(1, max_parallel_jobs)
 
-        print(f"INFO: Denormalizing data in {collection_name}")
+    collection_runs = list(DENORMALIZATION_PIPELINES.items())
 
-        for pipeline_func in pipelines:
-            pipeline_func(collection)
+    if not parallel_collections:
+        for collection_name, pipelines in collection_runs:
+            _run_collection_pipelines(db, collection_name, pipelines)
+        return
+
+    print(
+        "INFO: Collection-level parallelization enabled "
+        f"(max workers: {max_parallel_jobs})"
+    )
+
+    index = 0
+    while index < len(collection_runs):
+        collection_name, pipelines = collection_runs[index]
+        if collection_name not in PARALLEL_SAFE_COLLECTIONS:
+            _run_collection_pipelines(db, collection_name, pipelines)
+            index += 1
+            continue
+
+        batch_end = index
+        while batch_end < len(collection_runs) and (
+            collection_runs[batch_end][0] in PARALLEL_SAFE_COLLECTIONS
+        ):
+            batch_end += 1
+
+        batch = collection_runs[index:batch_end]
+        if len(batch) == 1:
+            _run_collection_pipelines(db, batch[0][0], batch[0][1])
+            index = batch_end
+            continue
+
+        workers = min(max_parallel_jobs, len(batch))
+        batch_names = [name for name, _ in batch]
+        print(
+            "INFO: Running collections in parallel: "
+            f"{batch_names} with {workers} workers"
+        )
+        Parallel(n_jobs=workers, prefer="threads", backend="threading")(
+            delayed(_run_collection_pipelines)(db, name, run_pipelines)
+            for name, run_pipelines in batch
+        )
+
+        index = batch_end
