@@ -382,9 +382,20 @@ def process_one_insert(oa_reg, db, collection, empty_work, es_handler, verbose=0
 
     entry["author_count"] = len(entry["authors"])
     # insert in mongo
-    response = collection.insert_one(entry)
+    inserted_id = None
+    openalex_id = oa_reg["id"] if "id" in oa_reg.keys() else None
+    if openalex_id:
+        response = collection.update_one(
+            {"external_ids": {"$elemMatch": {"source": "openalex", "id": openalex_id}}},
+            {"$setOnInsert": entry},
+            upsert=True
+        )
+        inserted_id = response.upserted_id
+    else:
+        response = collection.insert_one(entry)
+        inserted_id = response.inserted_id
     # insert in elasticsearch
-    if es_handler:
+    if es_handler and inserted_id:
         work = {}
         work["title"] = entry["titles"][0]["title"]
         work["source"] = entry["source"]["name"] if "name" in entry["source"].keys() else ""
@@ -402,7 +413,7 @@ def process_one_insert(oa_reg, db, collection, empty_work, es_handler, verbose=0
         work["authors"] = authors
         work["provenance"] = "openalex"
 
-        es_handler.insert_work(_id=str(response.inserted_id), work=work)
+        es_handler.insert_work(_id=str(inserted_id), work=work)
 
 
 def process_one(oa_reg, config, empty_work, client, es_handler, backend, verbose=0):
@@ -446,10 +457,19 @@ def process_one(oa_reg, config, empty_work, client, es_handler, backend, verbose
             es_handler = None
             print("WARNING: No elasticsearch configuration provided")
 
-    doi = oa_reg["doi"]
+    colav_reg = None
+    openalex_id = oa_reg["id"] if "id" in oa_reg.keys() else None
+    if openalex_id:
+        colav_reg = collection.find_one(
+            {"external_ids": {"$elemMatch": {"source": "openalex", "id": openalex_id}}}
+        )
 
-    if doi:
-        # is the doi in colavdb?
+    doi = oa_reg["doi"]
+    if colav_reg:
+        process_one_update(
+            oa_reg, colav_reg, db, collection, empty_work, verbose=verbose)
+    elif doi:
+        # fallback: is the doi in colavdb?
         colav_reg = collection.find_one({"external_ids.id": doi})
         if colav_reg:  # update the register
             process_one_update(
@@ -486,7 +506,7 @@ def process_one(oa_reg, config, empty_work, client, es_handler, backend, verbose
                 found = collection.count_documents(
                     # we are assuming here, all works of apenalex are unique.
                     # to avoid things like https://github.com/colav/impactu/issues/181
-                    {"exteral_ids.id": oa_reg["id"]})
+                    {"external_ids.id": oa_reg["id"]})
                 if found:
                     colav_reg = collection.find_one(
                         {"_id": ObjectId(response["_id"])})

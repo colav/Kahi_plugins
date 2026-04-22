@@ -1,5 +1,6 @@
 from kahi.KahiBase import KahiBase
 from pymongo import MongoClient, TEXT
+from pymongo.errors import DuplicateKeyError, OperationFailure
 from joblib import Parallel, delayed
 from kahi_openalex_works.process_one import process_one
 from mohan.Similarity import Similarity
@@ -45,6 +46,20 @@ class Kahi_openalex_works(KahiBase):
         self.collection.create_index("authors.affiliations.id")
         self.collection.create_index("authors.id")
         self.collection.create_index([("titles.title", TEXT)])
+        try:
+            self.collection.create_index(
+                [("external_ids.source", 1), ("external_ids.id", 1)],
+                name="external_ids_source_id_1_unique_openalex_partial",
+                unique=True,
+                partialFilterExpression={
+                    "external_ids.source": "openalex"
+                }
+            )
+        except (DuplicateKeyError, OperationFailure) as exc:
+            raise RuntimeError(
+                "Cannot create unique index external_ids_source_id_1_unique_openalex_partial in works. "
+                "Please deduplicate OpenAlex external_ids and retry."
+            ) from exc
 
         self.openalex_client = MongoClient(
             config["openalex_works"]["database_url"])

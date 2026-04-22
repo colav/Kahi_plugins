@@ -36,8 +36,9 @@ def parse_openalex(reg, empty_work, verbose=0):
         reg["publication_date"], "%Y-%m-%d").timestamp())
     entry["types"].append(
         {"provenance": "openalex", "source": "openalex", "type": reg["type"], "level": None})
-    entry["types"].append(
-        {"provenance": "openalex", "source": "crossref", "type": reg["type_crossref"], "level": None})
+    if "type_crossref" in reg.keys():
+        entry["types"].append(
+            {"provenance": "openalex", "source": "crossref", "type": reg["type_crossref"], "level": None})
 
     entry["citations_by_year"] = reg["counts_by_year"]
 

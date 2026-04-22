@@ -46,12 +46,16 @@ workflow:
     author_count: 6 #use this with warning, maybe the network is too big and it can not be saved in MongoDB
 ```
 
+Notes:
+- Denormalization runs with collection-level parallelization enabled by default.
+- The internal denormalization parallel setup is fixed to `parallel_collections = true`.
+- The internal denormalization parallel setup is fixed to `collection_jobs = 3`.
+- These two values are defined in code and are not configurable from the workflow YAML.
+
 
 # License
 BSD-3-Clause License 
 
 # Links
 http://colav.udea.edu.co/
-
-
 

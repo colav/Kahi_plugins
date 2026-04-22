@@ -387,8 +387,6 @@ def top_words_process_one(config, client, impactu_client, aff, stopwords, top_wo
     backend : str
         The backend to use for the parallel processing. "mutiprocessing" or "threading".
     """
-    global en_model
-    global es_model
     if backend != "threading":
         client = MongoClient(config["database_url"])
         db_in = client[config["database_name"]]
