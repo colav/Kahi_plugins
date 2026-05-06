@@ -31,11 +31,8 @@ config:
 workflow:
   openalex_sources:
     database_url: localhost:27017
-    database_name: openalexco
+    database_name: openalex
     collection_name: sources
-    global_database_url: localhost:27017
-    global_database_name: openalex
-    global_collection_name: sources
     num_jobs: 10
 ```
 
