@@ -31,8 +31,11 @@ config:
 workflow:
   openalex_sources:
     database_url: localhost:27017
-    database_name: openalex
-    collection_name: venues
+    database_name: openalexco
+    collection_name: sources
+    global_database_url: localhost:27017
+    global_database_name: openalex
+    global_collection_name: sources
     num_jobs: 10
 ```
 
@@ -42,4 +45,3 @@ BSD-3-Clause License
 
 # Links
 http://colav.udea.edu.co/
-

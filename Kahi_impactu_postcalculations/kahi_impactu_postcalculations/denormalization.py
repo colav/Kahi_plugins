@@ -1495,6 +1495,11 @@ def set_sources_products_count(collection) -> None:
     collection : pymongo.collection.Collection
         Sources collection
     """
+    works_collection = (
+        collection.database["works"]
+        if collection.name == "sources"
+        else collection
+    )
     pipeline = [
         {
             "$set": {
@@ -1534,7 +1539,7 @@ def set_sources_products_count(collection) -> None:
         },
     ]
 
-    collection.aggregate(pipeline)
+    works_collection.aggregate(pipeline)
 
 
 def normalize_sources_products_count(collection) -> None:
@@ -1561,6 +1566,11 @@ def set_sources_citations_count_openalex(collection) -> None:
     collection : pymongo.collection.Collection
         Sources collection
     """
+    works_collection = (
+        collection.database["works"]
+        if collection.name == "sources"
+        else collection
+    )
     pipeline = [
         {
             "$match": {
@@ -1632,7 +1642,7 @@ def set_sources_citations_count_openalex(collection) -> None:
         },
     ]
 
-    collection.aggregate(pipeline)
+    works_collection.aggregate(pipeline)
 
 
 def normalize_sources_citations_count(collection) -> None:
@@ -1656,6 +1666,25 @@ def normalize_sources_citations_count(collection) -> None:
                 ]
             }
         },
+    )
+
+
+def normalize_sources_global_counts(collection) -> None:
+    """
+    Function to set default global counts in sources
+
+    Parameters
+    ----------
+    collection : pymongo.collection.Collection
+        Sources collection
+    """
+    collection.update_many(
+        {"global_products_count": {"$exists": False}},
+        {"$set": {"global_products_count": 0}},
+    )
+    collection.update_many(
+        {"global_citations_count": {"$exists": False}},
+        {"$set": {"global_citations_count": 0}},
     )
 
 
@@ -2570,6 +2599,7 @@ DENORMALIZATION_PIPELINES = {
         normalize_sources_products_count,
         set_sources_citations_count_openalex,
         normalize_sources_citations_count,
+        normalize_sources_global_counts,
         normalize_source_apc_usd,
         normalize_source_scimago_best_quartile,
         normalize_source_open_access_status,

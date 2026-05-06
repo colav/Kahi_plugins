@@ -4,9 +4,32 @@ from time import time
 from joblib import Parallel, delayed
 
 
-def process_one(source, client, db_name, empty_source):
+def get_global_counts(source, global_collection=None):
+    if global_collection is not None and source.get("id"):
+        global_source = global_collection.find_one(
+            {"id": source["id"]},
+            {"works_count": 1, "cited_by_count": 1},
+        )
+        if global_source:
+            return {
+                "global_products_count": global_source.get("works_count") or 0,
+                "global_citations_count": global_source.get("cited_by_count") or 0,
+            }
+        return {
+            "global_products_count": 0,
+            "global_citations_count": 0,
+        }
+
+    return {
+        "global_products_count": source.get("works_count") or 0,
+        "global_citations_count": source.get("cited_by_count") or 0,
+    }
+
+
+def process_one(source, client, db_name, empty_source, global_collection=None):
     db = client[db_name]
     collection = db["sources"]
+    global_counts = get_global_counts(source, global_collection)
 
     source_db = None
     if "issn" in source.keys():
@@ -26,28 +49,22 @@ def process_one(source, client, db_name, empty_source):
                 source_db = collection.find_one(
                     {"external_ids.id": source["issn_l"]})
     if source_db:
-        oa_found = False
+        openalex_id_found = False
         for ext in source_db["external_ids"]:
             if ext["id"] == source["id"]:
-                oa_found = True
+                openalex_id_found = True
                 break
-        if oa_found:
-            return
 
+        updated_found = False
         for upd in source_db["updated"]:
             if upd["source"] == "openalex":
                 upd["time"] = int(time())
-                oa_found = True
-        if not oa_found:
+                updated_found = True
+        if not updated_found:
             source_db["updated"].append(
                 {"source": "openalex", "time": int(time())})
 
-        ext_found = False
-        for ext in source_db["external_ids"]:
-            if ext["id"] == source["id"]:
-                ext_found = True
-                break
-        if not ext_found:
+        if not openalex_id_found:
             source_db["external_ids"].append(
                 {"source": "openalex", "id": source["id"]})
 
@@ -92,10 +109,13 @@ def process_one(source, client, db_name, empty_source):
             "external_ids": source_db["external_ids"],
             "types": source_db["types"],
             "subjects": source_db["subjects"],
-            "open_access": source_db["open_access"]
+            "open_access": source_db["open_access"],
+            "global_products_count": global_counts["global_products_count"],
+            "global_citations_count": global_counts["global_citations_count"],
         }})
     else:
         entry = empty_source.copy()
+        entry.update(global_counts)
         entry["updated"] = [
             {"source": "openalex", "time": int(time())}]
         entry["names"].append(
@@ -191,6 +211,35 @@ class Kahi_openalex_sources(KahiBase):
         self.openalex_collection = self.openalex_db[config["openalex_sources"]
                                                     ["collection_name"]]
 
+        self.global_openalex_client = MongoClient(
+            config["openalex_sources"].get(
+                "global_database_url",
+                config["openalex_sources"]["database_url"],
+            )
+        )
+        self.global_openalex_database_name = config["openalex_sources"].get(
+            "global_database_name",
+            config["openalex_sources"]["database_name"],
+        )
+        if self.global_openalex_database_name not in self.global_openalex_client.list_database_names():
+            raise RuntimeError(
+                f'''Database {self.global_openalex_database_name} was not found''')
+
+        self.global_openalex_db = self.global_openalex_client[
+            self.global_openalex_database_name
+        ]
+        self.global_openalex_collection_name = config["openalex_sources"].get(
+            "global_collection_name",
+            config["openalex_sources"]["collection_name"],
+        )
+        if self.global_openalex_collection_name not in self.global_openalex_db.list_collection_names():
+            raise RuntimeError(
+                f'''Collection {self.global_openalex_collection_name} was not found on database {self.global_openalex_database_name}''')
+
+        self.global_openalex_collection = self.global_openalex_db[
+            self.global_openalex_collection_name
+        ]
+
         self.n_jobs = config["openalex_sources"]["num_jobs"]
         self.client.close()
 
@@ -205,7 +254,8 @@ class Kahi_openalex_sources(KahiBase):
                 source,
                 client,
                 self.config["database_name"],
-                self.empty_source()
+                self.empty_source(),
+                self.global_openalex_collection,
             ) for source in source_cursor
         )
         client.close()

@@ -31,6 +31,8 @@ def create_indexes(db):
         "citations_count.count": 1
     })
     db["sources"].create_index({"products_count": -1, "_id": 1})
+    db["sources"].create_index({"global_products_count": -1, "_id": 1})
+    db["sources"].create_index({"global_citations_count": -1, "_id": 1})
     db["sources"].create_index({"names.name": 1, "_id": 1})
     db["sources"].create_index({"names.name": "text"})
     db["sources"].create_index({"types.type": 1})
