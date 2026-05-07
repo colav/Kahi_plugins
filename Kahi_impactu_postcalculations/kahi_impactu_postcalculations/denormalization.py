@@ -2283,8 +2283,7 @@ def normalize_source_scimago_best_quartile(collection) -> None:
 
 def normalize_source_open_access_status(collection) -> None:
     """
-    Function to categorize sources as diamond, gold, hybrid, or closed based on
-    open access start year and APC charges, and store this status on the source.
+    Function to categorize sources as diamond, gold, hybrid, or closed.
 
     Parameters
     ----------
@@ -2296,7 +2295,82 @@ def normalize_source_open_access_status(collection) -> None:
             "$project": {
                 "_id": 1,
                 "open_access_start_year": 1,
-                "apc": 1
+                "apc": 1,
+                "open_access": 1
+            }
+        },
+        {
+            "$addFields": {
+                "_has_open_access": {
+                    "$gt": [
+                        {
+                            "$size": {
+                                "$filter": {
+                                    "input": {"$ifNull": ["$open_access", []]},
+                                    "as": "oa",
+                                    "cond": {
+                                        "$eq": [
+                                            "$$oa.is_open_access",
+                                            True
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        0
+                    ]
+                },
+                "_has_diamond": {
+                    "$gt": [
+                        {
+                            "$size": {
+                                "$filter": {
+                                    "input": {"$ifNull": ["$open_access", []]},
+                                    "as": "oa",
+                                    "cond": {
+                                        "$and": [
+                                            {
+                                                "$eq": [
+                                                    "$$oa.is_open_access",
+                                                    True
+                                                ]
+                                            },
+                                            {
+                                                "$eq": [
+                                                    "$$oa.open_access_diamond",
+                                                    True
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        0
+                    ]
+                },
+                "_has_open_access_start_year": {
+                    "$gt": [
+                        {"$ifNull": ["$open_access_start_year", 0]},
+                        0
+                    ]
+                },
+                "_has_apc": {
+                    "$gt": [
+                        {"$ifNull": ["$apc.charges", 0]},
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "$addFields": {
+                "_has_open_access_signal": {
+                    "$or": [
+                        "$_has_open_access",
+                        "$_has_open_access_start_year"
+                    ]
+                }
             }
         },
         {
@@ -2307,40 +2381,25 @@ def normalize_source_open_access_status(collection) -> None:
                             {
                                 "case": {
                                     "$and": [
+                                        "$_has_open_access_signal",
+                                        "$_has_apc"
+                                    ]
+                                },
+                                "then": "gold"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
                                         {
-                                            "$ifNull": [
-                                                "$open_access_start_year",
-                                                False
+                                            "$and": [
+                                                "$_has_diamond",
+                                                {"$not": ["$_has_apc"]}
                                             ]
                                         },
                                         {
-                                            "$gt": [
-                                                "$open_access_start_year",
-                                                0
-                                            ]
-                                        },
-                                        {
-                                            "$or": [
-                                                {
-                                                    "$eq": [
-                                                        {
-                                                            "$ifNull": [
-                                                                "$apc.charges",
-                                                                0
-                                                            ]
-                                                        },
-                                                        0
-                                                    ]
-                                                },
-                                                {"$eq": ["$apc", {}]},
-                                                {
-                                                    "$not": {
-                                                        "$ifNull": [
-                                                            "$apc.charges",
-                                                            False
-                                                        ]
-                                                    }
-                                                }
+                                            "$and": [
+                                                "$_has_open_access_signal",
+                                                {"$not": ["$_has_apc"]}
                                             ]
                                         }
                                     ]
@@ -2351,70 +2410,11 @@ def normalize_source_open_access_status(collection) -> None:
                                 "case": {
                                     "$and": [
                                         {
-                                            "$ifNull": [
-                                                "$open_access_start_year",
-                                                False
+                                            "$not": [
+                                                "$_has_open_access_signal"
                                             ]
                                         },
-                                        {
-                                            "$gt": [
-                                                "$open_access_start_year",
-                                                0
-                                            ]
-                                        },
-                                        {
-                                            "$gt": [
-                                                {
-                                                    "$ifNull": [
-                                                        "$apc.charges",
-                                                        0
-                                                    ]
-                                                },
-                                                0
-                                            ]
-                                        }
-                                    ]
-                                },
-                                "then": "gold"
-                            },
-                            {
-                                "case": {
-                                    "$and": [
-                                        {
-                                            "$or": [
-                                                {
-                                                    "$not": {
-                                                        "$ifNull": [
-                                                            "$open_access_start_year",  # noqa: E501
-                                                            False
-                                                        ]
-                                                    }
-                                                },
-                                                {
-                                                    "$eq": [
-                                                        "$open_access_start_year",  # noqa: E501
-                                                        0
-                                                    ]
-                                                },
-                                                {
-                                                    "$eq": [
-                                                        "$open_access_start_year",  # noqa: E501
-                                                        None
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "$gt": [
-                                                {
-                                                    "$ifNull": [
-                                                        "$apc.charges",
-                                                        0
-                                                    ]
-                                                },
-                                                0
-                                            ]
-                                        }
+                                        "$_has_apc"
                                     ]
                                 },
                                 "then": "hybrid"

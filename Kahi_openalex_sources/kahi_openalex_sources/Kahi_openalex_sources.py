@@ -11,10 +11,17 @@ def get_global_counts(source):
     }
 
 
+def get_open_access_start_year(source):
+    if "open_access_start_year" not in source:
+        return None
+    return source["open_access_start_year"]
+
+
 def process_one(source, client, db_name, empty_source):
     db = client[db_name]
     collection = db["sources"]
     global_counts = get_global_counts(source)
+    open_access_start_year = get_open_access_start_year(source)
 
     source_db = None
     if "issn" in source.keys():
@@ -88,7 +95,7 @@ def process_one(source, client, db_name, empty_source):
             if oa_reg not in source_db["open_access"]:
                 source_db["open_access"].append(oa_reg)
 
-        collection.update_one({"_id": source_db["_id"]}, {"$set": {
+        update_fields = {
             "updated": source_db["updated"],
             "names": source_db["names"],
             "external_ids": source_db["external_ids"],
@@ -97,7 +104,14 @@ def process_one(source, client, db_name, empty_source):
             "open_access": source_db["open_access"],
             "global_products_count": global_counts["global_products_count"],
             "global_citations_count": global_counts["global_citations_count"],
-        }})
+        }
+        if open_access_start_year is not None:
+            update_fields["open_access_start_year"] = open_access_start_year
+
+        collection.update_one(
+            {"_id": source_db["_id"]},
+            {"$set": update_fields},
+        )
     else:
         entry = empty_source.copy()
         entry.update(global_counts)
@@ -128,6 +142,8 @@ def process_one(source, client, db_name, empty_source):
             if source["apc_usd"]:
                 entry["apc"] = {"currency": "USD",
                                 "charges": source["apc_usd"]}
+        if open_access_start_year is not None:
+            entry["open_access_start_year"] = open_access_start_year
         if "is_oa" in source.keys():
             is_oa = source.get("is_oa")
             apc = source.get("apc_prices")
