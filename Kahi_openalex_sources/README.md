@@ -32,7 +32,7 @@ workflow:
   openalex_sources:
     database_url: localhost:27017
     database_name: openalex
-    collection_name: venues
+    collection_name: sources
     num_jobs: 10
 ```
 
@@ -42,4 +42,3 @@ BSD-3-Clause License
 
 # Links
 http://colav.udea.edu.co/
-

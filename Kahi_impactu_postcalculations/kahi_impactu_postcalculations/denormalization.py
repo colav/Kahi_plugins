@@ -1495,6 +1495,11 @@ def set_sources_products_count(collection) -> None:
     collection : pymongo.collection.Collection
         Sources collection
     """
+    works_collection = (
+        collection.database["works"]
+        if collection.name == "sources"
+        else collection
+    )
     pipeline = [
         {
             "$set": {
@@ -1534,7 +1539,7 @@ def set_sources_products_count(collection) -> None:
         },
     ]
 
-    collection.aggregate(pipeline)
+    works_collection.aggregate(pipeline)
 
 
 def normalize_sources_products_count(collection) -> None:
@@ -1561,6 +1566,11 @@ def set_sources_citations_count_openalex(collection) -> None:
     collection : pymongo.collection.Collection
         Sources collection
     """
+    works_collection = (
+        collection.database["works"]
+        if collection.name == "sources"
+        else collection
+    )
     pipeline = [
         {
             "$match": {
@@ -1632,7 +1642,7 @@ def set_sources_citations_count_openalex(collection) -> None:
         },
     ]
 
-    collection.aggregate(pipeline)
+    works_collection.aggregate(pipeline)
 
 
 def normalize_sources_citations_count(collection) -> None:
@@ -1656,6 +1666,25 @@ def normalize_sources_citations_count(collection) -> None:
                 ]
             }
         },
+    )
+
+
+def normalize_sources_global_counts(collection) -> None:
+    """
+    Function to set default global counts in sources
+
+    Parameters
+    ----------
+    collection : pymongo.collection.Collection
+        Sources collection
+    """
+    collection.update_many(
+        {"global_products_count": {"$exists": False}},
+        {"$set": {"global_products_count": 0}},
+    )
+    collection.update_many(
+        {"global_citations_count": {"$exists": False}},
+        {"$set": {"global_citations_count": 0}},
     )
 
 
@@ -2254,8 +2283,7 @@ def normalize_source_scimago_best_quartile(collection) -> None:
 
 def normalize_source_open_access_status(collection) -> None:
     """
-    Function to categorize sources as diamond, gold, hybrid, or closed based on
-    open access start year and APC charges, and store this status on the source.
+    Function to categorize sources as diamond, gold, hybrid, or closed.
 
     Parameters
     ----------
@@ -2267,7 +2295,82 @@ def normalize_source_open_access_status(collection) -> None:
             "$project": {
                 "_id": 1,
                 "open_access_start_year": 1,
-                "apc": 1
+                "apc": 1,
+                "open_access": 1
+            }
+        },
+        {
+            "$addFields": {
+                "_has_open_access": {
+                    "$gt": [
+                        {
+                            "$size": {
+                                "$filter": {
+                                    "input": {"$ifNull": ["$open_access", []]},
+                                    "as": "oa",
+                                    "cond": {
+                                        "$eq": [
+                                            "$$oa.is_open_access",
+                                            True
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        0
+                    ]
+                },
+                "_has_diamond": {
+                    "$gt": [
+                        {
+                            "$size": {
+                                "$filter": {
+                                    "input": {"$ifNull": ["$open_access", []]},
+                                    "as": "oa",
+                                    "cond": {
+                                        "$and": [
+                                            {
+                                                "$eq": [
+                                                    "$$oa.is_open_access",
+                                                    True
+                                                ]
+                                            },
+                                            {
+                                                "$eq": [
+                                                    "$$oa.open_access_diamond",
+                                                    True
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                }
+                            }
+                        },
+                        0
+                    ]
+                },
+                "_has_open_access_start_year": {
+                    "$gt": [
+                        {"$ifNull": ["$open_access_start_year", 0]},
+                        0
+                    ]
+                },
+                "_has_apc": {
+                    "$gt": [
+                        {"$ifNull": ["$apc.charges", 0]},
+                        0
+                    ]
+                }
+            }
+        },
+        {
+            "$addFields": {
+                "_has_open_access_signal": {
+                    "$or": [
+                        "$_has_open_access",
+                        "$_has_open_access_start_year"
+                    ]
+                }
             }
         },
         {
@@ -2278,40 +2381,25 @@ def normalize_source_open_access_status(collection) -> None:
                             {
                                 "case": {
                                     "$and": [
+                                        "$_has_open_access_signal",
+                                        "$_has_apc"
+                                    ]
+                                },
+                                "then": "gold"
+                            },
+                            {
+                                "case": {
+                                    "$or": [
                                         {
-                                            "$ifNull": [
-                                                "$open_access_start_year",
-                                                False
+                                            "$and": [
+                                                "$_has_diamond",
+                                                {"$not": ["$_has_apc"]}
                                             ]
                                         },
                                         {
-                                            "$gt": [
-                                                "$open_access_start_year",
-                                                0
-                                            ]
-                                        },
-                                        {
-                                            "$or": [
-                                                {
-                                                    "$eq": [
-                                                        {
-                                                            "$ifNull": [
-                                                                "$apc.charges",
-                                                                0
-                                                            ]
-                                                        },
-                                                        0
-                                                    ]
-                                                },
-                                                {"$eq": ["$apc", {}]},
-                                                {
-                                                    "$not": {
-                                                        "$ifNull": [
-                                                            "$apc.charges",
-                                                            False
-                                                        ]
-                                                    }
-                                                }
+                                            "$and": [
+                                                "$_has_open_access_signal",
+                                                {"$not": ["$_has_apc"]}
                                             ]
                                         }
                                     ]
@@ -2322,70 +2410,11 @@ def normalize_source_open_access_status(collection) -> None:
                                 "case": {
                                     "$and": [
                                         {
-                                            "$ifNull": [
-                                                "$open_access_start_year",
-                                                False
+                                            "$not": [
+                                                "$_has_open_access_signal"
                                             ]
                                         },
-                                        {
-                                            "$gt": [
-                                                "$open_access_start_year",
-                                                0
-                                            ]
-                                        },
-                                        {
-                                            "$gt": [
-                                                {
-                                                    "$ifNull": [
-                                                        "$apc.charges",
-                                                        0
-                                                    ]
-                                                },
-                                                0
-                                            ]
-                                        }
-                                    ]
-                                },
-                                "then": "gold"
-                            },
-                            {
-                                "case": {
-                                    "$and": [
-                                        {
-                                            "$or": [
-                                                {
-                                                    "$not": {
-                                                        "$ifNull": [
-                                                            "$open_access_start_year",  # noqa: E501
-                                                            False
-                                                        ]
-                                                    }
-                                                },
-                                                {
-                                                    "$eq": [
-                                                        "$open_access_start_year",  # noqa: E501
-                                                        0
-                                                    ]
-                                                },
-                                                {
-                                                    "$eq": [
-                                                        "$open_access_start_year",  # noqa: E501
-                                                        None
-                                                    ]
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "$gt": [
-                                                {
-                                                    "$ifNull": [
-                                                        "$apc.charges",
-                                                        0
-                                                    ]
-                                                },
-                                                0
-                                            ]
-                                        }
+                                        "$_has_apc"
                                     ]
                                 },
                                 "then": "hybrid"
@@ -2570,6 +2599,7 @@ DENORMALIZATION_PIPELINES = {
         normalize_sources_products_count,
         set_sources_citations_count_openalex,
         normalize_sources_citations_count,
+        normalize_sources_global_counts,
         normalize_source_apc_usd,
         normalize_source_scimago_best_quartile,
         normalize_source_open_access_status,

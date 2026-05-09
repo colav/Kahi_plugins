@@ -4,9 +4,24 @@ from time import time
 from joblib import Parallel, delayed
 
 
+def get_global_counts(source):
+    return {
+        "global_products_count": source.get("works_count") or 0,
+        "global_citations_count": source.get("cited_by_count") or 0,
+    }
+
+
+def get_open_access_start_year(source):
+    if "open_access_start_year" not in source:
+        return None
+    return source["open_access_start_year"]
+
+
 def process_one(source, client, db_name, empty_source):
     db = client[db_name]
     collection = db["sources"]
+    global_counts = get_global_counts(source)
+    open_access_start_year = get_open_access_start_year(source)
 
     source_db = None
     if "issn" in source.keys():
@@ -26,28 +41,22 @@ def process_one(source, client, db_name, empty_source):
                 source_db = collection.find_one(
                     {"external_ids.id": source["issn_l"]})
     if source_db:
-        oa_found = False
+        openalex_id_found = False
         for ext in source_db["external_ids"]:
             if ext["id"] == source["id"]:
-                oa_found = True
+                openalex_id_found = True
                 break
-        if oa_found:
-            return
 
+        updated_found = False
         for upd in source_db["updated"]:
             if upd["source"] == "openalex":
                 upd["time"] = int(time())
-                oa_found = True
-        if not oa_found:
+                updated_found = True
+        if not updated_found:
             source_db["updated"].append(
                 {"source": "openalex", "time": int(time())})
 
-        ext_found = False
-        for ext in source_db["external_ids"]:
-            if ext["id"] == source["id"]:
-                ext_found = True
-                break
-        if not ext_found:
+        if not openalex_id_found:
             source_db["external_ids"].append(
                 {"source": "openalex", "id": source["id"]})
 
@@ -86,16 +95,26 @@ def process_one(source, client, db_name, empty_source):
             if oa_reg not in source_db["open_access"]:
                 source_db["open_access"].append(oa_reg)
 
-        collection.update_one({"_id": source_db["_id"]}, {"$set": {
+        update_fields = {
             "updated": source_db["updated"],
             "names": source_db["names"],
             "external_ids": source_db["external_ids"],
             "types": source_db["types"],
             "subjects": source_db["subjects"],
-            "open_access": source_db["open_access"]
-        }})
+            "open_access": source_db["open_access"],
+            "global_products_count": global_counts["global_products_count"],
+            "global_citations_count": global_counts["global_citations_count"],
+        }
+        if open_access_start_year is not None:
+            update_fields["open_access_start_year"] = open_access_start_year
+
+        collection.update_one(
+            {"_id": source_db["_id"]},
+            {"$set": update_fields},
+        )
     else:
         entry = empty_source.copy()
+        entry.update(global_counts)
         entry["updated"] = [
             {"source": "openalex", "time": int(time())}]
         entry["names"].append(
@@ -123,6 +142,8 @@ def process_one(source, client, db_name, empty_source):
             if source["apc_usd"]:
                 entry["apc"] = {"currency": "USD",
                                 "charges": source["apc_usd"]}
+        if open_access_start_year is not None:
+            entry["open_access_start_year"] = open_access_start_year
         if "is_oa" in source.keys():
             is_oa = source.get("is_oa")
             apc = source.get("apc_prices")
@@ -205,7 +226,7 @@ class Kahi_openalex_sources(KahiBase):
                 source,
                 client,
                 self.config["database_name"],
-                self.empty_source()
+                self.empty_source(),
             ) for source in source_cursor
         )
         client.close()
