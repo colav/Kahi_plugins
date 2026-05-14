@@ -1,5 +1,6 @@
 from joblib import Parallel, delayed
-
+from datetime import datetime
+from pymongo import UpdateOne
 
 PARALLEL_SAFE_COLLECTIONS = {"sources", "person", "affiliations"}
 WORKS_DATES_CHUNK_BUCKETS = 16
@@ -102,6 +103,88 @@ def _run_chunked_aggregate_by_id(
         for range_info in ranges
     )
 
+def _compute_h_index(citations: list[int]) -> int:
+    """
+    Compute the h-index given a list of citation counts.
+    """
+    sorted_cits = sorted((c for c in citations if c is not None), reverse=True)
+    return sum(1 for i, c in enumerate(sorted_cits, 1) if c >= i)
+
+def _build_citations_pipeline(local_field: str, h5_start_year: int, h5_end_year: int) -> list:
+    """
+    Build the aggregation pipeline to compute h-index and h5-index.
+    """
+    return [
+        {
+            "$lookup": {
+                "from": "works",
+                "localField": "_id",
+                "foreignField": local_field,
+                "as": "work",
+                "pipeline": [
+                    {
+                        "$project": {
+                            "_id": 0,
+                            "year_published": 1,
+                            "citations_count_openalex": 1
+                        }
+                    }
+                ]
+            }
+        },
+        {
+            "$project": {
+                "_id": 1,
+                "all_citations": "$work.citations_count_openalex",
+                "h5_citations": {
+                    "$map": {
+                        "input": {
+                            "$filter": {
+                                "input": "$work",
+                                "as": "w",
+                                "cond": {
+                                    "$and": [
+                                        {"$gte": ["$$w.year_published", h5_start_year]},
+                                        {"$lte": ["$$w.year_published", h5_end_year]}
+                                    ]
+                                }
+                            }
+                        },
+                        "as": "w",
+                        "in": "$$w.citations_count_openalex"
+                    }
+                }
+            }
+        }
+    ]
+
+def _set_h_index_metrics(collection, into_collection_name, local_field) -> None:
+    """
+    Set h-index and h5-index for documents in the collection based on citations.
+    """
+    current_year = datetime.now().year
+    h5_start_year = current_year - 5
+    h5_end_year = current_year - 1
+
+    pipeline = _build_citations_pipeline(local_field, h5_start_year, h5_end_year)
+    cursor = collection.aggregate(pipeline, allowDiskUse=True)
+
+    bulk_ops = []
+    for doc in cursor:
+        h_index = _compute_h_index(doc.get("all_citations") or [])
+        h5_index = _compute_h_index(doc.get("h5_citations") or [])
+        bulk_ops.append(
+            UpdateOne(
+                {"_id": doc["_id"]},
+                {"$set": {"h_index": h_index, "h5_index": h5_index}}
+            )
+        )
+        if len(bulk_ops) >= 500:
+            collection.database[into_collection_name].bulk_write(bulk_ops, ordered=False)
+            bulk_ops = []
+
+    if bulk_ops:
+        collection.database[into_collection_name].bulk_write(bulk_ops, ordered=False)
 
 def set_works_authors_affiliations_country(collection) -> None:
     """
@@ -2577,6 +2660,21 @@ def normalize_source_topics(collection) -> None:
         allowDiskUse=True,
     )
 
+def set_person_h_index_metrics(collection) -> None:
+    target = collection.database["person"] if collection.name in ("works", "person") else collection
+    _set_h_index_metrics(
+        collection=target,
+        into_collection_name="person",
+        local_field="authors.id"
+    )
+
+def set_affiliations_h_index_metrics(collection) -> None:
+    target = collection.database["affiliations"] if collection.name in ("works", "affiliations") else collection
+    _set_h_index_metrics(
+        collection=target,
+        into_collection_name="affiliations",
+        local_field="authors.affiliations.id"
+    )
 
 DENORMALIZATION_PIPELINES = {
     "works": [
@@ -2608,9 +2706,11 @@ DENORMALIZATION_PIPELINES = {
     "person": [
         set_person_affiliations_relations,
         clean_person_empty_affiliations_array,
+        set_person_h_index_metrics,
     ],
     "affiliations": [
         set_affiliations_citations_count_openalex,
+        set_affiliations_h_index_metrics,
     ],
 }
 
