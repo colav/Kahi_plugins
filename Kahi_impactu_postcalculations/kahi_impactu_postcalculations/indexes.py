@@ -57,5 +57,5 @@ def create_indexes(db):
     db["sources"].create_index({"licenses.type": 1})
     db["sources"].create_index({"topics.id": 1})
     # H-index and H5-index calculations require these indexes to be efficient
-    db["works"].create_index({ "authors.id": 1, "year_published": 1, "citations_count_openalex": 1 })
-    db["works"].create_index({ "authors.affiliations.id": 1, "year_published": 1, "citations_count_openalex": 1 });
+    db["works"].create_index({"authors.id": 1, "year_published": 1, "citations_count_openalex": 1})
+    db["works"].create_index({"authors.affiliations.id": 1, "year_published": 1, "citations_count_openalex": 1})

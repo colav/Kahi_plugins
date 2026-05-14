@@ -103,12 +103,14 @@ def _run_chunked_aggregate_by_id(
         for range_info in ranges
     )
 
+
 def _compute_h_index(citations: list[int]) -> int:
     """
     Compute the h-index given a list of citation counts.
     """
     sorted_cits = sorted((c for c in citations if c is not None), reverse=True)
     return sum(1 for i, c in enumerate(sorted_cits, 1) if c >= i)
+
 
 def _build_citations_pipeline(local_field: str, h5_start_year: int, h5_end_year: int) -> list:
     """
@@ -158,6 +160,7 @@ def _build_citations_pipeline(local_field: str, h5_start_year: int, h5_end_year:
         }
     ]
 
+
 def _set_h_index_metrics(collection, into_collection_name, local_field) -> None:
     """
     Set h-index and h5-index for documents in the collection based on citations.
@@ -185,6 +188,7 @@ def _set_h_index_metrics(collection, into_collection_name, local_field) -> None:
 
     if bulk_ops:
         collection.database[into_collection_name].bulk_write(bulk_ops, ordered=False)
+
 
 def set_works_authors_affiliations_country(collection) -> None:
     """
@@ -2660,6 +2664,7 @@ def normalize_source_topics(collection) -> None:
         allowDiskUse=True,
     )
 
+
 def set_person_h_index_metrics(collection) -> None:
     target = collection.database["person"] if collection.name in ("works", "person") else collection
     _set_h_index_metrics(
@@ -2668,6 +2673,7 @@ def set_person_h_index_metrics(collection) -> None:
         local_field="authors.id"
     )
 
+
 def set_affiliations_h_index_metrics(collection) -> None:
     target = collection.database["affiliations"] if collection.name in ("works", "affiliations") else collection
     _set_h_index_metrics(
@@ -2675,6 +2681,7 @@ def set_affiliations_h_index_metrics(collection) -> None:
         into_collection_name="affiliations",
         local_field="authors.affiliations.id"
     )
+
 
 DENORMALIZATION_PIPELINES = {
     "works": [
