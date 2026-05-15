@@ -1,14 +1,15 @@
 import sys
 
 
-def process_person_id(client, person_col, works_col, person, source):
+def process_person_id(client, person_col, product_cols, person, source):
     """
     Process the person ID based on the source and update the MongoDB collection.
     Parameters:
     ---------
     client: MongoDB client
     person_col: MongoDB collection for person
-    works_col: MongoDB collection for works
+    product_cols: list
+        MongoDB collections containing products with authors.id references
     person: dict
         The person document to process
     source: str
@@ -57,9 +58,13 @@ def process_person_id(client, person_col, works_col, person, source):
                 f"Error insertando nuevo _id en person: {e}\n {source} {opid} {str(original_id)}")
             return pid
 
-    # Actualizar works.authors.id
-    works_col.update_many(
-        {"authors.id": original_id},
-        {"$set": {"authors.$[author].id": pid}},
-        array_filters=[{"author.id": original_id}],
-    )
+    if not isinstance(product_cols, (list, tuple)):
+        product_cols = [product_cols]
+
+    # Actualizar products.authors.id
+    for product_col in product_cols:
+        product_col.update_many(
+            {"authors.id": original_id},
+            {"$set": {"authors.$[author].id": pid}},
+            array_filters=[{"author.id": original_id}],
+        )

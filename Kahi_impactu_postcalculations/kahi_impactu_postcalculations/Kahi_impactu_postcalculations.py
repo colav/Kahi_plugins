@@ -134,6 +134,12 @@ class Kahi_impactu_postcalculations(KahiBase):
 
     def process_person_ids(self, client):
         db = client[self.database_name]
+        product_cols = [
+            db["works"],
+            db["patents"],
+            db["events"],
+            db["projects"],
+        ]
         for source in self.person_priority:
             print("INFO: PERSISTENT ID SOURCE  ", source)
             # Paso 1: Buscar todos los documentos 'person' (con o sin COD_RH)
@@ -148,7 +154,7 @@ class Kahi_impactu_postcalculations(KahiBase):
                     {"_id_old": {"$exists": False}, "external_ids.source": source})
 
             Parallel(n_jobs=self.n_jobs, backend="threading", verbose=10)(
-                delayed(process_person_id)(client, db["person"], db["works"], person, source) for person in cursor
+                delayed(process_person_id)(client, db["person"], product_cols, person, source) for person in cursor
             )
 
     def run(self):
@@ -178,6 +184,9 @@ class Kahi_impactu_postcalculations(KahiBase):
 
         print(f"INFO: Creating indexes in db {self.database_name} for backend")
         db["works"].create_index("authors.id")
+        db["patents"].create_index("authors.id")
+        db["events"].create_index("authors.id")
+        db["projects"].create_index("authors.id")
         create_indexes(db)
 
         print("INFO: Setting up topics for works")
