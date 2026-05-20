@@ -84,7 +84,17 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             return "unidades tecnológicas santander"
         elif "popayán" in name:
             return "popayán"
-        elif "tecnológico metropolitano" in name or "tecnologico metropolitano" in name or "institucion universitaria itm" in name or "institución universitaria itm" in name:
+        elif any(
+            value in name
+            for value in [
+                "tecnológico metropolitano",
+                "tecnologico metropolitano",
+                "institucion universitaria itm",
+                "institución universitaria itm",
+                "institucion universitaria - itm",
+                "institución universitaria - itm",
+            ]
+        ):
             return "instituto tecnologico metropolitano"
         elif "cesmag" in name:
             return "estudios superiores maría goretti"
