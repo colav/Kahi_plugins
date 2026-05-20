@@ -1,0 +1,2 @@
+recursive-include kahi_snies_affiliations/ *.py
+recursive-include kahi_snies_affiliations/ *.*
