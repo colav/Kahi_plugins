@@ -6,6 +6,7 @@ from kahi.KahiBase import KahiBase
 from unidecode import unidecode
 from thefuzz import fuzz
 from time import time
+import re
 
 
 class Kahi_minciencias_opendata_affiliations(KahiBase):
@@ -49,6 +50,7 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             "verbose"] if "verbose" in config["minciencias_opendata_affiliations"].keys() else 0
 
         self.inserted_cod_grupo = []
+        self.institution_match_cache = {}
 
         for reg in self.collection.find({"types.type": "group"}):
             for ext in reg["external_ids"]:
@@ -82,24 +84,165 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             return "unidades tecnológicas santander"
         elif "popayán" in name:
             return "popayán"
-        elif "tecnológico metropolitano" in name:
-            return "tecnológico metropolitano"
+        elif any(
+            value in name
+            for value in [
+                "tecnológico metropolitano",
+                "tecnologico metropolitano",
+                "institucion universitaria itm",
+                "institución universitaria itm",
+                "institucion universitaria - itm",
+                "institución universitaria - itm",
+            ]
+        ):
+            return "instituto tecnologico metropolitano"
         elif "cesmag" in name:
             return "estudios superiores maría goretti"
         elif "distrital francisco" in name:
             return "distrital francisco josé"
-        elif "santander" in name and "industrial" in name:
-            return "universidad industrial santander"
-        elif "santander" in name and "industrial" not in name and "francisco" not in name and "paula" not in name:
-            return "universidad santander"
-        elif "francisco" in name and "paula" in name and "santander" in name:
+        elif name in ["universidad industrial de santander", "uis"]:
+            return "universidad industrial de santander"
+        elif name in ["universidad de santander", "udes"]:
+            return "universidad de santander"
+        elif "universidad" in name and "francisco" in name and "paula" in name and "santander" in name:
             return "universidad francisco paula santander"
         elif "magdalena" in name:
             return "magdalena"
         elif "corporacion universitaria iberoamericana" == name:
             return "iberoamericana"
+        elif name in ["corporacion universitaria adventista", "corporación universitaria adventista"]:
+            return "colombia adventist university"
+        elif name in ["fundacion hospitalaria san vicente de paul", "fundación hospitalaria san vicente de paúl"]:
+            return "hospital universitario de san vicente fundacion"
+        elif name in ["alcaldia de medellin", "alcaldía de medellín"]:
+            return "municipality of medellin"
         else:
             return name
+
+    def normalize_institution_name(self, name):
+        name = unidecode(name.lower())
+        name = name.replace("(colombia)", "").replace("bogotá", "")
+        name = re.sub(r"[^\w\s]", " ", name)
+        name = re.sub(r"\s+", " ", name).strip()
+        return name
+
+    def normalize_inst_aval(self, name):
+        name = name.lower().strip()
+        name = self.rename_institution(name)
+        return self.normalize_institution_name(name)
+
+    def get_institution_name(self, institution):
+        name = ""
+        for n in institution.get("names", []):
+            if n.get("lang") == "es" and n.get("name"):
+                return n["name"]
+            elif n.get("lang") == "en" and n.get("name") and not name:
+                name = n["name"]
+        if not name and institution.get("names"):
+            name = institution["names"][0].get("name", "")
+        return name
+
+    def institution_candidate_names(self, institution):
+        names = []
+        for item in institution.get("names", []):
+            name = item.get("name")
+            if name and name not in names:
+                names.append(name)
+        return names
+
+    def get_institution_candidates(self, inst_aval):
+        projection = {
+            "names": 1,
+            "types": 1,
+            "addresses": 1,
+            "score": {"$meta": "textScore"}
+        }
+        base_query = {
+            "addresses.country": "Colombia",
+            "types.type": {"$ne": "group"}
+        }
+        candidates = []
+        seen = set()
+        for search in ['"{}"'.format(inst_aval), inst_aval]:
+            query = base_query.copy()
+            query["$text"] = {"$search": search}
+            cursor = self.collection.find(query, projection).sort(
+                [("score", {"$meta": "textScore"})]).limit(100)
+            for candidate in cursor:
+                if candidate["_id"] not in seen:
+                    candidates.append(candidate)
+                    seen.add(candidate["_id"])
+        return candidates
+
+    def institution_match_score(self, institution, inst_aval):
+        best = None
+        stopwords = {"de", "del", "la", "las", "los", "el", "y", "e", "en", "para", "por", "a"}
+        for name in self.institution_candidate_names(institution):
+            name_mod = self.normalize_institution_name(name)
+            compare_inst_aval = inst_aval
+            inst_tokens = set(compare_inst_aval.split())
+
+            name_tokens = set(name_mod.split())
+            token_overlap = len(inst_tokens & name_tokens) / max(
+                1, min(len(inst_tokens), len(name_tokens)))
+            distinctive_inst_tokens = inst_tokens - stopwords
+            distinctive_name_tokens = name_tokens - stopwords
+            distinctive_token_overlap = len(distinctive_inst_tokens & distinctive_name_tokens) / max(
+                1, min(len(distinctive_inst_tokens), len(distinctive_name_tokens)))
+            scores = {
+                "ratio": fuzz.ratio(name_mod, compare_inst_aval),
+                "token_sort_ratio": fuzz.token_sort_ratio(name_mod, compare_inst_aval),
+                "token_set_ratio": fuzz.token_set_ratio(name_mod, compare_inst_aval),
+                "wratio": fuzz.WRatio(name_mod, compare_inst_aval),
+            }
+            score = max(scores.values())
+            current = {
+                "name": name,
+                "normalized_name": name_mod,
+                "score": score,
+                "scores": scores,
+                "token_overlap": token_overlap,
+                "distinctive_token_overlap": distinctive_token_overlap,
+                "distinctive_name_token_count": len(distinctive_name_tokens)
+            }
+            if best is None or current["score"] > best["score"]:
+                best = current
+        return best
+
+    def find_matching_institution(self, inst_aval):
+        inst_aval = self.normalize_inst_aval(inst_aval)
+        if inst_aval in self.institution_match_cache:
+            return self.institution_match_cache[inst_aval]
+        candidates = self.get_institution_candidates(inst_aval)
+        matches = []
+        for candidate in candidates:
+            match = self.institution_match_score(candidate, inst_aval)
+            if not match:
+                continue
+            scores = match["scores"]
+            exact_match = match["normalized_name"] == inst_aval
+            high_direct_score = scores["ratio"] >= 92 or scores["token_sort_ratio"] >= 95
+            token_subset_match = all([
+                scores["token_set_ratio"] >= 92,
+                match["distinctive_token_overlap"] >= 0.75,
+                match["distinctive_name_token_count"] >= 3,
+            ])
+            strong_token_set_match = all([
+                scores["token_set_ratio"] >= 98,
+                match["distinctive_token_overlap"] >= 0.75,
+            ])
+            strong_weighted_match = all([
+                scores["wratio"] >= 94,
+                match["distinctive_token_overlap"] >= 0.75,
+            ])
+            if exact_match or high_direct_score or token_subset_match or strong_token_set_match or strong_weighted_match:
+                matches.append((candidate, match))
+        if not matches:
+            self.institution_match_cache[inst_aval] = None
+            return None
+        matches.sort(key=lambda item: item[1]["score"], reverse=True)
+        self.institution_match_cache[inst_aval] = matches[0][0]
+        return self.institution_match_cache[inst_aval]
 
     def process_one(self, reg, collection, empty_affiliation, verbose):
         if "cod_grupo_gr" not in reg.keys() or not reg["cod_grupo_gr"]:
@@ -185,63 +328,9 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             # START AVAL INSTITUTION SECTION
             if "inst_aval" in reg.keys():
                 for inst_aval in reg["inst_aval"].split("|"):
-                    inst_aval = inst_aval.lower().strip()
-
-                    inst_aval = self.rename_institution(inst_aval)
-
-                    inst_aval = unidecode(inst_aval)
-                    institutions = self.collection.find(
-                        {"$text": {"$search": inst_aval}, "addresses.country": "Colombia"}).limit(50)
-                    institution = ""
-                    score = 10
-                    for inst in institutions:
-                        method = ""
-                        name = ""
-                        for n in inst["names"]:
-                            if n["lang"] == "es":
-                                name = n["name"]
-                                break
-                            elif n["lang"] == "en":
-                                name = n["name"]
-                        name_mod = name.lower().replace("(colombia)", "").replace(
-                            "(", "").replace(")", "").replace("bogotá", "")
-                        # name_mod=name_mod.replace("universidad","").replace("de","").replace("del","").replace("los","").strip()
-                        name_mod = unidecode(name_mod)
-
-                        if "santander" in name_mod and "industrial" in name_mod:
-                            name_mod = "industrial santander"
-                        if "santander" in name_mod and "industrial" not in name_mod:
-                            name_mod = "universidad santander"
-                        if "francisco" in name_mod and "paula" in name_mod and "santander" in name_mod:
-                            inst_aval = "francisco paula"
-                        score = fuzz.ratio(name_mod, inst_aval)
-                        if score > 90:
-                            method = "ratio"
-                            institution = inst
-                            break
-                        elif score > 39:
-                            score = fuzz.partial_ratio(name_mod, inst_aval)
-                            # print("Partial ratio score: {}. {} -against- {}".format(score,name,reg["INST_AVAL"]))
-                            if score > 93:
-                                method = "partial ratio"
-                                institution = inst
-                                break
-                            elif score > 55:
-                                score = fuzz.token_set_ratio(name_mod, inst_aval)
-                                # print("Token set ratio score: {}. {} -against- {}".format(score,name,reg["INST_AVAL"]))
-                                if score > 98:
-                                    method = "token set ratio"
-                                    # print("Token set ratio score: {}. {} -against- {}".format(score,name,inst_aval))
-                                    institution = inst
-                                    break
-                    if institution != "":
-                        name = ""
-                        for n in inst["names"]:
-                            if n["lang"] == "es":
-                                name = n["name"]
-                                break
-                            elif n["lang"] == "en":
-                                name = n["name"]
+                    institution = self.find_matching_institution(inst_aval)
+                    if institution:
+                        name = self.get_institution_name(institution)
                         entry["relations"].append(
                             {"types": institution["types"], "id": institution["_id"], "name": name})
                         entry["addresses"].append({
@@ -254,9 +343,6 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
                             "country_code": institution["addresses"][0].get("country_code", None)
                         })
                     else:
-                        if score == 98 and method == "token set ratio":
-                            print(
-                                "(LAST) {} score: {}. {} -against- {}".format(method, score, name, inst_aval))
                         entry["addresses"].append({
                             "lat": "",
                             "lng": "",
