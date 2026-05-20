@@ -84,6 +84,7 @@ def snies_title(value):
     name = title_case(strip_snies_acronyms(clean_text(value))[0])
     name_map = {
         "Colegio Mayor de Nuestra Señora del Rosario": "Universidad del Rosario",
+        "Universidad Fucs": "Universidad FUCS",
     }
     return name_map.get(name, name)
 
