@@ -4,6 +4,56 @@ from time import time
 from joblib import Parallel, delayed
 
 
+def append_unique(items, item):
+    if item not in items:
+        items.append(item)
+
+
+def add_ror_names(inst, entry):
+    for item in inst.get("names", []):
+        name = item.get("value")
+        name_types = item.get("types", [])
+        lang = item.get("lang") or ""
+        if not name:
+            continue
+        if "acronym" in name_types:
+            append_unique(entry["abbreviations"], name)
+        elif "alias" in name_types:
+            append_unique(entry["aliases"], name)
+        elif "label" in name_types or "ror_display" in name_types:
+            append_unique(entry["names"], {"source": "ror", "name": name, "lang": lang})
+
+
+def add_ror_addresses(inst, entry):
+    for location in inst.get("locations", []):
+        details = location.get("geonames_details", {})
+        entry["addresses"].append({
+            "lat": details.get("lat", None),
+            "lng": details.get("lng", None),
+            "postcode": "",
+            "state": details.get("country_subdivision_name", ""),
+            "city": details.get("name", ""),
+            "country": details.get("country_name", ""),
+            "country_code": details.get("country_code", ""),
+        })
+
+
+def add_ror_external_urls(inst, entry):
+    for link in inst.get("links", []):
+        source = "wikipedia" if link.get("type") == "wikipedia" else "site"
+        url = link.get("value", "")
+        if url:
+            append_unique(entry["external_urls"], {"source": source, "url": url})
+
+
+def add_ror_external_ids(inst, entry):
+    for ext in inst.get("external_ids", []):
+        values = ext.get("all", [])
+        ext_id = ext.get("preferred") or (values[0] if values else "")
+        if ext_id:
+            append_unique(entry["external_ids"], {"provenance": "ror", "source": ext.get("type", "").lower(), "id": ext_id})
+
+
 def process_one(inst, collection, empty_affiliations):
     found_entry = collection.find_one({"external_ids.id": inst["id"]})
     if found_entry:
@@ -12,10 +62,7 @@ def process_one(inst, collection, empty_affiliations):
     else:
         entry = empty_affiliations.copy()
         entry["updated"].append({"time": int(time()), "source": "ror"})
-        entry["names"].append(
-            {"source": "ror", "name": inst["name"], "lang": "en"})
-        entry["aliases"].extend(inst["aliases"])
-        entry["abbreviations"].extend(inst["acronyms"])
+        add_ror_names(inst, entry)
         entry["year_established"] = int(
             inst["established"]) if inst["established"] else -1
         entry["status"] = [inst["status"]]
@@ -25,41 +72,14 @@ def process_one(inst, collection, empty_affiliations):
             entry["types"].append({"source": "ror", "type": typ})
 
         # addresses
-        for add in inst["addresses"]:
-            add_entry = {
-                "lat": add["lat"],
-                "lng": add["lng"],
-                "postcode": add["postcode"] if add["postcode"] else "",
-                "state": add["state"],
-                "city": add["city"],
-                "country": "",
-                "country_code": "",
-            }
-            entry["addresses"].append(add_entry)
-        entry["addresses"][0]["country"] = inst["country"]["country_name"]
-        entry["addresses"][0]["country_code"] = inst["country"]["country_code"]
+        add_ror_addresses(inst, entry)
 
         # external_urls
-        if inst["links"]:
-            for link in inst["links"]:
-                url_entry = {"source": "site", "url": inst["links"][0]}
-                if url_entry not in entry["external_urls"]:
-                    entry["external_urls"].append(url_entry)
-        if inst["wikipedia_url"]:
-            entry["external_urls"].append(
-                {"source": "wikipedia", "url": inst["wikipedia_url"]})
+        add_ror_external_urls(inst, entry)
 
         # external_ids
-        if inst["external_ids"]:
-            for key, ext in inst["external_ids"].items():
-                if isinstance(ext["all"], list):
-                    alll = ext["all"][0] if len(
-                        ext["all"]) > 0 else ext["all"]
-                    ext_entry = {"source": key.lower(), "id": alll}
-                    if ext_entry not in entry["external_ids"]:
-                        entry["external_ids"].append(ext_entry)
-        entry["external_ids"].append(
-            {"source": "ror", "id": inst["id"]})
+        add_ror_external_ids(inst, entry)
+        append_unique(entry["external_ids"], {"provenance": "ror", "id": inst["id"], "source": "ror"})
         entry["_id"] = inst["id"].split("/")[-1]
         collection.insert_one(entry)
 
