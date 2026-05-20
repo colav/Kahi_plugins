@@ -84,8 +84,8 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             return "unidades tecnológicas santander"
         elif "popayán" in name:
             return "popayán"
-        elif "tecnológico metropolitano" in name:
-            return "tecnológico metropolitano"
+        elif "tecnológico metropolitano" in name or "tecnologico metropolitano" in name or "institucion universitaria itm" in name or "institución universitaria itm" in name:
+            return "instituto tecnologico metropolitano"
         elif "cesmag" in name:
             return "estudios superiores maría goretti"
         elif "distrital francisco" in name:
@@ -100,6 +100,12 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             return "magdalena"
         elif "corporacion universitaria iberoamericana" == name:
             return "iberoamericana"
+        elif name in ["corporacion universitaria adventista", "corporación universitaria adventista"]:
+            return "colombia adventist university"
+        elif name in ["fundacion hospitalaria san vicente de paul", "fundación hospitalaria san vicente de paúl"]:
+            return "hospital universitario de san vicente fundacion"
+        elif name in ["alcaldia de medellin", "alcaldía de medellín"]:
+            return "municipality of medellin"
         else:
             return name
 
