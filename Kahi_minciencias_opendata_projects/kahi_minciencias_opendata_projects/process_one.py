@@ -53,6 +53,50 @@ def get_units_affiations(db, author_db, affiliations):
     return units
 
 
+def get_cod_rh(author):
+    for ext in author.get("external_ids", []):
+        ext_id = ext.get("id", {})
+        if isinstance(ext_id, dict) and ext_id.get("COD_RH"):
+            return ext_id["COD_RH"]
+    return None
+
+
+def find_author_by_cod_rh(db, cod_rh):
+    if not cod_rh:
+        return None
+    author_db = db["person"].find_one({"external_ids.id": {"COD_RH": cod_rh}})
+    if not author_db:
+        author_db = db["person"].find_one({"external_ids.id.COD_RH": cod_rh})
+    return author_db
+
+
+def reconcile_author_id(collection, colav_reg, author_db):
+    if not author_db:
+        return False
+
+    valid_ids = [author_db["_id"]]
+    if author_db.get("_id_old"):
+        valid_ids.append(author_db["_id_old"])
+
+    changed = False
+    for author in colav_reg.get("authors", []):
+        if author.get("id") not in valid_ids:
+            continue
+        if author.get("id") != author_db["_id"]:
+            author["id"] = author_db["_id"]
+            changed = True
+        if author.get("full_name") != author_db.get("full_name"):
+            author["full_name"] = author_db.get("full_name", author.get("full_name", ""))
+            changed = True
+
+    if changed:
+        collection.update_one(
+            {"_id": colav_reg["_id"]},
+            {"$set": {"authors": colav_reg["authors"]}},
+        )
+    return changed
+
+
 def process_one_update(openadata_reg, colav_reg, db, collection, empty_project, verbose=0):
     """
     Method to update a register in the kahi database from minciencias opendata database if it is found.
@@ -76,10 +120,15 @@ def process_one_update(openadata_reg, colav_reg, db, collection, empty_project, 
     """
     entry = parse_minciencias_opendata(
         openadata_reg, empty_project.copy(), verbose=verbose)
+    minciencias_author = ""
+    if "authors" in entry.keys():
+        if entry["authors"]:
+            minciencias_author = entry["authors"][0]
+    author_db = find_author_by_cod_rh(db, get_cod_rh(minciencias_author)) if minciencias_author else None
     # updated
     for upd in colav_reg["updated"]:
         if upd["source"] == "minciencias":
-            # autor y cod prod
+            reconcile_author_id(collection, colav_reg, author_db)
             return None  # Register already on db
     colav_reg["updated"].append(
         {"source": "minciencias", "time": int(time())})
@@ -99,18 +148,12 @@ def process_one_update(openadata_reg, colav_reg, db, collection, empty_project, 
     for typ in entry["types"]:
         if typ["source"] not in types:
             colav_reg["types"].append(typ)
-    # authors
-    minciencias_author = ""
-    if "authors" in entry.keys():
-        if entry["authors"]:
-            minciencias_author = entry["authors"][0]
-    author_db = None
     if minciencias_author:
         author_found = False
         if "external_ids" in minciencias_author.keys() and minciencias_author["affiliations"]:
             for ext in minciencias_author["external_ids"]:
-                author_db = db["person"].find_one(
-                    {"external_ids.id.COD_RH": ext["id"]})
+                cod_rh = ext["id"].get("COD_RH") if isinstance(ext["id"], dict) else ext["id"]
+                author_db = find_author_by_cod_rh(db, cod_rh)
                 if not author_db:
                     print(
                         f"WARNING: author not found in db with external id {ext['id']}")
