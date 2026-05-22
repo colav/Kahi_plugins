@@ -12,6 +12,12 @@ import re
 class Kahi_minciencias_opendata_affiliations(KahiBase):
 
     config = {}
+    missing_group_names = {
+        "COL0014761": "Política, Género y Democracia",
+        "COL0058004": "Estudios Hobbesianos",
+        "COL0095339": "Grupo de Investigación Tlamatinime sobre Ontología Latinoamericana",
+        "COL0011438": "Resiliencia y Saneamiento RESA",
+    }
 
     def __init__(self, config):
         self.config = config
@@ -244,6 +250,11 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
         self.institution_match_cache[inst_aval] = matches[0][0]
         return self.institution_match_cache[inst_aval]
 
+    def group_name(self, reg):
+        if "nme_grupo_gr" in reg.keys():
+            return reg["nme_grupo_gr"]
+        return self.missing_group_names.get(reg["cod_grupo_gr"], "")
+
     def process_one(self, reg, collection, empty_affiliation, verbose):
         if "cod_grupo_gr" not in reg.keys() or not reg["cod_grupo_gr"]:
             return
@@ -297,7 +308,7 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             entry["updated"].append(
                 {"source": "minciencias", "time": int(time())})
             entry["names"].append(
-                {"source": "minciencias", "lang": "es", "name": reg["nme_grupo_gr"] if "nme_grupo_gr" in reg.keys() else ""})
+                {"source": "minciencias", "lang": "es", "name": self.group_name(reg)})
             entry["types"].append({"source": "minciencias", "type": "group"})
             year_established = ""
             date_established = check_date_format(reg["fcreacion_gr"]) if "fcreacion_gr" in reg.keys() else ""
