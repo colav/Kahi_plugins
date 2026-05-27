@@ -25,12 +25,51 @@ class Kahi_scimago_sources(KahiBase):
 
         self.collection.create_index("external_ids.id")
 
-        self.scimago_file_paths = self.config["scimago_sources"]["file_path"]
+        self.scimago_config = self.config["scimago_sources"]
+        self.scimago_file_paths = self.scimago_config.get("file_path")
+        self.scimago_collection = None
+
+        if not self.scimago_file_paths:
+            self.scimago_client = MongoClient(self.scimago_config["database_url"])
+            database_name = self.scimago_config["database_name"]
+            collection_name = self.scimago_config["collection_name"]
+
+            if database_name not in self.scimago_client.list_database_names():
+                raise Exception(
+                    f"Database {database_name} missing from {self.scimago_config['database_url']}"
+                )
+
+            self.scimago_db = self.scimago_client[database_name]
+            if collection_name not in self.scimago_db.list_collection_names():
+                raise Exception(
+                    f"Collection {database_name}.{collection_name} missing from {database_name}"
+                )
+
+            self.scimago_collection = self.scimago_db[collection_name]
+
+        self.verbose = self.scimago_config.get("verbose", 0)
 
         self.already_in_db = []
 
+    def _get_value(self, reg, key, default=None):
+        if hasattr(reg, "get"):
+            value = reg.get(key, default)
+        else:
+            value = reg[key] if key in reg else default
+        return default if value is None else value
+
     def _normalize_spaces(self, s: str) -> str:
         return " ".join(s.strip().split())
+
+    def _iter_issns(self, issn_list):
+        if not issn_list:
+            return []
+        issns = []
+        for issn in str(issn_list).split(","):
+            issn = issn.strip()
+            if len(issn) >= 8:
+                issns.append(issn)
+        return issns
 
     def parse_scimago_categories(self, raw: str):
         """
@@ -80,9 +119,9 @@ class Kahi_scimago_sources(KahiBase):
 
         from_ts = int(self.scimago_start_ts)
         to_ts = int(self.scimago_end_ts)
-        order_val = int(sjr["Rank"]) if sjr.get("Rank") else None
+        order_val = int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None
 
-        cats = self.parse_scimago_categories(sjr.get("Categories", ""))
+        cats = self.parse_scimago_categories(self._get_value(sjr, "Categories", ""))
 
         existing = set()
         for r in entry["ranking"]:
@@ -113,11 +152,14 @@ class Kahi_scimago_sources(KahiBase):
             entry["updated"].append(
                 {"source": "scimago", "time": int(time())})
 
+        found_scimago_name = False
         for name in entry["names"]:
-            if name == sjr["Title"]:
-                if name["source"] != "scimago":
-                    entry["names"].append(
-                        {"lang": "en", "name": sjr["Title"], "source": "scimago"})
+            if name.get("name") == self._get_value(sjr, "Title") and name.get("source") == "scimago":
+                found_scimago_name = True
+                break
+        if not found_scimago_name:
+            entry["names"].append(
+                {"lang": "en", "name": self._get_value(sjr, "Title"), "source": "scimago"})
         found_scimagoid = False
         for ext in entry["external_ids"]:
             if ext["source"] == "scimago":
@@ -125,17 +167,17 @@ class Kahi_scimago_sources(KahiBase):
                 break
         if not found_scimagoid:
             entry["external_ids"].append(
-                {"source": "scimago", "id": str(sjr["Sourceid"])})
+                {"source": "scimago", "id": str(self._get_value(sjr, "Sourceid"))})
         found_scimago_type = False
         for typ in entry["types"]:
             if typ["source"] == "scimago":
                 found_scimago_type = True
                 break
         if not found_scimago_type:
-            entry["types"].append({"source": "scimago", "type": sjr["Type"]})
+            entry["types"].append({"source": "scimago", "type": self._get_value(sjr, "Type")})
 
         ids = [extid["id"] for extid in entry["external_ids"]]
-        for extid in sjr["Issn"].split(","):
+        for extid in self._iter_issns(self._get_value(sjr, "Issn")):
             extid = extid.strip()
             extid = extid[:4] + "-" + extid[4:]
             if extid not in ids:
@@ -148,45 +190,45 @@ class Kahi_scimago_sources(KahiBase):
             entry["ranking"].append({
                 "to_date": self.scimago_end_ts,
                 "from_date": self.scimago_start_ts,
-                "rank": sjr["SJR Best Quartile"],
-                "order": int(sjr["Rank"]) if sjr["Rank"] else None,
+                "rank": self._get_value(sjr, "SJR Best Quartile"),
+                "order": int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None,
                 "source": "scimago Best Quartile"
             })
         if ("scimago hindex", self.scimago_start_ts, self.scimago_end_ts) not in rankings:
             entry["ranking"].append({
                 "to_date": self.scimago_end_ts,
                 "from_date": self.scimago_start_ts,
-                "rank": int(sjr["H index"]),
-                "order": int(sjr["Rank"]) if sjr["Rank"] else None,
+                "rank": int(self._get_value(sjr, "H index")),
+                "order": int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None,
                 "source": "scimago hindex"
             })
-        if sjr.get("Open Access") and sjr.get("Open Access Diamond"):
+        if self._get_value(sjr, "Open Access") and self._get_value(sjr, "Open Access Diamond"):
             oa_rec = ({
                 "provenance": "scimago",
-                "is_open_access": True if sjr.get("Open Access") == "Yes" else False,
-                "open_access_diamond": True if sjr.get("Open Access Diamond") == "Yes" else False
+                "is_open_access": True if self._get_value(sjr, "Open Access") == "Yes" else False,
+                "open_access_diamond": True if self._get_value(sjr, "Open Access Diamond") == "Yes" else False
             })
             if oa_rec not in entry["open_access"]:
                 entry["open_access"].append(oa_rec)
         if ("scimago", self.scimago_start_ts, self.scimago_end_ts) not in rankings:
-            if sjr["SJR"]:
+            if self._get_value(sjr, "SJR"):
                 rank = ""
-                if isinstance(sjr["SJR"], str):
-                    rank = float(sjr["SJR"].replace(",", "."))
+                if isinstance(self._get_value(sjr, "SJR"), str):
+                    rank = float(self._get_value(sjr, "SJR").replace(",", "."))
                 else:
-                    rank = sjr["SJR"]
+                    rank = self._get_value(sjr, "SJR")
                 entry["ranking"].append({
                     "to_date": self.scimago_end_ts,
                     "from_date": self.scimago_start_ts,
                     "rank": rank,
-                    "order": int(sjr["Rank"]) if sjr["Rank"] else None,
+                    "order": int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None,
                     "source": "scimago"
                 })
         # Upsert category rankings
         self.upsert_scimago_category_rankings(sjr, entry)
 
         scimago_subjects = []
-        for cat in sjr["Categories"].split(";"):
+        for cat in self._get_value(sjr, "Categories", "").split(";"):
             cat_clean = self._normalize_spaces(cat)
             m = self._CAT_RE.match(cat_clean)
             if m:
@@ -220,12 +262,13 @@ class Kahi_scimago_sources(KahiBase):
         self.collection.update_one({"_id": _id}, {"$set": entry})
 
     def process_scimago(self):
-        for issn_list in self.scimago["Issn"].unique():
+        for sjr in self.scimago:
+            issn_list = self._get_value(sjr, "Issn")
             db_found = False
             db_reg = None
             ext_ids = []
             found_issn = None
-            for issn in issn_list.split(","):
+            for issn in self._iter_issns(issn_list):
                 issn = issn.strip()
                 extid = issn[:4] + "-" + issn[4:]
                 db_reg = self.collection.find_one({"external_ids.id": extid})
@@ -236,90 +279,87 @@ class Kahi_scimago_sources(KahiBase):
                 ext_ids.append({"source": "issn", "id": extid})
             if db_found:
                 self.already_in_db.append(found_issn)
-                sjr = self.scimago[self.scimago["Issn"] == issn_list]
-                sjr = sjr.iloc[0]
                 self.update_scimago(sjr, db_reg)
             else:
                 entry = self.empty_source()
                 entry["updated"] = [{"source": "scimago", "time": int(time())}]
-                sjr = self.scimago[self.scimago["Issn"] == issn_list]
-                sjr = sjr.iloc[0]
                 entry["types"].append(
-                    {"source": "scimago", "type": sjr["Type"]})
+                    {"source": "scimago", "type": self._get_value(sjr, "Type")})
                 entry["external_ids"] = ext_ids
                 entry["external_ids"].append(
-                    {"source": "scimago", "id": int(sjr["Sourceid"])})
+                    {"source": "scimago", "id": int(self._get_value(sjr, "Sourceid"))})
                 entry["names"] = [
-                    {"lang": "en", "name": sjr["Title"], "source": "scimago"}]
+                    {"lang": "en", "name": self._get_value(sjr, "Title"), "source": "scimago"}]
                 country = None
                 try:
-                    if sjr["Country"] == "United States":
-                        sjr["Country"] = "United States of America"
-                    elif sjr["Country"] == "United Kingdom":
-                        sjr["Country"] = "United Kingdom of Great Britain and Northern Ireland"
-                    elif sjr["Country"] == "South Korea":
-                        sjr["Country"] = "Korea, Republic of"
-                    elif sjr["Country"] == "Czech Republic":
-                        sjr["Country"] = "Czechia"
-                    elif sjr["Country"] == "Taiwan":
-                        sjr["Country"] = "Taiwan, Province of China"
-                    elif sjr["Country"] == "Iran":
-                        sjr["Country"] = "Iran, Islamic Republic of"
-                    elif sjr["Country"] == "Moldova":
-                        sjr["Country"] = "Moldova, Republic of"
-                    elif sjr["Country"] == "Venezuela":
-                        sjr["Country"] = "Venezuela, Bolivarian Republic of"
-                    elif sjr["Country"] == "Macedonia":
-                        sjr["Country"] = "North Macedonia"
-                    elif sjr["Country"] == "Palestine":
-                        sjr["Country"] = "Palestine, State of"
-                    elif sjr["Country"] == "Turkey":
-                        sjr["Country"] = "Türkiye"
-                    elif sjr["Country"] == "Vatican City State":
-                        sjr["Country"] = "Holy See"
-                    elif sjr["Country"] == "Tanzania":
-                        sjr["Country"] = "Tanzania, United Republic of"
-                    elif sjr["Country"] == "Bolivia":
-                        sjr["Country"] = "Bolivia, Plurinational State of"
+                    country_name = self._get_value(sjr, "Country")
+                    if country_name == "United States":
+                        country_name = "United States of America"
+                    elif country_name == "United Kingdom":
+                        country_name = "United Kingdom of Great Britain and Northern Ireland"
+                    elif country_name == "South Korea":
+                        country_name = "Korea, Republic of"
+                    elif country_name == "Czech Republic":
+                        country_name = "Czechia"
+                    elif country_name == "Taiwan":
+                        country_name = "Taiwan, Province of China"
+                    elif country_name == "Iran":
+                        country_name = "Iran, Islamic Republic of"
+                    elif country_name == "Moldova":
+                        country_name = "Moldova, Republic of"
+                    elif country_name == "Venezuela":
+                        country_name = "Venezuela, Bolivarian Republic of"
+                    elif country_name == "Macedonia":
+                        country_name = "North Macedonia"
+                    elif country_name == "Palestine":
+                        country_name = "Palestine, State of"
+                    elif country_name == "Turkey":
+                        country_name = "Türkiye"
+                    elif country_name == "Vatican City State":
+                        country_name = "Holy See"
+                    elif country_name == "Tanzania":
+                        country_name = "Tanzania, United Republic of"
+                    elif country_name == "Bolivia":
+                        country_name = "Bolivia, Plurinational State of"
 
                     country = iso3166.countries_by_name.get(
-                        sjr["Country"].upper()).alpha2
+                        country_name.upper()).alpha2
                 except Exception as e:
-                    print(e, sjr["Country"])
+                    print(e, self._get_value(sjr, "Country"))
                 if country:
                     entry["publisher"] = {
-                        "country_code": country, "name": sjr["Publisher"]}
+                        "country_code": country, "name": self._get_value(sjr, "Publisher")}
                 entry["ranking"].append({
-                    "to_date": 1640995199,
-                    "from_date": 1640995199,
-                    "rank": sjr["SJR Best Quartile"],
-                    "order": int(sjr["Rank"]) if sjr["Rank"] else None,
+                    "to_date": self.scimago_end_ts,
+                    "from_date": self.scimago_start_ts,
+                    "rank": self._get_value(sjr, "SJR Best Quartile"),
+                    "order": int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None,
                     "source": "scimago Best Quartile"
                 })
                 entry["ranking"].append({
-                    "to_date": 1640995199,
-                    "from_date": 1640995199,
-                    "rank": int(sjr["H index"]),
-                    "order": int(sjr["Rank"]) if sjr["Rank"] else None,
+                    "to_date": self.scimago_end_ts,
+                    "from_date": self.scimago_start_ts,
+                    "rank": int(self._get_value(sjr, "H index")),
+                    "order": int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None,
                     "source": "scimago hindex"
                 })
-                if sjr.get("Open Access") and sjr.get("Open Access Diamond"):
+                if self._get_value(sjr, "Open Access") and self._get_value(sjr, "Open Access Diamond"):
                     entry["open_access"].append({
                         "provenance": "scimago",
-                        "is_open_access": True if sjr.get("Open Access") == "Yes" else False,
-                        "open_access_diamond": True if sjr.get("Open Access Diamond") == "Yes" else False
+                        "is_open_access": True if self._get_value(sjr, "Open Access") == "Yes" else False,
+                        "open_access_diamond": True if self._get_value(sjr, "Open Access Diamond") == "Yes" else False
                     })
-                if sjr["SJR"]:
+                if self._get_value(sjr, "SJR"):
                     rank = ""
-                    if isinstance(sjr["SJR"], str):
-                        rank = float(sjr["SJR"].replace(",", "."))
+                    if isinstance(self._get_value(sjr, "SJR"), str):
+                        rank = float(self._get_value(sjr, "SJR").replace(",", "."))
                     else:
-                        rank = sjr["SJR"]
+                        rank = self._get_value(sjr, "SJR")
                     entry["ranking"].append({
-                        "to_date": 1640995199,
-                        "from_date": 1640995199,
+                        "to_date": self.scimago_end_ts,
+                        "from_date": self.scimago_start_ts,
                         "rank": rank,
-                        "order": int(sjr["Rank"]) if sjr["Rank"] else None,
+                        "order": int(self._get_value(sjr, "Rank")) if self._get_value(sjr, "Rank") else None,
                         "source": "scimago"
                     })
 
@@ -327,7 +367,7 @@ class Kahi_scimago_sources(KahiBase):
                 self.upsert_scimago_category_rankings(sjr, entry)
 
                 scimago_subjects = []
-                for cat in sjr["Categories"].split(";"):
+                for cat in self._get_value(sjr, "Categories", "").split(";"):
                     cat_clean = self._normalize_spaces(cat)
                     m = self._CAT_RE.match(cat_clean)
                     if m:
@@ -347,14 +387,28 @@ class Kahi_scimago_sources(KahiBase):
                 self.collection.insert_one(entry)
 
     def run(self):
-        for filename in self.scimago_file_paths:
-            self.scimago_year = int(
-                filename.replace(".csv", "").split(" ")[-1])
+        if self.scimago_file_paths:
+            for filename in self.scimago_file_paths:
+                self.scimago_year = int(
+                    filename.replace(".csv", "").split(" ")[-1])
+                self.scimago_start_ts = dt.strptime(
+                    "01 01 " + str(self.scimago_year), "%d %m %Y").timestamp()
+                self.scimago_end_ts = dt.strptime(
+                    "31 12 " + str(self.scimago_year), "%d %m %Y").timestamp()
+                self.scimago = read_csv(filename,
+                                        sep=";", dtype={"Sourceid": str}).to_dict("records")
+                self.process_scimago()
+            return 0
+
+        years = self.scimago_collection.distinct("year")
+        for year in sorted(years):
+            self.scimago_year = int(year)
             self.scimago_start_ts = dt.strptime(
                 "01 01 " + str(self.scimago_year), "%d %m %Y").timestamp()
             self.scimago_end_ts = dt.strptime(
                 "31 12 " + str(self.scimago_year), "%d %m %Y").timestamp()
-            self.scimago = read_csv(filename,
-                                    sep=";", dtype={"Sourceid": str})
+            self.scimago = self.scimago_collection.find(
+                {"year": self.scimago_year}, sort=[("Sourceid", 1)]
+            )
             self.process_scimago()
         return 0

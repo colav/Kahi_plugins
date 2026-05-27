@@ -1,5 +1,6 @@
 from datetime import datetime as dt
 from time import time
+import calendar
 import re
 
 from kahi.KahiBase import KahiBase
@@ -27,17 +28,37 @@ class Kahi_publindex_sources(KahiBase):
             )
 
         self.publindex_db = self.publindex_client[source_cfg["database_name"]]
-        if source_cfg["collection_name"] not in self.publindex_db.list_collection_names():
+        collection_names = self.publindex_db.list_collection_names()
+        national_collection_name = source_cfg.get(
+            "national_collection_name",
+            source_cfg.get("collection_name", "national"),
+        )
+        if national_collection_name not in collection_names and national_collection_name == "national":
+            national_collection_name = "publindex_data"
+
+        if national_collection_name not in collection_names:
             raise RuntimeError(
-                f'Collection {source_cfg["collection_name"]} was not found on database {source_cfg["database_name"]}'
+                f'Collection {national_collection_name} was not found on database {source_cfg["database_name"]}'
             )
 
-        self.publindex_collection = self.publindex_db[source_cfg["collection_name"]]
+        self.publindex_collection = self.publindex_db[national_collection_name]
+
+        international_collection_name = source_cfg.get(
+            "international_collection_name", "international")
+        self.publindex_international_collection = None
+        if international_collection_name in collection_names:
+            self.publindex_international_collection = self.publindex_db[
+                international_collection_name
+            ]
+
         self.verbose = source_cfg.get("verbose", 0)
 
         self.inserted = 0
         self.updated = 0
         self.skipped = 0
+        self.international_inserted = 0
+        self.international_updated = 0
+        self.international_skipped = 0
 
     def _normalize_text(self, value):
         if value is None:
@@ -80,6 +101,48 @@ class Kahi_publindex_sources(KahiBase):
         end = int(dt(year, 12, 31, 23, 59, 59).timestamp())
         return (start, end)
 
+    def _vigencia_bounds(self, value):
+        text = self._normalize_text(value)
+        if not text:
+            return (None, None)
+
+        month_map = {
+            "ene": 1,
+            "feb": 2,
+            "mar": 3,
+            "abr": 4,
+            "may": 5,
+            "jun": 6,
+            "jul": 7,
+            "ago": 8,
+            "sep": 9,
+            "sept": 9,
+            "oct": 10,
+            "nov": 11,
+            "dic": 12,
+        }
+        matches = re.findall(r"([A-Za-zÁÉÍÓÚáéíóúñÑ]{3,})\s+(\d{4})", text)
+        if len(matches) >= 2:
+            start_month = month_map.get(matches[0][0].lower()[:4])
+            if start_month is None:
+                start_month = month_map.get(matches[0][0].lower()[:3])
+            end_month = month_map.get(matches[-1][0].lower()[:4])
+            if end_month is None:
+                end_month = month_map.get(matches[-1][0].lower()[:3])
+            start_year = int(matches[0][1])
+            end_year = int(matches[-1][1])
+            if start_month and end_month:
+                last_day = calendar.monthrange(end_year, end_month)[1]
+                return (
+                    int(dt(start_year, start_month, 1, 0, 0, 0).timestamp()),
+                    int(dt(end_year, end_month, last_day, 23, 59, 59).timestamp()),
+                )
+
+        years = re.findall(r"\d{4}", text)
+        if years:
+            return self._year_bounds(years[-1])
+        return (None, None)
+
     def _ensure_required_fields(self, entry):
         list_fields = [
             "updated",
@@ -115,7 +178,11 @@ class Kahi_publindex_sources(KahiBase):
         if not name:
             return
         for rec in entry["names"]:
-            if rec.get("name") == name and rec.get("source") == source:
+            if rec.get("name") != name:
+                continue
+            if rec.get("source") != source:
+                continue
+            if rec.get("lang", "") == lang:
                 return
         entry["names"].append({"lang": lang, "name": name, "source": source})
 
@@ -128,14 +195,14 @@ class Kahi_publindex_sources(KahiBase):
                 return
         entry["external_ids"].append({"source": source, "id": identifier})
 
-    def _upsert_ranking(self, entry, rank_value, from_date, to_date):
+    def _upsert_ranking(self, entry, rank_value, from_date, to_date, source="publindex"):
         rank_value = self._normalize_text(rank_value)
         if not rank_value:
             return
 
         for rec in entry["ranking"]:
             if (
-                rec.get("source") == "publindex" and rec.get("from_date") == from_date and rec.get("to_date") == to_date
+                rec.get("source") == source and rec.get("from_date") == from_date and rec.get("to_date") == to_date
             ):
                 rec["rank"] = rank_value
                 rec["order"] = None
@@ -147,7 +214,7 @@ class Kahi_publindex_sources(KahiBase):
                 "to_date": to_date,
                 "rank": rank_value,
                 "order": None,
-                "source": "publindex",
+                "source": source,
             }
         )
 
@@ -240,6 +307,25 @@ class Kahi_publindex_sources(KahiBase):
             "publindex_id": self._normalize_numeric_id(reg.get("id_revista_p")),
         }
 
+    def _extract_international_identity(self, reg):
+        issns = reg.get("issns", [])
+        if isinstance(issns, str):
+            issns = re.split(r"[,;|/\\]+", issns)
+        elif not isinstance(issns, list):
+            issns = [issns]
+
+        normalized_issns = []
+        for issn in issns:
+            normalized = self._normalize_issn(issn)
+            if normalized and normalized not in normalized_issns:
+                normalized_issns.append(normalized)
+
+        return {
+            "name": self._normalize_text(reg.get("nombreRevista")),
+            "issns": normalized_issns,
+            "rank": self._normalize_text(reg.get("calificacion")),
+        }
+
     def _find_existing_source(self, reg):
         identity = self._extract_identity(reg)
         ids = [
@@ -257,13 +343,25 @@ class Kahi_publindex_sources(KahiBase):
             return self.collection.find_one({"names.name": identity["name"]})
         return None
 
+    def _find_existing_international_source(self, reg):
+        identity = self._extract_international_identity(reg)
+        if identity["issns"]:
+            doc = self.collection.find_one(
+                {"external_ids.id": {"$in": identity["issns"]}})
+            if doc:
+                return doc
+
+        if identity["name"]:
+            return self.collection.find_one({"names.name": identity["name"]})
+        return None
+
     def insert_source(self, reg):
         entry = self.empty_source()
         entry = self._ensure_required_fields(entry)
         identity = self._extract_identity(reg)
 
         self._upsert_updated(entry, "publindex")
-        self._append_name(entry, identity["name"], "es", "publindex")
+        self._append_name(entry, identity["name"], "", "publindex")
         self._append_external_id(entry, "issn", identity["issn_p"])
         self._append_external_id(entry, "issn_l", identity["issn_l"])
         self._append_external_id(entry, "publindex", identity["publindex_id"])
@@ -291,7 +389,7 @@ class Kahi_publindex_sources(KahiBase):
         identity = self._extract_identity(reg)
 
         self._upsert_updated(entry, "publindex")
-        self._append_name(entry, identity["name"], "es", "publindex")
+        self._append_name(entry, identity["name"], "", "publindex")
         self._append_external_id(entry, "issn", identity["issn_p"])
         self._append_external_id(entry, "issn_l", identity["issn_l"])
         self._append_external_id(entry, "publindex", identity["publindex_id"])
@@ -321,6 +419,53 @@ class Kahi_publindex_sources(KahiBase):
         del entry["_id"]
         self.collection.update_one({"_id": doc_id}, {"$set": entry})
         self.updated += 1
+
+    def insert_international_source(self, reg):
+        entry = self.empty_source()
+        entry = self._ensure_required_fields(entry)
+        identity = self._extract_international_identity(reg)
+
+        self._upsert_updated(entry, "publindex")
+        self._append_name(
+            entry, identity["name"], "", "publindex")
+        for issn in identity["issns"]:
+            self._append_external_id(entry, "issn", issn)
+
+        from_date, to_date = self._vigencia_bounds(reg.get("vigencia"))
+        self._upsert_ranking(
+            entry,
+            identity["rank"],
+            from_date,
+            to_date,
+            source="publindex",
+        )
+
+        self.collection.insert_one(entry)
+        self.international_inserted += 1
+
+    def update_international_source(self, reg, entry):
+        entry = self._ensure_required_fields(entry)
+        identity = self._extract_international_identity(reg)
+
+        self._upsert_updated(entry, "publindex")
+        self._append_name(
+            entry, identity["name"], "", "publindex")
+        for issn in identity["issns"]:
+            self._append_external_id(entry, "issn", issn)
+
+        from_date, to_date = self._vigencia_bounds(reg.get("vigencia"))
+        self._upsert_ranking(
+            entry,
+            identity["rank"],
+            from_date,
+            to_date,
+            source="publindex",
+        )
+
+        doc_id = entry["_id"]
+        del entry["_id"]
+        self.collection.update_one({"_id": doc_id}, {"$set": entry})
+        self.international_updated += 1
 
     def process_publindex(self):
         cursor = self.publindex_collection.find(no_cursor_timeout=True)
@@ -355,9 +500,45 @@ class Kahi_publindex_sources(KahiBase):
                 f"Publindex finished: inserted={self.inserted}, updated={self.updated}, skipped={self.skipped}"
             )
 
+    def process_publindex_international(self):
+        if self.publindex_international_collection is None:
+            if self.verbose >= 4:
+                print("Publindex international skipped: collection not found")
+            return
+
+        cursor = self.publindex_international_collection.find(
+            no_cursor_timeout=True)
+        try:
+            for idx, reg in enumerate(cursor, start=1):
+                identity = self._extract_international_identity(reg)
+                has_identity = bool(identity["name"] or identity["issns"])
+                if not has_identity:
+                    self.international_skipped += 1
+                    continue
+
+                source_db = self._find_existing_international_source(reg)
+                if source_db:
+                    self.update_international_source(reg, source_db)
+                else:
+                    self.insert_international_source(reg)
+
+                if self.verbose >= 5 and idx % 1000 == 0:
+                    print(f"Processed {idx} international records")
+        finally:
+            cursor.close()
+
+        if self.verbose >= 4:
+            print(
+                "Publindex international finished: "
+                f"inserted={self.international_inserted}, "
+                f"updated={self.international_updated}, "
+                f"skipped={self.international_skipped}"
+            )
+
     def run(self):
         start_time = time()
         self.process_publindex()
+        self.process_publindex_international()
         print("Execution time: {} minutes".format(
             round((time() - start_time) / 60, 2)))
         self.client.close()

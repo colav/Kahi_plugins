@@ -3,6 +3,7 @@ from pymongo import MongoClient, InsertOne, UpdateOne, ASCENDING
 from time import time
 from langid import classify
 from kahi_impactu_utils.Utils import check_date_format
+import re
 
 
 class Kahi_scienti_sources(KahiBase):
@@ -54,6 +55,46 @@ class Kahi_scienti_sources(KahiBase):
                 collection.create_index(
                     [("details.article.journal.TXT_ISSN_SEP", ASCENDING)])
                 client.close()
+
+    def _normalize_issn(self, value):
+        if value is None:
+            return ""
+        text = str(value).strip().upper()
+        text = text.replace("-", "").replace(" ", "")
+        if len(text) != 8:
+            return ""
+        if not re.match(r"^[0-9]{7}[0-9X]$", text):
+            return ""
+        return f"{text[:4]}-{text[4:]}"
+
+    def _issn_values(self, value):
+        normalized = self._normalize_issn(value)
+        if not normalized:
+            return []
+        return [normalized, normalized.replace("-", "")]
+
+    def _journal_query_for_issn(self, issn):
+        values = self._issn_values(issn)
+        return {
+            "$or": [
+                {"details.article.journal.TXT_ISSN_SEP": {"$in": values}},
+                {"details.article.journal.TXT_ISSN": {"$in": values}},
+                {"details.article.journal_others.TXT_ISSN": {"$in": values}},
+            ]
+        }
+
+    def _find_source_by_issn(self, issn):
+        values = self._issn_values(issn)
+        if not values:
+            return None
+        return self.collection.find_one({"external_ids.id": {"$in": values}})
+
+    def _append_external_id(self, entry, source, identifier):
+        identifier = str(identifier)
+        for ext in entry["external_ids"]:
+            if ext.get("source") == source and str(ext.get("id")) == identifier:
+                return
+        entry["external_ids"].append({"source": source, "id": identifier})
 
     def process_editorials(self, editorials_list):
         unique_codes = list(set(editorials_list))
@@ -149,14 +190,13 @@ class Kahi_scienti_sources(KahiBase):
         if "TPO_REVISTA" in journal.keys():
             entry["types"].append(
                 {"source": "scienti", "type": journal["TPO_REVISTA"]})
-        entry["external_ids"].append(
-            {"source": "scienti", "id": journal["COD_REVISTA"]})
+        self._append_external_id(entry, "scienti", journal["COD_REVISTA"])
 
         rankings_list = []
         ranks = []
         dates = [(rank["from_date"], rank["to_date"])
                  for rank in entry["ranking"] if rank["source"] == "scienti"]
-        for reg_scienti in self.scienti_collection.find({"details.article.journal.TXT_ISSN_SEP": issn}):
+        for reg_scienti in self.scienti_collection.find(self._journal_query_for_issn(issn)):
             paper = None
             journal = None
             if "details" not in reg_scienti.keys():
@@ -190,19 +230,12 @@ class Kahi_scienti_sources(KahiBase):
             else:
                 idx = ranks.index(journal["TPO_CLASIFICACION"])
                 date1, date2 = dates[idx]
-
-                try:
+                if isinstance(date1, (int, float)) and isinstance(date2, (int, float)):
                     if date1 > DTA_CREACION:
                         date1 = DTA_CREACION
                     if date2 < DTA_CREACION:
                         date2 = DTA_CREACION
                     dates[idx] = (date1, date2)
-                except Exception as e:
-                    print(e)
-                    date1 = ''
-                    date2 = ''
-
-                dates[idx] = ('', '')
 
         self.collection.update_one({"_id": entry["_id"]}, {"$set": {
             "types": entry["types"],
@@ -220,30 +253,31 @@ class Kahi_scienti_sources(KahiBase):
         issn_list = list(self.scienti_collection.distinct(
             "details.article.journal.TXT_ISSN_SEP"))
         issn_list.extend(self.scienti_collection.distinct(
+            "details.article.journal.TXT_ISSN"))
+        issn_list.extend(self.scienti_collection.distinct(
             "details.article.journal_others.TXT_ISSN"))
+        issn_list = sorted(
+            {
+                self._normalize_issn(issn)
+                for issn in issn_list
+                if self._normalize_issn(issn)
+            }
+        )
         # extracting the editorial codes
         editorials_list = list(self.scienti_collection.distinct(
             "details.book.editorial.COD_EDITORIAL"))
         editorials_list = [str(code) for code in editorials_list]
 
-        for issn in set(issn_list):
-            reg_db = self.collection.find_one({"external_ids.id": issn})
+        for issn in issn_list:
+            reg_db = self._find_source_by_issn(issn)
             if reg_db:
                 reg_scienti = self.scienti_collection.find_one(
-                    {"details.article.journal.TXT_ISSN_SEP": issn})
+                    self._journal_query_for_issn(issn))
                 if reg_scienti:
                     self.update_scienti(reg_scienti, reg_db, issn)
-                else:
-                    reg_scienti = self.scienti_collection.find_one(
-                        {"details.article.journal_others.TXT_ISSN": issn})
-                    if reg_scienti:
-                        self.update_scienti(reg_scienti, reg_db, issn)
             else:
                 reg_scienti = self.scienti_collection.find_one(
-                    {"details.article.journal.TXT_ISSN_SEP": issn})
-                if not reg_scienti:
-                    reg_scienti = self.scienti_collection.find_one(
-                        {"details.article.journal_others.TXT_ISSN": issn})
+                    self._journal_query_for_issn(issn))
                 if reg_scienti:
                     journal = None
                     if "details" not in reg_scienti.keys():
@@ -265,10 +299,8 @@ class Kahi_scienti_sources(KahiBase):
                     lang = classify(journal["TXT_NME_REVISTA"])[0]
                     entry["names"] = [
                         {"lang": lang, "name": journal["TXT_NME_REVISTA"], "source": "scienti"}]
-                    entry["external_ids"].append(
-                        {"source": "issn", "id": journal["TXT_ISSN_SEP"] if "TXT_ISSN_SEP" in journal.keys() else journal["TXT_ISSN"]})
-                    entry["external_ids"].append(
-                        {"source": "scienti", "id": journal["COD_REVISTA"]})
+                    entry["external_ids"].append({"source": "issn", "id": issn})
+                    self._append_external_id(entry, "scienti", journal["COD_REVISTA"])
                     if "TPO_REVISTA" in journal.keys():
                         entry["types"].append(
                             {"source": "scienti", "type": journal["TPO_REVISTA"]})
@@ -278,7 +310,7 @@ class Kahi_scienti_sources(KahiBase):
                     rankings_list = []
                     ranks = []
                     dates = []
-                    for reg_scienti in self.scienti_collection.find({"details.article.journal.TXT_ISSN_SEP": issn}):
+                    for reg_scienti in self.scienti_collection.find(self._journal_query_for_issn(issn)):
                         paper = None
                         journal = None
                         if "details" not in reg_scienti.keys():
@@ -314,17 +346,12 @@ class Kahi_scienti_sources(KahiBase):
                                 # if is already ranked but dates changed
                                 idx = ranks.index(journal["TPO_CLASIFICACION"])
                                 date1, date2 = dates[idx]
-                                try:
+                                if isinstance(date1, (int, float)) and isinstance(date2, (int, float)):
                                     if date1 > DTA_CREACION:
                                         date1 = DTA_CREACION
                                     if date2 < DTA_CREACION:
                                         date2 = DTA_CREACION
-                                except Exception as e:
-                                    print(e)
-                                    date1 = ''
-                                    date2 = ''
-
-                                dates[idx] = (date1, date2)
+                                    dates[idx] = (date1, date2)
                     entry["ranking"] = rankings_list
                     self.collection.insert_one(entry)
 

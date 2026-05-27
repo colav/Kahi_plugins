@@ -77,7 +77,7 @@ def process_one(source, client, db_name, empty_source):
                 break
         if not name_found:
             source_db["names"].append(
-                {"name": source["display_name"], "lang": "en", "source": "openalex"})
+                {"lang": "en", "name": source["display_name"], "source": "openalex"})
         if "is_oa" in source.keys():
             is_oa = source.get("is_oa")
             apc = source.get("apc_prices")
@@ -118,7 +118,7 @@ def process_one(source, client, db_name, empty_source):
         entry["updated"] = [
             {"source": "openalex", "time": int(time())}]
         entry["names"].append(
-            {"name": source["display_name"], "lang": "en", "source": "openalex"})
+            {"lang": "en", "name": source["display_name"], "source": "openalex"})
         entry["external_ids"].append(
             {"source": "openalex", "id": source["id"]})
         if "issn" in source.keys():

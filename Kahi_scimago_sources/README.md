@@ -4,7 +4,7 @@
 Kahi will use this plugin to insert or update the journal information from scimago
 
 # Description
-Plugin that reads the information from scimago ranking csv file to update or insert the information of the journals in CoLav's database format.
+Plugin that reads ScimagoJR ranking records from MongoDB to update or insert journal information in CoLav's database format.
 
 # Installation
 You could download the repository from github. Go into the folder where the setup.py is located and run
@@ -18,7 +18,7 @@ pip3 install kahi_scimago_sources
 
 ## Dependencies
 Software dependencies will automatically be installed when installing the plugin.
-The user must have at least one file fomr scimago report of journal rankings that can be downloaded from [scimago website](https://www.scimagojr.com/journalrank.php "Scimago journal rankings"). The file **MUST** be named as the download from scimago suggests i.e. scimagojr 2023.csv
+The user must have ScimagoJR data loaded in MongoDB. The expected records are the ones produced by the `scimagojr_capture` extractor, with at least `Sourceid`, `year`, `Issn`, `Title`, `Rank`, `SJR`, `SJR Best Quartile`, `H index`, `Categories`, `Country`, `Publisher`, and `Type`.
 
 # Usage
 To use this plugin you must have kahi installed in your system and construct a yaml file such as
@@ -30,32 +30,17 @@ config:
   log_collection: log
 workflow:
   scimago_sources:
-    file_path:
-      - scimago/scimagojr 2020.csv
+    database_url: localhost:27017
+    database_name: scimagojr
+    collection_name: scimagojr
+    verbose: 4
 ```
-Where file_path under scimago_sources task is the full path where the scimago csv is located.
-
-I you have several scimago files use the yaml structure as shown below
-```yaml
-config:
-  database_url: localhost
-  database_name: kahi_test
-  log_database: kahi_test
-  log_collection: log
-workflow:
-  scimago_sources:
-    file_path: 
-      - /current/data/scimago/scimagojr 1999.csv
-      - /current/data/scimago/scimagojr 2000.csv
-      - /current/data/scimago/scimagojr 2001.csv
-      - /current/data/scimago/scimagojr 2002.csv
-```
+Where `database_url`, `database_name`, and `collection_name` under `scimago_sources` point to the MongoDB collection with ScimagoJR records.
 
 # License
 BSD-3-Clause License 
 
 # Links
 http://colav.udea.edu.co/
-
 
 
