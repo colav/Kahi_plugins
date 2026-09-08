@@ -27,6 +27,7 @@ def create_indexes(db):
     db["works"].create_index({"open_access.is_open_access": 1})
     db["works"].create_index({"year_published": 1})
     db["works"].create_index({"types.source": 1, "types.type": 1, "types.code": 1})
+    db["works"].create_index({"types.source": 1, "types.level": 1})
     db["works"].create_index({"subjects.subjects.level": 1, "subjects.subjects.name": 1})
     db["works"].create_index({"topics.id": 1})
     db["works"].create_index({"primary_topic.id": 1})
@@ -47,6 +48,7 @@ def create_indexes(db):
     db["works"].create_index({"authors.affiliations.id": 1, "year_published": -1, "_id": 1})
     # H-index calculations
     db["works"].create_index({"authors.affiliations.id": 1, "year_published": 1, "citations_count_openalex": 1})
+    db["works"].create_index({"authors.affiliations.id": 1, "authors.affiliations.addresses.country_code": 1})
 
     # --- By authors.id (person research/products) ---
     # sort=citations_desc
