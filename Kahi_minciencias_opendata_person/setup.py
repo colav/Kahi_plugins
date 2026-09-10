@@ -82,11 +82,7 @@ def main():
         # put you packages here
         install_requires=[
             'kahi',
-            'pymongo',
-            'pandas',
-            'thefuzz',
-            'datetime',
-            'beautifulsoup4'
+            'pymongo'
         ],
     )
 

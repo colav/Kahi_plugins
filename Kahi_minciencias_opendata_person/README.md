@@ -1,10 +1,17 @@
 <center><img src="https://raw.githubusercontent.com/colav/colav.github.io/master/img/Logo.png"/></center>
 
-# Kahi minciencias openadata person plugin 
-Kahi will use this plugin to insert or update the people's information from minciencias opendata file and a cvlac scraping information
+# Kahi minciencias openadata person plugin
+Kahi uses this plugin to import the audited ScienTI person snapshot.
 
 # Description
-Plugin that reads the information from minciencias opendata and cvlac files to update or insert the information of the people in CoLav's database format.
+The plugin consumes the `persons` collection from an explicit immutable six-entity
+Yuku release. It does not read or aggregate the historical open-data, CvLAC HTML,
+private-profile or group-production collections.
+
+Only DOI-identified MinCiencias related works are imported. Existing related works
+from other providers are preserved, while legacy MinCiencias related works are
+replaced. Group affiliations are resolved to their Kahi identifiers; therefore the
+affiliations plugin must run first.
 
 # Installation
 You could download the repository from github. Go into the folder where the setup.py is located and run
@@ -17,8 +24,7 @@ pip3 install kahi_minciencias_opendata_person
 ```
 
 ## Dependencies
-Software dependencies will automatically be installed when installing the plugin.
-The user must have at least one file from minciencias opendata found [here](https://www.datos.gov.co/Ciencia-Tecnolog-a-e-Innovaci-n/Investigadores-Reconocidos-por-convocatoria/bqtm-4y2h "minciencias researchers data"). Also the user needs the file from the production of the research groups found [here](https://www.datos.gov.co/Ciencia-Tecnolog-a-e-Innovaci-n/Producci-n-Grupos-Investigaci-n/33dq-ab5a). Additionally user must have a cvlac [file](https://drive.google.com/file/d/1DwNqYzUg57YVjBSno-A6ZlEt51mPTzER/view?usp=drive_link) with a scraping of all available researchers.
+The source database must contain a published and audited six-entity ScienTI release.
 
 # Usage
 To use this plugin you must have kahi installed in your system and construct a yaml file such as
@@ -31,21 +37,19 @@ config:
 workflow:
    minciencias_opendata_person:
     database_url: localhost:27017
-    database_name: yuku
-    researchers: cvlac_data
-    cvlac: cvlac_stage
-    groups_production: gruplac_production_data
-    private_profiles: cvlac_stage_private
-    cvlac_html_profiles: cvlac_stage_raw
-    num_jobs: 12
+    database_name: dam
+    release_name: scienti_kahi_release_YYYYMMDD
+    batch_size: 1000
     verbose: 5
 ```
+
+`release_name` cannot be `current`. Options from the former reader are rejected.
+Progress and immutable source evidence are stored in
+`minciencias_opendata_person_runs`, allowing safe batch-level resumption.
 
 # License
 BSD-3-Clause License 
 
 # Links
 http://colav.udea.edu.co/
-
-
 
