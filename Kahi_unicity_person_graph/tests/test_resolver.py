@@ -529,6 +529,83 @@ def test_shared_affiliation_support_does_not_promote_a_weak_edge_to_high():
     ]
 
 
+def test_only_existing_affiliations_can_support_an_edge():
+    affiliation = [{"id": "affiliation-1"}]
+    group = CandidateGroup("doi", DOI_1, ("a", "b"), 0, 2000)
+    snapshot = {
+        "a": person(
+            "a", "A Lovelace", "staff", affiliations=affiliation,
+            first_names=["A"], last_names=["Lovelace"], initials="A",
+        ),
+        "b": person(
+            "b", "Ada Lovelace", "scholar", affiliations=affiliation,
+            first_names=["Ada"], last_names=["Lovelace"], initials="A",
+        ),
+    }
+
+    invalid = CandidateEdgeBuilder(compare_author).add_groups(
+        [group], snapshot, valid_affiliation_ids=set()
+    ).finish()
+    valid = CandidateEdgeBuilder(compare_author).add_groups(
+        [group], snapshot, valid_affiliation_ids={"affiliation-1"}
+    ).finish()
+
+    assert invalid.edges[0].score == 60
+    assert invalid.edges[0].match_details[0]["shared_affiliation"] is False
+    assert invalid.rejected_invalid_affiliation_references == 2
+    assert valid.edges[0].score == 65
+    assert valid.edges[0].match_details[0]["shared_affiliation_ids"] == [
+        "affiliation-1"
+    ]
+    assert valid.rejected_invalid_affiliation_references == 0
+
+
+def test_doi_evidence_records_author_count_and_its_source():
+    group = CandidateGroup(
+        "doi", DOI_1, ("a", "b"), 0, 4, "person.related_works"
+    )
+    snapshot = {
+        "a": person("a", "Ada Lovelace", "staff"),
+        "b": person("b", "Ada Lovelace", "openalex"),
+    }
+
+    _, results = build([group], snapshot)
+
+    assert results[0].plans[0].evidence == ({
+        "source": "doi", "key": DOI_1, "author_count": 4,
+        "author_count_source": "person.related_works",
+    },)
+
+
+def test_doi_discovery_uses_embedded_author_count_conservatively():
+    class Collection:
+        pipeline = None
+
+        def aggregate(self, pipeline, allowDiskUse):
+            self.pipeline = pipeline
+            return [{
+                "_id": DOI_1, "member_ids": ["a", "b"],
+                "embedded_author_count": 200,
+                "matched_work_author_count": 4,
+            }]
+
+    plugin = object.__new__(Kahi_unicity_person_graph)
+    plugin.tasks = ["doi"]
+    plugin.max_profiles_per_doi = 100
+    plugin.works_collection_name = "works"
+    plugin.collection = Collection()
+
+    group = plugin.discover_candidate_groups()[0]
+    group_stage = next(
+        stage["$group"] for stage in plugin.collection.pipeline
+        if "$group" in stage
+    )
+
+    assert group.work_author_count == 200
+    assert group.work_author_count_source == "person.related_works+works"
+    assert "embedded_author_count" in group_stage
+
+
 def test_high_subcluster_is_preserved_when_another_edge_is_medium():
     groups = [
         CandidateGroup("doi", DOI_1, ("a", "b"), 0, 20),

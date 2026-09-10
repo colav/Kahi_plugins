@@ -13,6 +13,7 @@ class CandidateGroup:
     member_ids: Tuple[Any, ...]
     order: int
     work_author_count: Optional[int] = None
+    work_author_count_source: Optional[str] = None
 
 
 @dataclass(frozen=True)

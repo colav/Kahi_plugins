@@ -133,3 +133,6 @@ def test_dry_run_preserves_person_documents_and_stores_one_plan():
     assert run["max_authors_threshold"] == 10
     assert run["single_doi_exact_name_max_authors"] == 50
     assert run["max_profiles_per_doi"] == 100
+    assert run["invalid_affiliation_references"] == 0
+    assert run["affiliations_collection_name"] == "affiliations"
+    assert run["works_collection_name"] == "works"

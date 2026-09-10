@@ -25,7 +25,11 @@ The graph is used only for isolation. Name compatibility is always decided by
   three tokens and is corroborated by four independent DOIs. Other alias-only
   and initials-only matches remain `medium` review records.
 - A shared affiliation only supports a review score and never promotes it by
-  itself to an automatic merge.
+  itself to an automatic merge. The affiliation must resolve to an existing
+  document; dangling references are ignored and counted in the run audit.
+- DOI evidence records the effective `author_count` and where that count came
+  from. The embedded value in `person.related_works` is available before works
+  ingestion; when both sources exist, the largest count is used conservatively.
 - Automatic clusters are built only from `high` edges, strongest first. Strong
   transitive paths are allowed, but every cluster union is blocked by a name,
   valid ORCID, or Scienti conflict between any two members.
@@ -64,6 +68,8 @@ config:
 workflow:
   unicity_person_graph:
     collection_name: person
+    affiliations_collection_name: affiliations
+    works_collection_name: works
     max_authors_threshold: 10
     single_doi_exact_name_max_authors: 50
     max_profiles_per_doi: 100
@@ -82,7 +88,9 @@ workflow:
 ```
 
 For one shared DOI, `max_authors_threshold` is the maximum real number of work
-authors that allows a compatible abbreviated name to be high confidence.
+authors that allows a compatible abbreviated name to be high confidence. The
+count is read first from `person.related_works.author_count`, with the works
+collection used as complementary evidence.
 `single_doi_exact_name_max_authors` sets the corresponding limit for an exact
 normalized name. A missing work count is kept for review. DOI values are
 canonicalized before candidate grouping. `max_profiles_per_doi` is a separate

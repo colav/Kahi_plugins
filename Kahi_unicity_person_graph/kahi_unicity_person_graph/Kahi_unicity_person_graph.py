@@ -1,5 +1,4 @@
 import copy
-import json
 import re
 import uuid
 from dataclasses import dataclass
@@ -139,6 +138,7 @@ class EdgeDiscoveryResult:
     rejected_given_name_conflicts: int
     rejected_untrusted_doi_pairs: int
     rejected_invalid_identifier_groups: int
+    rejected_invalid_affiliation_references: int
 
 
 class ComponentResolver:
@@ -637,21 +637,34 @@ class ComponentResolver:
         return min(priorities, default=99), object_id_key(member_id)
 
     @staticmethod
-    def _shared_affiliation_ids(left: dict, right: dict) -> set:
-        def identifiers(document):
-            return {
-                json.dumps(
-                    affiliation.get("id"),
-                    sort_keys=True,
-                    default=str,
-                    separators=(",", ":"),
-                )
-                for affiliation in document.get("affiliations", [])
-                if isinstance(affiliation, dict)
-                and affiliation.get("id") not in (None, "")
-            }
+    def _affiliation_ids(document: dict) -> set:
+        identifiers = set()
+        for affiliation in document.get("affiliations", []):
+            if not isinstance(affiliation, dict):
+                continue
+            identifier = affiliation.get("id")
+            if identifier in (None, ""):
+                continue
+            try:
+                hash(identifier)
+            except TypeError:
+                continue
+            identifiers.add(identifier)
+        return identifiers
 
-        return identifiers(left).intersection(identifiers(right))
+    @classmethod
+    def _shared_affiliation_ids(
+        cls,
+        left: dict,
+        right: dict,
+        valid_affiliation_ids: set = None,
+    ) -> set:
+        shared = cls._affiliation_ids(left).intersection(
+            cls._affiliation_ids(right)
+        )
+        if valid_affiliation_ids is not None:
+            shared.intersection_update(valid_affiliation_ids)
+        return shared
 
     @staticmethod
     def _best_direct_match(matches: Sequence[dict]) -> dict:
@@ -675,11 +688,15 @@ class ComponentResolver:
         right: dict,
         left_name_features: dict = None,
         right_name_features: dict = None,
+        valid_affiliation_ids: set = None,
     ) -> dict:
         left_name_features = left_name_features or cls._name_features(left)
         right_name_features = right_name_features or cls._name_features(right)
         shared_name_variants = left_name_features["variants"].intersection(
             right_name_features["variants"]
+        )
+        shared_affiliation_ids = cls._shared_affiliation_ids(
+            left, right, valid_affiliation_ids
         )
         return {
             "source": group.source,
@@ -692,7 +709,11 @@ class ComponentResolver:
                 left_name_features["full_name"]
                 == right_name_features["full_name"]
             ),
-            "shared_affiliation": bool(cls._shared_affiliation_ids(left, right)),
+            "shared_affiliation": bool(shared_affiliation_ids),
+            "shared_affiliation_ids": sorted(
+                (copy.deepcopy(value) for value in shared_affiliation_ids),
+                key=str,
+            ),
             "shared_name_variants": sorted(shared_name_variants),
             "shared_name_token_count": len(
                 left_name_features["full_tokens"].intersection(
@@ -820,12 +841,26 @@ class CandidateEdgeBuilder:
         self.rejected_given_name_conflicts = 0
         self.rejected_untrusted_doi_pairs = 0
         self.rejected_invalid_identifier_groups = 0
+        self.rejected_invalid_affiliation_references = 0
+        self._invalid_affiliation_references = set()
 
     def add_groups(
         self,
         groups: Sequence[CandidateGroup],
         snapshot: Dict[Any, dict],
+        valid_affiliation_ids: set = None,
     ) -> "CandidateEdgeBuilder":
+        if valid_affiliation_ids is not None:
+            for member_id, document in snapshot.items():
+                for identifier in ComponentResolver._affiliation_ids(document):
+                    if identifier in valid_affiliation_ids:
+                        continue
+                    self._invalid_affiliation_references.add(
+                        (object_id_key(member_id), repr(identifier))
+                    )
+            self.rejected_invalid_affiliation_references = len(
+                self._invalid_affiliation_references
+            )
         name_features = {
             member_id: ComponentResolver._name_features(document)
             for member_id, document in snapshot.items()
@@ -844,6 +879,7 @@ class CandidateEdgeBuilder:
                 group.member_ids,
                 group.order,
                 group.work_author_count,
+                group.work_author_count_source,
             )
             author_count = (
                 group.work_author_count
@@ -897,10 +933,14 @@ class CandidateEdgeBuilder:
                     snapshot[pair[1]],
                     name_features[pair[0]],
                     name_features[pair[1]],
+                    valid_affiliation_ids,
                 )
                 detail["compare_author"] = compare_match
                 detail["alias_name_match"] = alias_match
                 detail["work_author_count"] = group.work_author_count
+                detail["work_author_count_source"] = (
+                    group.work_author_count_source
+                )
                 details = self.pair_details.setdefault(pair, [])
                 marker = (detail["source"], repr(detail["key"]))
                 if not any(
@@ -1016,17 +1056,27 @@ class CandidateEdgeBuilder:
                     ),
                 )
             )
-            evidence = tuple(
-                {"source": detail["source"], "key": copy.deepcopy(detail["key"])}
-                for detail in details
-            )
+            evidence = []
+            for detail in details:
+                item = {
+                    "source": detail["source"],
+                    "key": copy.deepcopy(detail["key"]),
+                }
+                if detail["source"] == "doi":
+                    if detail.get("work_author_count") is not None:
+                        item["author_count"] = detail["work_author_count"]
+                    if detail.get("work_author_count_source"):
+                        item["author_count_source"] = detail[
+                            "work_author_count_source"
+                        ]
+                evidence.append(item)
             edges.append(
                 EvidenceEdge(
                     left_id=left_id,
                     right_id=right_id,
                     confidence=confidence,
                     score=score,
-                    evidence=evidence,
+                    evidence=tuple(evidence),
                     match_details=details,
                 )
             )
@@ -1043,6 +1093,9 @@ class CandidateEdgeBuilder:
             rejected_untrusted_doi_pairs=self.rejected_untrusted_doi_pairs,
             rejected_invalid_identifier_groups=(
                 self.rejected_invalid_identifier_groups
+            ),
+            rejected_invalid_affiliation_references=(
+                self.rejected_invalid_affiliation_references
             ),
         )
 
@@ -1062,6 +1115,12 @@ class Kahi_unicity_person_graph(KahiBase):
             )
 
         self.collection = self.db[self.collection_name]
+        self.works_collection_name = plugin_config.get(
+            "works_collection_name", "works"
+        )
+        self.affiliations_collection_name = plugin_config.get(
+            "affiliations_collection_name", "affiliations"
+        )
         self.merged_collection = self.db[
             plugin_config.get(
                 "merged_collection_name",
@@ -1203,6 +1262,21 @@ class Kahi_unicity_person_graph(KahiBase):
             ]
         }
 
+    @staticmethod
+    def _related_work_author_count_expression() -> dict:
+        return {
+            "$cond": [
+                {
+                    "$and": [
+                        {"$isNumber": "$related_works.author_count"},
+                        {"$gt": ["$related_works.author_count", 0]},
+                    ]
+                },
+                {"$toInt": "$related_works.author_count"},
+                None,
+            ]
+        }
+
     def discover_candidate_groups(self) -> List[CandidateGroup]:
         groups = []
         order = 0
@@ -1267,12 +1341,15 @@ class Kahi_unicity_person_graph(KahiBase):
                     "$group": {
                         "_id": "$canonical_doi",
                         "member_ids": {"$addToSet": "$_id"},
+                        "embedded_author_count": {
+                            "$max": self._related_work_author_count_expression()
+                        },
                     }
                 },
                 {"$match": {"$expr": {"$and": size_conditions}}},
                 {
                     "$lookup": {
-                        "from": "works",
+                        "from": self.works_collection_name,
                         "localField": "_id",
                         "foreignField": "external_ids.id",
                         "pipeline": [
@@ -1290,7 +1367,7 @@ class Kahi_unicity_person_graph(KahiBase):
                 },
                 {
                     "$set": {
-                        "work_author_count": {
+                        "matched_work_author_count": {
                             "$max": "$matched_works.count"
                         }
                     }
@@ -1303,13 +1380,26 @@ class Kahi_unicity_person_graph(KahiBase):
                     sorted(
                         record["member_ids"],
                         key=object_id_key))
+                embedded_count = record.get("embedded_author_count")
+                work_count = record.get("matched_work_author_count")
+                available_counts = [
+                    int(value) for value in (embedded_count, work_count)
+                    if isinstance(value, (int, float)) and value > 0
+                ]
+                author_count = max(available_counts) if available_counts else None
+                count_sources = []
+                if isinstance(embedded_count, (int, float)) and embedded_count > 0:
+                    count_sources.append("person.related_works")
+                if isinstance(work_count, (int, float)) and work_count > 0:
+                    count_sources.append(self.works_collection_name)
                 groups.append(
                     CandidateGroup(
                         "doi",
                         record["_id"],
                         member_ids,
                         order,
-                        record.get("work_author_count"),
+                        author_count,
+                        "+".join(count_sources) or None,
                     )
                 )
                 order += 1
@@ -1347,7 +1437,18 @@ class Kahi_unicity_person_graph(KahiBase):
                     projection,
                 )
             }
-            builder.add_groups(batch, snapshot)
+            affiliation_ids = {
+                identifier
+                for document in snapshot.values()
+                for identifier in ComponentResolver._affiliation_ids(document)
+            }
+            valid_affiliation_ids = {
+                document["_id"]
+                for document in self.db[self.affiliations_collection_name].find(
+                    {"_id": {"$in": list(affiliation_ids)}}, {"_id": 1}
+                )
+            }
+            builder.add_groups(batch, snapshot, valid_affiliation_ids)
         return builder.finish()
 
     def run(self):
@@ -1369,6 +1470,8 @@ class Kahi_unicity_person_graph(KahiBase):
                     self.single_doi_exact_name_max_authors
                 ),
                 "max_profiles_per_doi": self.max_profiles_per_doi,
+                "works_collection_name": self.works_collection_name,
+                "affiliations_collection_name": self.affiliations_collection_name,
             }
         )
 
@@ -1508,6 +1611,9 @@ class Kahi_unicity_person_graph(KahiBase):
                             "rejected_invalid_identifier_groups": (
                                 edge_discovery.rejected_invalid_identifier_groups
                             ),
+                            "invalid_affiliation_references": (
+                                edge_discovery.rejected_invalid_affiliation_references
+                            ),
                         }
                     },
                 )
@@ -1545,6 +1651,9 @@ class Kahi_unicity_person_graph(KahiBase):
                         ),
                         "rejected_invalid_identifier_groups": (
                             edge_discovery.rejected_invalid_identifier_groups
+                        ),
+                        "invalid_affiliation_references": (
+                            edge_discovery.rejected_invalid_affiliation_references
                         ),
                     }
                 },
