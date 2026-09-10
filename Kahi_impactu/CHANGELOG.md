@@ -17,9 +17,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Updated Kahi and affiliation plugin pins to the versions used by the current
-  ImpactU workflow.
-- Added the person graph unicity plugin required by the workflow.
+- Updated Kahi, postcalculation, and six-entity ScienTI snapshot plugin pins to
+  the versions used by the current ImpactU workflow.
+- Added the person graph unicity plugin and pinned its audited release.
 
  
 ## [0.0.6] - 2024-02-16
