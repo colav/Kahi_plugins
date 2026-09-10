@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 - 2026-09-09
 
 - Replace the legacy GrupLAC parser and Elasticsearch path with bounded,
   resumable ingestion from an explicit audited six-entity works snapshot.
