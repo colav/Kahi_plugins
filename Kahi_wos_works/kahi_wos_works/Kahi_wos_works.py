@@ -195,7 +195,8 @@ def process_one(wos_reg, db, collection, empty_work, verbose=0):
                 if upd["source"] == "wos":
                     # client.close()
                     return None  # Register already on db
-                    # Could be updated with new information when wos database changes
+                    # Could be updated with new information when wos database
+                    # changes
             entry = parse_wos(
                 wos_reg, empty_work.copy(), verbose=verbose)
             colav_reg["updated"].append(
@@ -214,7 +215,8 @@ def process_one(wos_reg, db, collection, empty_work, verbose=0):
             if "is_open_acess" not in colav_reg["bibliographic_info"].keys():
                 if "is_open_access" in entry["bibliographic_info"].keys():
                     colav_reg["bibliographic_info"]["is_open_acess"] = entry["bibliographic_info"]["is_open_access"]
-            if "open_access_status" not in colav_reg["bibliographic_info"].keys():
+            if "open_access_status" not in colav_reg["bibliographic_info"].keys(
+            ):
                 if "open_access_status" in entry["bibliographic_info"].keys():
                     colav_reg["bibliographic_info"]["open_access_status"] = entry["bibliographic_info"]["open_access_status"]
             if "start_page" not in colav_reg["bibliographic_info"].keys():
@@ -420,12 +422,15 @@ class Kahi_wos_works(KahiBase):
             config["wos_works"]["database_url"])
         if config["wos_works"]["database_name"] not in self.wos_client.list_database_names():
             raise Exception(
-                f"Database {config['wos_works']['database_name']} not found in {config['wos_works']['database_url']}")
+                f"Database {config['wos_works']['database_name']} found not in "
+                f"{config['wos_works']['database_url']}")
         self.wos_db = self.wos_client[config["wos_works"]
                                             ["database_name"]]
         if config["wos_works"]["collection_name"] not in self.wos_db.list_collection_names():
             raise Exception(
-                f"Collection {config['wos_works']['database_name']}.{config['wos_works']['collection_name']} not found in {config['wos_works']['database_url']}")
+                f"Collection {config['wos_works']['database_name']}."
+                f"{config['wos_works']['collection_name']} found not in "
+                f"{config['wos_works']['database_url']}")
         self.wos_collection = self.wos_db[config["wos_works"]
                                                 ["collection_name"]]
 

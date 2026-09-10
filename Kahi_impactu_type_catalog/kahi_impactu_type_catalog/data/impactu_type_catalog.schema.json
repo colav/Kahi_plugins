@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Shared ImpactU type routing catalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "catalog_version",
+    "source",
+    "entities",
+    "impactu_types",
+    "mappings",
+    "unmapped"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "impactu-type-routing-v1"
+    },
+    "catalog_version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workbook",
+        "sha256",
+        "sheets",
+        "input_rows",
+        "rows",
+        "duplicates_removed",
+        "unmapped_rows"
+      ],
+      "properties": {
+        "workbook": {"const": "Tipos_ImpactU_Definitivo.xlsx"},
+        "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+        "sheets": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "source",
+              "input_rows",
+              "mapping_rows",
+              "unmapped_rows"
+            ],
+            "properties": {
+              "name": {
+                "enum": ["ALL", "COAR", "REDCOL", "INFO-EU-REPO"]
+              },
+              "source": {"type": "string", "minLength": 1},
+              "input_rows": {"type": "integer", "minimum": 0},
+              "mapping_rows": {"type": "integer", "minimum": 0},
+              "unmapped_rows": {"type": "integer", "minimum": 0}
+            }
+          }
+        },
+        "input_rows": {"type": "integer", "minimum": 1},
+        "rows": {"type": "integer", "minimum": 1},
+        "duplicates_removed": {"type": "integer", "minimum": 0},
+        "unmapped_rows": {"type": "integer", "minimum": 0}
+      }
+    },
+    "entities": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {"enum": ["works", "projects", "patents", "events"]}
+    },
+    "impactu_types": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "mappings": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/$defs/mapping"}
+    },
+    "unmapped": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/unmapped"}
+    }
+  },
+  "$defs": {
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source", "type", "type_impactu", "entity"],
+      "properties": {
+        "source": {"type": "string", "minLength": 1},
+        "type": {"type": "string", "minLength": 1},
+        "type_impactu": {"type": "string", "minLength": 1},
+        "entity": {"enum": ["works", "projects", "patents", "events"]}
+      }
+    },
+    "unmapped": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sheet", "row", "source", "type", "entity", "reason"],
+      "properties": {
+        "sheet": {"enum": ["ALL", "COAR", "REDCOL", "INFO-EU-REPO"]},
+        "row": {"type": "integer", "minimum": 2},
+        "source": {"type": "string", "minLength": 1},
+        "type": {"type": "string", "minLength": 1},
+        "entity": {"enum": ["works", "projects", "patents", "events"]},
+        "reason": {"const": "missing_type_impactu"}
+      }
+    }
+  }
+}

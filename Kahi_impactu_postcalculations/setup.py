@@ -85,7 +85,7 @@ def main():
             'spacy',
             'joblib',
             'datetime',
-            'openpyxl',
+            'Kahi_impactu_type_catalog==0.1.0',
         ],
     )
 

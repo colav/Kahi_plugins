@@ -1,0 +1,8 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+recursive-include kahi_impactu_type_catalog *.py
+recursive-include kahi_impactu_type_catalog/data *.json *.xlsx
+recursive-include scripts *.py
+global-exclude *.py[cod]
+prune kahi_impactu_type_catalog/__pycache__

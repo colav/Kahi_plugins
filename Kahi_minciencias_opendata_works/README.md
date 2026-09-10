@@ -1,10 +1,18 @@
 <center><img src="https://raw.githubusercontent.com/colav/colav.github.io/master/img/Logo.png"/></center>
 
-# Kahi minciencias opendata plugin 
-Kahi will use this plugin to insert or update the works information from the minciencias opendata database.
+# Kahi minciencias opendata works plugin
+Kahi uses this plugin to import the audited ScienTI works snapshot.
 
 # Description
-Plugin that reads the information from minciencias opendata database to insert or update the information of the of academic products in colav's database.
+The plugin streams `works` from an explicit immutable six-entity Yuku release.
+It does not parse `gruplac_production_data`, query Elasticsearch or promote
+products from `person.related_works`.
+
+Authors identified by `COD_RH` and groups identified by `COL...` are resolved
+against Kahi. Empty author identifiers remain empty and are never matched by
+name. `source_metadata` and `authorship_status` stay in DAM. Existing non-empty
+metadata is preserved, while missing `bibliographic_info` values are enriched
+recursively from the snapshot.
 
 # Installation
 You could download the repository from github. Go into the folder where the setup.py is located and run
@@ -15,12 +23,6 @@ From the package you can install by running
 ```shell
 pip3 install kahi_minciencias_opendata_works
 ```
-# Similarity support
-This plugin only process works without doi. Then a elastic search server must be running. The plugin will use the server to find the most similar works in the database. To deply it please read https://github.com/colav/Chia/tree/main/elasticsaerch and follow the instructions.
-
-Docker and docker-compose are required to deploy the server.
-
-
 # Usage
 To use this plugin you must have kahi installed in your system and construct a yaml file such as
 ```yaml
@@ -31,27 +33,19 @@ config:
   log_collection: log
 workflow:
   minciencias_opendata_works:
-    es_index: kahi_es
-    es_url: http://localhost:9200
-    es_user: elastic
-    es_password: colav
     database_url: localhost:27017
-    database_name: yuku
-    collection_name: gruplac_production_data
-    insert_all: False
-    thresholds: [65, 90, 95]
-    num_jobs: 6
+    database_name: dam
+    release_name: scienti_kahi_release_YYYYMMDD
+    batch_size: 500
     verbose: 1
 ```
-* WARNING *. This process can take more than an hour.
 
-Note: 
--In case you want to insert all documents that fail to be associated through the similarity processes as new documents, you need to change the value of the insert_all flag to True in the workflow
--The thresholds parameter only accepts a list of three corresponding values for: A threshold for author names, a low threshold for works and a high threshold for works.
+`release_name` cannot be `current`. The plugin records checkpoints and source
+evidence in `minciencias_opendata_works_runs`, allowing an interrupted import to
+resume from its last completed batch. Affiliations and people must be loaded first.
 
 # License
 BSD-3-Clause License 
 
 # Links
 http://colav.udea.edu.co/
-

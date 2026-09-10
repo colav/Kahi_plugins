@@ -1,0 +1,4899 @@
+{
+  "schema_version": "impactu-type-routing-v1",
+  "catalog_version": "1.1.0",
+  "source": {
+    "workbook": "Tipos_ImpactU_Definitivo.xlsx",
+    "sha256": "7288727e73be698acaf6ba81799d36d56b37f9265b163a6e9a85f4489c0ecb91",
+    "sheets": [
+      {
+        "name": "ALL",
+        "source": "Fuente column",
+        "input_rows": 606,
+        "mapping_rows": 606,
+        "unmapped_rows": 0
+      },
+      {
+        "name": "COAR",
+        "source": "coar",
+        "input_rows": 109,
+        "mapping_rows": 108,
+        "unmapped_rows": 1
+      },
+      {
+        "name": "REDCOL",
+        "source": "redcol",
+        "input_rows": 61,
+        "mapping_rows": 61,
+        "unmapped_rows": 0
+      },
+      {
+        "name": "INFO-EU-REPO",
+        "source": "eu-repo",
+        "input_rows": 31,
+        "mapping_rows": 25,
+        "unmapped_rows": 1
+      }
+    ],
+    "input_rows": 807,
+    "rows": 800,
+    "duplicates_removed": 5,
+    "unmapped_rows": 2
+  },
+  "entities": [
+    "events",
+    "patents",
+    "projects",
+    "works"
+  ],
+  "impactu_types": [
+    "Artículo de revista",
+    "Audiovisual",
+    "Capítulo de libro",
+    "Conjunto de datos",
+    "Código fuente",
+    "Documento de trabajo",
+    "Documento legal",
+    "Evento",
+    "Informe",
+    "Innovación y apropiación",
+    "Investigación-creación",
+    "Libro",
+    "Material cartográfico",
+    "Modelo",
+    "Norma",
+    "Otro",
+    "Patente",
+    "Producción artística",
+    "Programa de curso",
+    "Proyecto",
+    "Publicaciones editoriales no especializadas",
+    "Recursos electrónicos",
+    "Resultado de conferencia",
+    "Secuencia genética",
+    "Tesis de posgrado",
+    "Tesis de pregrado",
+    "Variedad animal",
+    "Variedad vegetal",
+    "Variedad vegetal o animal"
+  ],
+  "mappings": [
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo corto publicado en libro de texto",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo corto publicado en libro resultado de investigacion",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo corto publicado en revista Tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo corto publicado en revista Tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo corto publicado en revista Tipo B1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo corto publicado en revista Tipo C1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista de difusion internacional. Categoria A",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista nacional de difusion local",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista nacional de difusion nacional",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista Tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista Tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista Tipo B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista Tipo B2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulo en revista Tipo C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Articulos nacionales publicados ante del 28/03/2003",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Capitulo de libro de ensayo",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Capitulo de libro de texto",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Capitulo de libro resultado de investigacion",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Capitulo de libro Tipo B",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Capitulo de obra artistica",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Capitulo de obra artistica nacional",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Carta al editor en revista tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Carta al editor en revista tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Carta al editor en revista tipo B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Carta al editor en revista tipo C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Composicion musica de camara nacional",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Composicion musical musica de camara",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Comunicacion corta en revista Tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Comunicacion corta en revista Tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Comunicacion corta en revista Tipo B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Comunicacion corta en revista Tipo C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Cuento o relato de difusion nacional",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Direccion de trabajo de grado de doctorado",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Direccion de trabajo de grado de especializacion medica()",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Direccion de trabajo de grado de maestria",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Director de actores en obra de teatro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Editorial en revista tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Editorial en revista tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Editorial en revista tipo B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Editorial en revista tipo C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Estidio posdoctoral",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Impreso universitario",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Interpretacion de impacto internacional",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Interpretacion de impacto local",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Interpretacion de impacto nacional",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro de ensayo",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro de ensayo por capitulos",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro de investigacion por capitulos resolucion 01 14/03/2018",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro de literatura categoria A",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro de texto",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro de texto por capitulos",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro resultado de investigacion",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro resultado de investigacion por capitulos",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro resultado de tesis doctoral categoria A",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Libro resultado de tesis doctoral categoria B",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Obra de creacion complementaria internacional.",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Obra de creacion complementaria o de apoyo local",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Obra de creacion complementaria o de apoyo Nacional",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Obra de creacion original artistica internacional",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Obra de creacion original artistica local",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Obra de creacion original artistica nacional",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "PATENTE A4 VIA TRADICIONAL SIN PRODUCTO Y SIN CONTRATO",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "PATENTE DE INVENCION",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Patente. Categoria A",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia de extension intermedia en evento internacional ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia de extension intermedia en evento nacional ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia de extension intermedia latinoameric o de 1 cont ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia en extenso en evento iberoamericano ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia en extenso en evento internacional",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia en extenso en evento latinoamericano ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia en extenso en evento local",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Ponencia en extenso en evento nacional",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio internacional",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio internacional B",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio Internacional C",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio internacional D",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio nacional",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio nacional B",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio nacional C",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Premio nacional D",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Produccion Academica Especial",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Produccion especial para bonificacion",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Produccion fonografica didiactica local",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Produccion fonografica documental local",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Produccion fonografica nacional",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Produccion radiografica de difusion local",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Producto tecnologico de adaptacion",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Producto tecnologico de innovacion",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Puntaje Asignado a Profesor Visitante",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en libro",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en libro de texto",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en libro resultado de investigacion",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en revista Tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en revista Tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en revista Tipo B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Reporte de caso en revista Tipo C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Resena critica",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Resumen de ponencia en evento iberoamericano o de 2 continet",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Resumen de ponencia en evento internacional ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Resumen de ponencia en evento latinoamerican o de 1 continet",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Resumen de ponencia en evento nacional ()",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en libro de difusion nacional-intenacional",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en libro de texto",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en libro resultado de investigacion",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en revista Tipo A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en revista Tipo A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en revista Tipo B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Revision de tema en revista Tipo C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Software de produccion cientifica",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Software de produccion tecnologica",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Traduccion Articulo",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Traduccion Articulo de revista o libro de difusion nal o reg",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Traduccion de articulo o capitulo de libro",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Traduccion de Libro",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Video didactico de difusion local",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Video didactico internacional",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Video didactico nacional",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Video Documental Internacional",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Video Documental Local",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_udea",
+      "type": "Video Documental Nacional",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Apoyo a la investigación",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Artículo de conferencia",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Artículo de revista",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Biografía",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Capítulo de libro",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Colección científica",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Comentario",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Datos",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Desarrollo de software",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Editorial",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Errata",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Estado del arte",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Estudio comparativo",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Estudio observacional",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Formato audiovisual",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Libro",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Patente",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Ponencias en eventos",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Ponencias en eventos especializados",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Posters presentados",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Preimpresión",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Proceso instrumental",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Proyecto",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Reporte de caso",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Reporte tecnico",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Revisión sistemática",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Tesis Doctorado",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Tesis Especialización",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Tesis Maestría",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_unal",
+      "type": "Tesis Pregrado",
+      "type_impactu": "Tesis de pregrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "1.TEXTO UNIVERSITARIO",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "3.ENSAYOS EN FORMA DE ARTíCULOS",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "4.MóDULOS O MATERIALES AUTOFORMATIVOS",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "5.CONFERENCIAS DE CLASE",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "6.GUíAS DE PRáCTICA, TALLER O LABORATORIO",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "8.MATERIALES AUDIOVISUALES",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "ADAPTACIóN TECNOLóGICA",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "ARTICULO EN REVISTA NO INDEXADA/HOMOLOGADA",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "CARáCTER DOCUMENTAL IMPACTO INTERNACIONAL",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "COMUNICACION CORTA REVISTA TIPO A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "COMUNICACION CORTA REVISTA TIPO A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "COMUNICACION CORTA REVISTA TIPO B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "COMUNICACION CORTA REVISTA TIPO C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "CREACION COMPLEMENTARIA IMPACTO REGIONAL - LOCAL",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "CREACION ORIGINAL IMPACTO REGIONAL - LOCAL",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DESARROLLO SOFTWARE PRODUCCION CIENTIFICA",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DESARROLLO SOFTWARE PRODUCCION TECNOLOGICA",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DIRECCION DE TESIS DE DOCTORADO",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DIRECCION DE TESIS DE MAESTRIA",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DISCOS, FILMES, VIDEOS Y AUDIOVISUALES",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DISEÑOS O MEMORIAS TÉCNICAS Y PROTOTIPOS",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DOCUMENTOS DE ANALOGOS FINES Y CONTENIDOS",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DOCUMENTOS DE TRABAJO DE INVESTIGACION",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "DOCUMENTOS SOBRE POLÍTICA UNIVERSITARIA",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "EN REVISTA TIPO A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "EN REVISTA TIPO A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "EN REVISTA TIPO B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "EN REVISTA TIPO C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "ESTUDIOS POSTDOCTORALES",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "FINES DIDáCTICOS IMPACTO NACIONAL",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "FULL PAPER REVISTA TIPO A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "FULL PAPER REVISTA TIPO A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "FULL PAPER REVISTA TIPO B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "FULL PAPER REVISTA TIPO C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "IMPACTO INTERNACIONAL",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "IMPACTO NACIONAL",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "INFORMES FINALES DE INVESTIGACION",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "INNOVACIóN TECNOLóGICA",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "INTERPRETACION DE IMPACTO REGIONAL - LOCAL",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "INVENTO PATENTADO",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "LIBRO DE ENSAYO",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "LIBRO DE INVESTIGACION",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "LIBRO DE INVESTIGACION_",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "LIBRO DE SISTEMATIZACION",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "LIBRO DE TEXTO",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "MATERIALES DE SOPORTE A LA DOCENCIA",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "MATERIALES PARA EDUCACION A DISTANCIA",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "MONOGRAFIA",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "MONOGRAFIA DE SISTEMATIZACION",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "OBRAS ARQUITECTÓNICAS",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PATENTE",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PONENCIA",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PONENCIA EN EVENTO INTERNACIONAL",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PONENCIA EN EVENTO NACIONAL",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PONENCIA EN EVENTO REGIONAL",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PONENCIAS PRESENTADAS EN CONGRESOS",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PREMIO INTERNACIONAL",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PREMIO NACIONAL",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "PROFESOR DISTINGUIDO, HONORARIO ó EMéRITO",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "RECONOCIMIENTO ESPECIAL",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REPORTE, REVISION DE TEMA EN REVISTA TIPO A1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REPORTE, REVISION DE TEMA EN REVISTA TIPO A2",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REPORTE, REVISION DE TEMA EN REVISTA TIPO B",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REPORTE, REVISION DE TEMA EN REVISTA TIPO C",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REPRESENTACIóN ARTISTICA",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "RESENAS CRITICAS",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "RESEñAS CRíTICAS",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REVISTA NO INDEXADA-HOMOLOGADA",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "REVISTA NO INDEXADA/HOMOLOGADA",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "TESIS DE POSTGRADO LAUREADA O EQUIVALENTE",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "TESIS DOCTORADO",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "TESIS MAESTRIA",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "TRADUCCION PUBLICADA DE ARTICULO",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "ciarp_univalle",
+      "type": "TRADUCCIóN DE LIBRO",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "1ytn-rjze",
+      "type_impactu": "Documento legal",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "2h0m-x761",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "43kc-t6dc",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "542x-3s04",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "63ng-b465",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "6nc7-gk9s",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "8kjg-qs0y",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "9dkx-ksaf",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "coar",
+      "type": "a8f1-npv9",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "acf7-8yt9",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "am6w-6qaw",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "bw7t-ym2g",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c53b-jcy5",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "coar",
+      "type": "c_0040",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_0640",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_0857",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_1162",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_12cc",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_12cd",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_12ce",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_15cd",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "coar",
+      "type": "c_1843",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_186u",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18cc",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18cd",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18cf",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18co",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18cp",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18cw",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18gh",
+      "type_impactu": "Informe",
+      "entity": "projects"
+    },
+    {
+      "source": "coar",
+      "type": "c_18hj",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18op",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18wq",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18ws",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18ww",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_18wz",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_2659",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_26e4",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_2cd9",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_2df8fbb1",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_2f33",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_2fe3",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_3248",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_393c",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_3e5a",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_545b",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_5794",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_5ce6",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_6501",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_6670",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_6947",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_71bd",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_7877",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_7a1f",
+      "type_impactu": "Tesis de pregrado",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_7acd",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_7ad9",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_7bab",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_8042",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_816b",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_8544",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_86bc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_8a7e",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_93fc",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_998f",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_ab20",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_b239",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_ba08",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_ba1f",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_baaf",
+      "type_impactu": "Proyecto",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_bdcc",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_beb9",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_c513",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_c94f",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_c950",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_cb28",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_db06",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_dcae04bc",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_ddb1",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_e059",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_e9a0",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_ecc8",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_efa0",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "c_f744",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "cqmr-7k63",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "d97f-vb57",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "dd58-gfsx",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "dx5j-ta9r",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "f8rt-tjk0",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "ff4c-28rk",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "fxf3-d3g7",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "gpq7-g5ve",
+      "type_impactu": "Variedad vegetal o animal",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "gsza-y7v7",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "h41y-fw7b",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "h6qp-sc1x",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "coar",
+      "type": "h9bq-739p",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "jbnf-dyad",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "mw8g-3cr8",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "coar",
+      "type": "nhd0-w6sy",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "qh80-2r4e",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "qx5c-ar31",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "r60j-j5bd",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "rmp5-3gq6",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "s7r1-k5p0",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "sb3y-w4eh",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "coar",
+      "type": "w2xt-7017",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "yc9f-hgcf",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "yz1n-zft9",
+      "type_impactu": "Proyecto",
+      "entity": "works"
+    },
+    {
+      "source": "coar",
+      "type": "z907-ymbb",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "eu-repo",
+      "type": "annotation",
+      "type_impactu": "Documento legal",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "article",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "bachelorthesis",
+      "type_impactu": "Tesis de pregrado",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "book",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "bookpart",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "bookreview",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "conferencecontribution",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "conferenceitem",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "conferenceobject",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "conferencepaper",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "conferenceposter",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "conferenceproceedings",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "contributiontoperiodical",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "doctoralthesis",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "lecture",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "masterthesis",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "patent",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "eu-repo",
+      "type": "preprint",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "report",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "reportpart",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "researchproposal",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "eu-repo",
+      "type": "review",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "studentthesis",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "technicaldocumentation",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "eu-repo",
+      "type": "workingpaper",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Artículos",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Boletín divulgativo de resultado de investigación",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Consultoría científico-técnica",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Consultoría en artes, arquitectura y diseño",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Desarrollos Web",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Documento de trabajo",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Edicion",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Evento científico",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Eventos artísticos, de arquitectura o de diseño con componentes de apropiación",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Informe Final de Investigación",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Informe técnico final",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Libros de Divulgación de investigación y/o Compilación de Divulgación",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Libros de Formación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Manuales y Guías Especializadas",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Notas científica",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Nueva secuencia genética",
+      "type_impactu": "Secuencia genética",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Procesos de apropiación resultado del trabajo conjunto entre un Centro de Ciencia y un grupo",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Procesos de Apropiación social del conocimiento para el fortalecimiento de cadenas productivas",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Procesos de apropiación social del conocimiento para el fortalecimiento o solución de asuntos",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Procesos de apropiación social del conocimiento para la generación de insumos",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Producciones de contenido digital",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Producción de estrategias y contenidos Transmedia",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Publicaciones editoriales no especializadas",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Red de conocimiento especializado",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento y divulgación pública de la ciencia: Talleres de creación",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Artículos",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Boletín divulgativo de resultado de investigación",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Capítulos de libro",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Consultoría científico-técnica",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Consultoría en artes, arquitectura y diseño",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Documento de trabajo",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Edicion",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Espacios de participación ciudadana",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Estrategia de comunicación del conocimiento",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Estrategias pedagógicas para el fomento a la CTI",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Evento científico",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Eventos artísticos",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Generación de contenido de audio",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Generación de contenido impresa",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Generación de contenido multimedia",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Generación de contenido virtual",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Informe Final de Investigación",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Libros",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Notas científica",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Nueva secuencia genética",
+      "type_impactu": "Secuencia genética",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Participación ciudadana en proyectos de CTI",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Red de conocimiento especializado",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Apropiación social del conocimiento: Talleres de creación",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Colección científica",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Conceptos técnicos",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Consultorias",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Consultoría científico-técnica",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Consultoría en artes, arquitectura y diseño",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Diseño Industrial",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Empresa de base tecnológica",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Empresas creativas y culturales",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Esquema de circuito integrado",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Informe Final de Investigación",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Informe técnico final",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Innovacion de gestion empresarial",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Innovaciones en procedimiento y servicio",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Innovación de procedimiento",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Nuevo registro científico",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Planta Piloto",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Productos nutraceúticos",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Prototipo Industrial",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Registros de acuerdos de licencia para la explotación de obras",
+      "type_impactu": "Documento legal",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación Norma o Reglamento",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma acto legislativo",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma manejo clínico forense",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma manuales y modelos de atención diferencial a víctimas",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma protocolos de atención a usuarios/víctimas (pacientes)",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma protocolos de vigilancia epidemiológica",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma proyecto de ley",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Regulación y norma práctica clínica",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Secreto empresarial",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Signos Distintivos",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Software",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Desarrollo tecnológico e innovación: Spin-off",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Apoyo creación de cursos",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Apoyo de programas",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Asesoría al programa Ondas",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Proyecto de extensión",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Proyecto de extensión y responsabilidad social en CTI",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Proyecto de Investigacion y Desarrollo",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Proyecto de Investigación y Creación",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Proyecto ID+I con Formación",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Tesis de doctorado",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Tesis de maestria",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Formación de recurso humano: Tesis de pregrado",
+      "type_impactu": "Tesis de pregrado",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "No categorizado: Registro general",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Artículos",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Artículos de investigación",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Capítulos de libro",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Capítulos de libro de investigación",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Libros",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Libros de Formación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Libros de investigación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Notas científica",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Obras o productos de arte, arquitectura y diseño",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Patente de invención",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Patente modelo de utilidad",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Variedad animal",
+      "type_impactu": "Variedad vegetal o animal",
+      "entity": "works"
+    },
+    {
+      "source": "minciencias",
+      "type": "Nuevo conocimiento: Variedad vegetal",
+      "type_impactu": "Variedad vegetal o animal",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "article",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "book",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "book-chapter",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "dataset",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "dissertation",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "editorial",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "erratum",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "grant",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "openalex",
+      "type": "letter",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "libguides",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "other",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "paratext",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "peer-review",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "preprint",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "reference-entry",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "report",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "retraction",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "review",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "standard",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "openalex",
+      "type": "supplementary-materials",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "aad",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "al",
+      "type_impactu": "Documento legal",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ap",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "apo",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "art",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "bol",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "cap_lib",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "cc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "con_aad",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "con_ct",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ct",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "di",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ebt",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ec",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "redcol",
+      "type": "eca",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "redcol",
+      "type": "eci",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "epa",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "epc",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "erl",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "gc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "gmcf",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "icc",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ifi",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ig",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "inf",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ipp",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "lib",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ma",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "redcol",
+      "type": "madv",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "mr",
+      "type_impactu": "Documento legal",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "n",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "nrc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "nsg",
+      "type_impactu": "Secuencia genética",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "pa",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "redcol",
+      "type": "pau",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "pcc",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "pe",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "redcol",
+      "type": "pi",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "pic",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "redcol",
+      "type": "pid",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "redcol",
+      "type": "pn",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "redcol",
+      "type": "pp",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "ppc",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "pve",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "rc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "rnl",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "rnpc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "rnpl",
+      "type_impactu": "Documento legal",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "rnr",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "rnt",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "sd",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "redcol",
+      "type": "se",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "sf",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "tc",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "td",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "tm",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "tp",
+      "type_impactu": "Tesis de pregrado",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "va",
+      "type_impactu": "Variedad vegetal o animal",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "va_b",
+      "type_impactu": "Variedad vegetal o animal",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "vv",
+      "type_impactu": "Variedad vegetal o animal",
+      "entity": "works"
+    },
+    {
+      "source": "redcol",
+      "type": "wp",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "article",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "book",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "incollection",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "inproceedings",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "mastersthesis",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "misc",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "phdthesis",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "scholar",
+      "type": "techreport",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 11: Artículo 111: Publicado en revista especializada",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 11: Artículo 112: Corto (Resumen)",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 11: Artículo 113: Revisión (Survey)",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 11: Artículo 114: Caso clínico",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 12: Trabajos en eventos (Capítulos de memoria) 121: Completo",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 12: Trabajos en eventos (Capítulos de memoria) 122: Resumen",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 131: Otro libro publicado",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 132: Capítulo de libro",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 133: Libro pedagógico y/o de divulgación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 134: Libro resultado de investigación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 135: Otro capítulo de libro publicado",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 136: Traducciones Filológicas y Edición de Fuentes",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 137: Libro de creación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 138: Libros de formación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 139: Libros de divulgación y/o Compilación de divulgación",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 13: Libro 140: Manuales y Guías Especializadas",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 14: Otro artículo publicado 141: Periódico de noticias",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 14: Otro artículo publicado 142: Revista de divulgación",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 14: Otro artículo publicado 143: Carta al editor",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 14: Otro artículo publicado 144: Reseña de libro",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 14: Otro artículo publicado 145: Columna de opinión",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1A: Traducciones 1A1: Artículo",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1A: Traducciones 1A2: Libro",
+      "type_impactu": "Libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1A: Traducciones 1A9: Otra",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1B: Partituras musicales 1B1: Canto",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1B: Partituras musicales 1B2: Coral",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1B: Partituras musicales 1B3: Orquesta",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1B: Partituras musicales 1B9: Otro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1D: Documento de trabajo (Working Paper)",
+      "type_impactu": "Documento de trabajo",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1K: Nota científica",
+      "type_impactu": "Artículo de revista",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1Z: Otra producción bibliográfica 1Z2: Epílogo",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1Z: Otra producción bibliográfica 1Z3: Introducción",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1Z: Otra producción bibliográfica 1Z4: Prólogo",
+      "type_impactu": "Capítulo de libro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "1: Producción bibliográfica 1Z: Otra producción bibliográfica 1Z9: Otra",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 21: Softwares 211: Computacional",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 21: Softwares 212: Multimedia",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 21: Softwares 219: Otra",
+      "type_impactu": "Código fuente",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 22: Productos tecnológicos 225: Gen Clonado",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 22: Productos tecnológicos 226: Base de datos de referencia para investigacion",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 22: Productos tecnológicos 227: Coleccion biologica de referencia con informacion sistematizada",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 22: Productos tecnológicos 229: Otro",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 23: Innovación de proceso o procedimiento",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 241: Servicios de Proyectos de I+D+I",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 242: Acciones de transferencia tecnológica",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 243: Comercialización de tecnología",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 244: Desarrollo de productos",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 245: Informe técnico",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 246: Análisis de competitividad",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 247: Implementación de sistemas de análisis",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 248: Consultoría en artes, arquitectura y diseño",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 24: Consultoría Científico Tecnológica e Informe Técnico 249: Otra",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 251: Social",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 252: Educativa",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 253: Ambiental o de Salud",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica 2541: Básica",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica 2542: Terminología",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica 2543: Ensayo",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica 2544: Producto",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica 2545: Proceso",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 254: Técnica 2546: Servicio",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 255: Guía de práctica clínica",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 256: Proyecto de ley",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 258: Protocolo de atención a pacientes",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 259: Manuales y modelos de atención a víctimas",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 25: Regulación, norma, reglamento o legislación 25A: Acto legislativo",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 26: Diseño Industrial",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 27: Planta piloto",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 28: Prototipo 281: Industrial",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 28: Prototipo 282: Servicios",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 29: Reglamento Técnico",
+      "type_impactu": "Norma",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2A: Cartas, mapas o similares 2A1: Aerofotograma",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2A: Cartas, mapas o similares 2A2: Carta",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2A: Cartas, mapas o similares 2A3: Fotograma",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2A: Cartas, mapas o similares 2A4: Mapa",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2A: Cartas, mapas o similares 2A9: Otra",
+      "type_impactu": "Material cartográfico",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2B: Cursos de corta duración dictados 2B1: Extensión extracurricular",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2B: Cursos de corta duración dictados 2B2: Perfeccionamiento",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2B: Cursos de corta duración dictados 2B3: Especialización",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2B: Cursos de corta duración dictados 2B9: Otro",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D1: Libro",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D2: Anales",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D3: Catálogo",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D4: Compilación",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D5: Enciclopedia",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D6: Revista",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2D: Editoración o revisión 2D9: Otro",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2E: Mantenimiento de obras artísticas 2E1: Conservación",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2E: Mantenimiento de obras artísticas 2E9: Otro",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G1: Concierto",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G2: Concurso",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G3: Congreso",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G4: Exposición",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G5: Festival",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G6: Seminario",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G7: Simposio",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G8: Taller",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2G9: Otro",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2G: Organización de eventos 2GA: Encuentro",
+      "type_impactu": "Evento",
+      "entity": "events"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2H: Multimedia 2H1: Entrevista",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2H: Multimedia 2H2: Mesa redonda",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2H: Multimedia 2H3: Comentario",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2H: Multimedia 2H4: Base de datos o repositorio para investigación",
+      "type_impactu": "Conjunto de datos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2H: Multimedia 2H9: Otro",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2I: Informes de investigación",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J1: Comunicación",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J2: Conferencia",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J3: Congreso",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J4: Seminario",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J5: Simposio",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J6: Ponencia",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2J: Presentación de trabajo 2J9: Otro",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2K: Variedad vegetal",
+      "type_impactu": "Variedad vegetal",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2L: Variedad animal",
+      "type_impactu": "Variedad animal",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2M: Esquema de circuito integrado",
+      "type_impactu": "Modelo",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2N: Innovaciones generadas de producción empresarial 2N1: Organizacional",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2N: Innovaciones generadas de producción empresarial 2N2: Empresarial",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2O: Empresa de base tecnológica 2O1: Spin-off",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2O: Empresa de base tecnológica 2O2: Start-up",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2P: Impresa 2P1: Cartilla",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2P: Impresa 2P2: Boletín",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2P: Impresa 2P3: Manual",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2P: Impresa 2P4: Guía",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2P: Impresa 2P5: Metodología",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Q: Contenido Virtual 2Q1: Página web",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Q: Contenido Virtual 2Q2: Portal",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Q: Contenido Virtual 2Q3: Micrositio",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Q: Contenido Virtual 2Q4: Aplicativo",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Q: Contenido Virtual 2Q5: Blog",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Q: Contenido Virtual 2Q6: Otro",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2R: Nuevo registro científico",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2S: Protocolo de vigilancia epidemiológica",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2U: Productos nutraceúticos",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2V: Concepto técnico",
+      "type_impactu": "Informe",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2W: Generación de contenido de audio",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "2: Producción técnica 2Y: Nueva secuencia genética",
+      "type_impactu": "Secuencia genética",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 31: Presentaciones de obras artísticas 311: Coreográfica",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 31: Presentaciones de obras artísticas 312: Literaria",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 31: Presentaciones de obras artísticas 313: Musical",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 31: Presentaciones de obras artísticas 314: Teatral",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 31: Presentaciones de obras artísticas 319: Otro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 32: Arreglos musicales 321: Canto",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 32: Arreglos musicales 323: Orquesta",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 32: Arreglos musicales 329: Otro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 33: Composiciones musicales 331: Canto",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 33: Composiciones musicales 332: Coral",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 33: Composiciones musicales 333: Orquesta",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 33: Composiciones musicales 339: Otro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 34: Cursos de corta duración 341: Extensión extracurricular",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 34: Cursos de corta duración 342: Perfeccionamiento",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 34: Cursos de corta duración 343: Especialización",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 34: Cursos de corta duración 349: Otro",
+      "type_impactu": "Programa de curso",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 35: Presentaciones de radio o TV 351: Danza",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 35: Presentaciones de radio o TV 352: Música",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 35: Presentaciones de radio o TV 353: Teatro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 35: Presentaciones de radio o TV 359: Otro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 361: Cine",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 362: Dibujo",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 363: Escultura",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 364: Fotografía",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 365: Grabado",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 366: Instalación",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 367: Pintura",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 368: Televisión",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 369: Vídeo",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 36: Obras de artes visual 36Z: Otro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 37: Sonorización 371: Cine",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 37: Sonorización 372: Música",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 37: Sonorización 373: Radio",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 37: Sonorización 374: Televisión",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 37: Sonorización 375: Teatro",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3: Producción artística/cultural 3Z: Otra producción artística/cultural",
+      "type_impactu": "Producción artística",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3A: Apropiación social del conocimiento 3A1: Proceso de Apropiación Social del Conocimiento para el fortalecimiento o solución de asuntos de interés social",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3A: Apropiación social del conocimiento 3A2: Proceso de Apropiación Social del Conocimiento resultado del trabajo conjunto entre un Centro de Ciencia y un grupo de investigación",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3A: Apropiación social del conocimiento 3A3: Proceso de Apropiación Social del Conocimiento para la generación de insumos de política pública y normatividad",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "3A: Apropiación social del conocimiento 3A4: Proceso de Apropiación Social del Conocimiento para el fortalecimiento de cadenas",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A1: Publicaciones editoriales no especializadas: cartillas, manual no especializado, periódicos, revistas, boletín, etc",
+      "type_impactu": "Publicaciones editoriales no especializadas",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A21: Audiovisuales 4A211: Cápsulas de video",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A21: Audiovisuales 4A212: Video",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A22: Sonoro 4A221: Podcast",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A22: Sonoro 4A222: Cápsulas radiales",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A22: Sonoro 4A223: Programa radial",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A23: Recursos gráficos digitales 4A231: Infografías",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A2: Producciones de contenido digital 4A23: Recursos gráficos digitales 4A232: Videografías",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A3: Producción de estrategias y contenidos transmedia",
+      "type_impactu": "Audiovisual",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "4A: Divulgación pública de la ciencia 4A4: Desarrollos web: Páginas web-blogs, micrositios, aplicativos móviles + estrategia de Redes Sociales",
+      "type_impactu": "Recursos electrónicos",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "5: Demás trabajos 51: Demás trabajos",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "5: Demás trabajos 51: Demás trabajos 511: Póster",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "6: Trabajos dirigidos/Tutorías 61: Tesis de doctorado",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "6: Trabajos dirigidos/Tutorías 62: Trabajo de grado de maestría o especialidad clínica",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "6: Trabajos dirigidos/Tutorías 63: Monografía de conclusión de curso de perfeccionamiento/especialización",
+      "type_impactu": "Tesis de posgrado",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "6: Trabajos dirigidos/Tutorías 64: Trabajos de grado de pregrado",
+      "type_impactu": "Tesis de pregrado",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "6: Trabajos dirigidos/Tutorías 65: Iniciación Científica",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "6: Trabajos dirigidos/Tutorías 66: Trabajos dirigidos/Tutorías de otro tipo",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "7: Producción en artes, arquitectura y diseño 7A1: Efímero",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "7: Producción en artes, arquitectura y diseño 7A2: Permanente",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "7: Producción en artes, arquitectura y diseño 7A3: Procesual",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "7: Producción en artes, arquitectura y diseño 7A: Obra o producto",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "7: Producción en artes, arquitectura y diseño 7B: Industrias creativas y culturales",
+      "type_impactu": "Innovación y apropiación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "8: Signos distintivos 81: Marcas",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "8: Signos distintivos 84: Nombres comerciales",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "8: Signos distintivos 85: Denominaciones de origen",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "8: Signos distintivos 87: Marcas de certificación",
+      "type_impactu": "Otro",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A1: Jurado/Comisiones evaluadoras de trabajo de grado A11: Maestría",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A1: Jurado/Comisiones evaluadoras de trabajo de grado A12: Doctorado",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A1: Jurado/Comisiones evaluadoras de trabajo de grado A14: Curso de perfeccionamiento/especialización",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A1: Jurado/Comisiones evaluadoras de trabajo de grado A15: Pregrado",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A1: Jurado/Comisiones evaluadoras de trabajo de grado A16: Especialidad Médica",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A1: Jurado/Comisiones evaluadoras de trabajo de grado A19: Otra",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A21: Profesor titular",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A22: Concurso docente",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A23: Jefe de cátedra",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A24: Evaluación de cursos",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A25: Acreditación de programas",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A26: Asignación de becas",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "A: Datos complementarios A2: Participación en comités de evaluación A29: Otra",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AA",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AB",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AC",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AD",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AE",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AF",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "AG",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "CC",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "CG",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "CR",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "EN",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "EX",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "scienti",
+      "type": "IC",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "ID",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "scienti",
+      "type": "IN",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "scienti",
+      "type": "MI",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "MU",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "OT",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "OU",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "PE",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "PF",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "PI",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "PIV",
+      "type_impactu": "Patente",
+      "entity": "patents"
+    },
+    {
+      "source": "scienti",
+      "type": "RC",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "SE",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "SI",
+      "type_impactu": "Resultado de conferencia",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "TA",
+      "type_impactu": "Otro",
+      "entity": "works"
+    },
+    {
+      "source": "scienti",
+      "type": "TC",
+      "type_impactu": "Investigación-creación",
+      "entity": "works"
+    },
+    {
+      "source": "siiu",
+      "type": "1:Investigación 11:Aplicada",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "siiu",
+      "type": "1:Investigación 12:Básica",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "siiu",
+      "type": "2:Extensión 23:Responsabilidad e Innovación Social",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "siiu",
+      "type": "2:Extensión 25:Cultura y Patrimonio",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    },
+    {
+      "source": "siiu",
+      "type": "2:Extensión 26:Innovación",
+      "type_impactu": "Proyecto",
+      "entity": "projects"
+    }
+  ],
+  "unmapped": [
+    {
+      "sheet": "COAR",
+      "row": 54,
+      "source": "coar",
+      "type": "c_46ec",
+      "entity": "works",
+      "reason": "missing_type_impactu"
+    },
+    {
+      "sheet": "INFO-EU-REPO",
+      "row": 17,
+      "source": "eu-repo",
+      "type": "other",
+      "entity": "works",
+      "reason": "missing_type_impactu"
+    }
+  ]
+}
