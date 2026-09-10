@@ -1573,6 +1573,41 @@ def set_affiliations_citations_count_openalex(collection) -> None:
     collection.update_many({}, pipeline)
 
 
+def set_person_citations_count_openalex(collection) -> None:
+    pipeline = [
+        {
+            "$set": {
+                "citations_count_openalex": {
+                    "$ifNull": [
+                        {
+                            "$getField": {
+                                "field": "count",
+                                "input": {
+                                    "$first": {
+                                        "$filter": {
+                                            "input": "$citations_count",
+                                            "as": "c",
+                                            "cond": {
+                                                "$eq": [
+                                                    "$$c.source",
+                                                    "openalex",
+                                                ]
+                                            },
+                                        }
+                                    }
+                                },
+                            }
+                        },
+                        0,
+                    ]
+                }
+            }
+        }
+    ]
+
+    collection.update_many({}, pipeline)
+
+
 def set_sources_products_count(collection) -> None:
     """
     Function to set products count in sources from works
@@ -2713,6 +2748,7 @@ DENORMALIZATION_PIPELINES = {
     "person": [
         set_person_affiliations_relations,
         clean_person_empty_affiliations_array,
+        set_person_citations_count_openalex,
         set_person_h_index_metrics,
     ],
     "affiliations": [
