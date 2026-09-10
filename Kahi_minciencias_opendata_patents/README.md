@@ -1,42 +1,37 @@
-<center><img src="https://raw.githubusercontent.com/colav/colav.github.io/master/img/Logo.png"/></center>
+# Kahi minciencias opendata patents
 
-# Kahi minciencias opendata plugin 
-Kahi will use this plugin to insert or update the patents information from the minciencias opendata database.
+Imports patents from the `patents` member of an audited, published six-entity
+ScienTI release. The plugin resolves `COD_RH` authors and `COL` research groups
+against the Kahi `person` and `affiliations` collections without changing them.
 
-# Description
-Plugin that reads the information from minciencias opendata database to insert or update the information of the of academic venets in colav's database.
+The source release must include exactly `works`, `projects`, `patents`, `events`,
+`persons`, and `affiliations`, have a passing audit with no critical anomalies,
+and retain the audited document count. `release_name` must be immutable and
+explicit; `current` and the former open-data options are rejected.
 
-# Installation
-You could download the repository from github. Go into the folder where the setup.py is located and run
-```shell
-pip3 install .
-```
-From the package you can install by running
-```shell
-pip3 install kahi_minciencias_opendata_patents
-```
+## Usage
 
-
-# Usage
-To use this plugin you must have kahi installed in your system and construct a yaml file such as
 ```yaml
 config:
-  database_url: localhost:27017
+  database_url: mongodb://localhost:27017
   database_name: kahi
-  log_database: kahi
-  log_collection: log
 workflow:
   minciencias_opendata_patents:
-    database_url: localhost:27017
-    database_name: yuku
-    collection_name: gruplac_production_data
-    num_jobs: 6
+    database_url: mongodb://localhost:27017
+    database_name: dam
+    release_name: scienti_six_entities_YYYYMMDD
+    batch_size: 500
     verbose: 1
 ```
 
-# License
-BSD-3-Clause License 
+Progress and source evidence are recorded in
+`minciencias_opendata_patents_runs`, so a failed import resumes after the last
+completed batch. Existing patent metadata from other sources is preserved.
 
-# Links
-http://colav.udea.edu.co/
+## Installation
 
+```shell
+pip install kahi_minciencias_opendata_patents
+```
+
+BSD-3-Clause License.
