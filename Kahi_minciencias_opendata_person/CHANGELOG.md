@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.5-beta - 2026-09-09
 
 - Replace the legacy multi-collection reader and global aggregations with direct
   streaming from an explicit audited six-entity ScienTI person snapshot.
