@@ -1,5 +1,4 @@
-import pandas as pd
-
+from kahi_impactu_type_catalog import get_impactu_catalog
 from kahi_impactu_postcalculations.typing import (
     build_type_lookup,
     functors,
@@ -8,116 +7,129 @@ from kahi_impactu_postcalculations.typing import (
 )
 
 
-def test_minciencias_accepts_single_type():
-    types = pd.DataFrame(
-        {"Tipo": ["Capítulo de libro"], "Tipo ImpactU": ["book-chapter"]}
-    )
-    result = process_minciencias(
-        {"types": [{"source": "minciencias", "type": "Capítulo de libro"}]},
-        types,
-    )
-    assert result["type"] == "book-chapter"
-
-
-def test_minciencias_accepts_already_normalized_single_type():
-    types = pd.DataFrame(
-        {
-            "Tipo": ["Nuevo conocimiento: Capítulos de libro"],
-            "Tipo ImpactU": ["Capítulo de libro"],
-        }
-    )
-    result = process_minciencias(
-        {"types": [{"source": "minciencias", "type": "Capítulo de libro"}]},
-        types,
-    )
-    assert result["type"] == "Capítulo de libro"
-
-
-def test_minciencias_prefers_two_level_mapping():
-    types = pd.DataFrame(
-        {
-            "Tipo": ["Producción bibliográfica: Capítulo de libro"],
-            "Tipo ImpactU": ["book-chapter"],
-        }
-    )
-    result = process_minciencias(
-        {
-            "types": [
-                {"type": "Producción bibliográfica"},
-                {"type": "Capítulo de libro"},
-            ]
-        },
-        types,
-    )
-    assert result["type"] == "book-chapter"
-
-
-def test_crossref_functor_is_registered():
-    types = pd.DataFrame(
-        {"Tipo": ["journal-article"], "Tipo ImpactU": ["article"]}
-    )
-    result = functors["crossref"](
-        {"types": [{"type": "journal-article"}]}, types
-    )
-    assert result == {
-        "provenance": "crossref",
-        "source": "impactu",
-        "type": "article",
+def mapping(source, native_type, impactu_type, entity="works"):
+    return {
+        "source": source,
+        "type": native_type,
+        "type_impactu": impactu_type,
+        "entity": entity,
     }
 
 
-class _Works:
-    def __init__(self):
-        self.update = None
+def test_process_minciencias_maps_single_type():
+    lookup = build_type_lookup(
+        [mapping("minciencias", "Capítulo de libro", "book-chapter")],
+        "minciencias",
+    )
+    work = {"types": [{"type": "Capítulo de libro"}]}
+    assert process_minciencias(work, lookup)["type"] == "book-chapter"
 
-    def update_one(self, query, update):
-        self.update = (query, update)
+
+def test_process_minciencias_accepts_normalized_single_type():
+    lookup = build_type_lookup(
+        [
+            mapping(
+                "minciencias",
+                "Nuevo conocimiento: Capítulos de libro",
+                "Capítulo de libro",
+            )
+        ],
+        "minciencias",
+    )
+    work = {"types": [{"type": "Capítulo de libro"}]}
+    assert process_minciencias(work, lookup)["type"] == "Capítulo de libro"
+
+
+def test_process_minciencias_prefers_two_level_mapping():
+    lookup = build_type_lookup(
+        [
+            mapping(
+                "minciencias",
+                "Producción bibliográfica: Capítulo de libro",
+                "research-article",
+            ),
+        ],
+        "minciencias",
+    )
+    work = {
+        "types": [
+            {"type": "Producción bibliográfica"},
+            {"type": "Capítulo de libro"},
+        ]
+    }
+    assert process_minciencias(work, lookup)["type"] == "research-article"
+
+
+def test_crossref_functor_uses_lookup():
+    lookup = build_type_lookup(
+        [mapping("crossref", "journal-article", "article")],
+        "crossref",
+    )
+    work = {"types": [{"type": "journal-article"}]}
+    assert functors["crossref"](work, lookup)["type"] == "article"
 
 
 def test_process_type_is_idempotent():
-    works = _Works()
-    db = {"works": works}
-    types = pd.DataFrame(
-        {
-            "Fuente": ["crossref"],
-            "Tipo": ["journal-article"],
-            "Tipo ImpactU": ["article"],
-        }
-    )
-    process_type(
-        db,
-        {"_id": "w1", "types": [{"type": "journal-article"}]},
+    calls = []
+
+    class Collection:
+        def update_one(self, query, update):
+            calls.append((query, update))
+
+    types = [mapping("crossref", "journal-article", "article")]
+    work = {"_id": "work-1", "types": [{"type": "journal-article"}]}
+    process_type({"works": Collection()}, work, "crossref", types, False)
+    assert calls == [
+        (
+            {"_id": "work-1"},
+            {
+                "$addToSet": {
+                    "types": {
+                        "provenance": "crossref",
+                        "source": "impactu",
+                        "type": "article",
+                    }
+                }
+            },
+        )
+    ]
+
+
+def test_build_type_lookup_returns_mapping_result():
+    lookup = build_type_lookup(
+        [mapping("crossref", "journal-article", "article")],
         "crossref",
-        types,
-        verbose=False,
     )
-    assert "$addToSet" in works.update[1]
+    assert lookup["by_type"]["journal-article"] == ("article",)
 
 
-def test_lookup_matches_dataframe_result():
-    types = pd.DataFrame({
-        "Fuente": ["coar", "coar"],
-        "Tipo": ["article", "book"],
-        "Tipo ImpactU": ["Artículo", "Libro"],
-    })
-    lookup = build_type_lookup(types, "coar")
+def test_process_type_warnings_depend_on_verbose(capsys):
+    class Collection:
+        def update_one(self, _query, _update):
+            raise AssertionError("update_one should not be called")
 
-    assert functors["coar"](
-        {"types": [{"type": "article"}]}, lookup
-    )["type"] == "Artículo"
-
-
-def test_warnings_depend_on_verbose(capsys):
-    types = pd.DataFrame({
-        "Fuente": ["coar"],
-        "Tipo": ["article"],
-        "Tipo ImpactU": ["Artículo"],
-    })
-    work = {"_id": "w1", "types": [{"type": "unknown"}, {"type": "other"}]}
-    db = {"works": _Works()}
-
-    process_type(db, work, "coar", build_type_lookup(types, "coar"), verbose=False)
+    types = [mapping("crossref", "journal-article", "article")]
+    work = {"_id": "work-1", "types": [{"type": "unknown"}]}
+    db = {"works": Collection()}
+    process_type(db, work, "crossref", types, False)
     assert capsys.readouterr().out == ""
+    process_type(db, work, "crossref", types, True)
+    assert "work-1" in capsys.readouterr().out
 
-    process_type(db, work, "coar", build_type_lookup(types, "coar"), verbose=True)
-    assert "WARNING:" in capsys.readouterr().out
+
+def test_shared_catalog_drives_kahi_type_lookup():
+    catalog = get_impactu_catalog()
+    redcol_lookup = build_type_lookup(catalog, "redcol")
+    ciarp_lookup = build_type_lookup(catalog, "ciarp")
+
+    redcol_work = {"types": [{"type": "td"}]}
+    assert functors["redcol"](redcol_work, redcol_lookup)["type"] == (
+        "Tesis de posgrado"
+    )
+
+    ciarp_work = {
+        "types": [{"type": "Direccion de trabajo de grado de doctorado"}]
+    }
+    assert functors["ciarp"](ciarp_work, ciarp_lookup)["type"] == (
+        "Tesis de posgrado"
+    )

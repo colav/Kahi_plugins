@@ -25,18 +25,37 @@ def get_scienti_string(work):
 
 def build_type_lookup(types, source):
     """Build immutable O(1) mappings for one source."""
-    filtered = types[types["Fuente"].str.contains(source, case=False, na=False)]
+    if hasattr(types, "payload"):
+        records = types.payload.get("mappings", [])
+    elif isinstance(types, dict) and "mappings" in types:
+        records = types["mappings"]
+    elif hasattr(types, "to_dict"):
+        records = types.to_dict("records")
+    else:
+        records = types
+
     by_type = {}
-    for type_name, group in filtered.groupby("Tipo", dropna=False):
-        if isinstance(type_name, str):
-            by_type[type_name] = tuple(
-                group["Tipo ImpactU"].dropna().unique().tolist()
-            )
+    impactu_types = set()
+    source_key = str(source).casefold()
+    for record in records:
+        record_source = record.get("source", record.get("Fuente", ""))
+        if source_key not in str(record_source).casefold():
+            continue
+        if record.get("entity", record.get("Entidad", "works")) != "works":
+            continue
+        type_name = record.get("type", record.get("Tipo"))
+        impactu_type = record.get("type_impactu", record.get("Tipo ImpactU"))
+        if not isinstance(type_name, str) or not impactu_type:
+            continue
+        values = by_type.setdefault(type_name, [])
+        if impactu_type not in values:
+            values.append(impactu_type)
+        impactu_types.add(impactu_type)
     return {
-        "by_type": by_type,
-        "impactu_types": frozenset(
-            filtered["Tipo ImpactU"].dropna().unique().tolist()
-        ),
+        "by_type": {
+            type_name: tuple(values) for type_name, values in by_type.items()
+        },
+        "impactu_types": frozenset(impactu_types),
     }
 
 
@@ -62,8 +81,8 @@ def process_scienti(work, types, verbose=False):
     ----------
     work: dict
         The work from kahi
-    types: pandas.DataFrame
-        The types dataframe
+    types: dict or sequence
+        The precompiled lookup or catalog mappings
     verbose: bool
         If True, print warnings
 
@@ -77,7 +96,11 @@ def process_scienti(work, types, verbose=False):
     if len(impactu_type) > 1 and verbose:
         print(f"WARNING: more than one type found for {t} = {impactu_type}")
     if len(impactu_type) == 1:
-        return {"provenance": "scienti", "source": "impactu", "type": impactu_type[0]}
+        return {
+            "provenance": "scienti",
+            "source": "impactu",
+            "type": impactu_type[0],
+        }
     return {}
 
 
@@ -89,8 +112,8 @@ def process_minciencias(work, types, verbose=False):
     ----------
     work: dict
         The work from kahi
-    types: pandas.DataFrame
-        The impactu types
+    types: dict or sequence
+        The precompiled lookup or catalog mappings
 
     Returns:
     -------
@@ -133,7 +156,11 @@ def process_minciencias(work, types, verbose=False):
     if len(impactu_type) > 1 and verbose:
         print(f"WARNING: more than one type found for {t} = {impactu_type}")
     if len(impactu_type) == 1:
-        return {"provenance": "minciencias", "source": "impactu", "type": impactu_type[0]}
+        return {
+            "provenance": "minciencias",
+            "source": "impactu",
+            "type": impactu_type[0],
+        }
     return {}
 
 
@@ -159,8 +186,8 @@ def process_others(source):
         ----------
         work: dict
             The work from kahi
-        types: pandas.DataFrame
-            The impactu types
+        types: dict or sequence
+            The precompiled lookup or catalog mappings
 
         Returns:
         -------
@@ -180,7 +207,11 @@ def process_others(source):
             print(
                 f"WARNING: more than one type found for {t} = {impactu_type}")
         if len(impactu_type) == 1:
-            return {"provenance": source, "source": "impactu", "type": impactu_type[0]}
+            return {
+                "provenance": source,
+                "source": "impactu",
+                "type": impactu_type[0],
+            }
         return {}
     return process_source
 
@@ -208,9 +239,9 @@ def process_type(db, work, source, types, verbose=False):
     work: dict
         The work from kahi
     source: str
-        The source of the types ex: minciencias, scienti, ciarp, openalex, scholar
-    types: pandas.DataFrame
-        The impactu types
+        Type source, for example minciencias, scienti, ciarp, or openalex
+    types: dict or sequence
+        The precompiled lookup or catalog mappings
     verbose: bool
         If True, print warnings
 
@@ -219,7 +250,11 @@ def process_type(db, work, source, types, verbose=False):
         source_types = types
     else:
         source_types = build_type_lookup(types, source)
-    if len(work["types"]) > 1 and source not in ("minciencias", "scienti") and verbose:
+    if (
+        len(work["types"]) > 1
+        and source not in ("minciencias", "scienti")
+        and verbose
+    ):
         print(f"WARNING: more than one type found for {source} = {work}")
 
     impactu_type = functors[source](work, source_types, verbose=verbose)

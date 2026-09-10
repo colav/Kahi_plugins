@@ -16,6 +16,9 @@ Supports the calculation of the following metrics:
 
 ## Dependencies
 This package requires MongoDB to be installed and running and kahi already executed.
+ImpactU type mappings are loaded from the versioned
+`Kahi_impactu_type_catalog` package; this plugin no longer maintains a separate
+Excel copy.
 
 ## Package
 To install the package, run the following command:
@@ -81,6 +84,8 @@ Notes:
   titles are processed once per work instead of once per person/affiliation.
 - Type-mapping warnings are emitted only with `verbose: 4` or higher. Type
   mappings are compiled once per source and reused by all workers.
+- Type rules come from the shared catalog JSON bundled by
+  `Kahi_impactu_type_catalog==0.1.0`.
 
 
 # License
