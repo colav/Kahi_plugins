@@ -12,6 +12,18 @@ from time import time
 import re
 
 
+CONTRACT_VERSION = "scienti-kahi-ingestion-v1"
+SNAPSHOT_ENTITIES = {
+    "works", "projects", "patents", "events", "persons", "affiliations"
+}
+SNAPSHOT_LIST_FIELDS = (
+    "updated", "names", "aliases", "abbreviations", "types", "status",
+    "addresses", "external_urls", "external_ids", "subjects", "ranking",
+    "description",
+)
+SNAPSHOT_FIELDS = set(SNAPSHOT_LIST_FIELDS) | {"year_established", "relations"}
+
+
 def is_strict_institution_match(match):
     """Accept exact names or high-confidence similarities only."""
     if not match:
@@ -56,30 +68,33 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
         self.collection.create_index("names.name")
         self.collection.create_index([("names.name", TEXT)])
 
-        self.openadata_client = MongoClient(
-            config["minciencias_opendata_affiliations"]["database_url"])
-        if config["minciencias_opendata_affiliations"]["database_name"] not in self.openadata_client.list_database_names():
+        source_config = config["minciencias_opendata_affiliations"]
+        self.source_mode = source_config.get("source_mode")
+        if self.source_mode not in {"snapshot", "legacy_open_data"}:
+            raise ValueError(
+                "minciencias_opendata_affiliations.source_mode must explicitly be "
+                "'snapshot' or 'legacy_open_data'"
+            )
+        self.openadata_client = MongoClient(source_config["database_url"])
+        if source_config["database_name"] not in self.openadata_client.list_database_names():
             raise Exception("Database {} not found in {}".format(
-                config["minciencias_opendata_affiliations"]['database_name'], config["minciencias_opendata_affiliations"]["database_url"]))
+                source_config['database_name'], source_config["database_url"]))
 
-        self.openadata_db = self.openadata_client[config["minciencias_opendata_affiliations"]["database_name"]]
+        self.openadata_db = self.openadata_client[source_config["database_name"]]
 
-        if config["minciencias_opendata_affiliations"]["collection_name"] not in self.openadata_db.list_collection_names():
-            raise Exception("Collection {} not found in {}".format(
-                config["minciencias_opendata_affiliations"]['collection_name'], config["minciencias_opendata_affiliations"]["database_url"]))
+        if self.source_mode == "snapshot":
+            self._configure_snapshot_source(source_config)
+        else:
+            self._configure_legacy_source(source_config)
 
-        self.openadata_collection = self.openadata_db[
-            config["minciencias_opendata_affiliations"]["collection_name"]]
-        self.openadata_collection.create_index(
-            [("cod_grupo_gr", ASCENDING), ("ano_convo", DESCENDING)],
-            name="cod_grupo_gr_1_ano_convo_-1",
-        )
-
-        self.n_jobs = config["minciencias_opendata_affiliations"]["num_jobs"] if "num_jobs" in config["minciencias_opendata_affiliations"].keys(
-        ) else 1
-
-        self.verbose = config["minciencias_opendata_affiliations"][
-            "verbose"] if "verbose" in config["minciencias_opendata_affiliations"].keys() else 0
+        self.n_jobs = source_config.get("num_jobs", 1)
+        self.verbose = source_config.get("verbose", 0)
+        self.batch_size = max(1, int(source_config.get("batch_size", 500)))
+        if self.source_mode == "snapshot":
+            self.runs = self.db[source_config.get(
+                "runs_collection", "minciencias_opendata_affiliations_runs"
+            )]
+            self.run_id = "affiliations:{}".format(self.snapshot_release_name)
 
         self.inserted_cod_grupo = []
         self.institution_match_cache = {}
@@ -89,8 +104,65 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
                 if ext["source"] == "minciencias":
                     self.inserted_cod_grupo.append(ext["id"])
 
+    def _configure_legacy_source(self, source_config):
+        collection_name = source_config.get("collection_name")
+        if not collection_name or collection_name not in self.openadata_db.list_collection_names():
+            raise Exception("Collection {} not found in {}".format(
+                collection_name, source_config["database_url"]))
+        self.openadata_collection = self.openadata_db[collection_name]
+        self.openadata_collection.create_index(
+            [("cod_grupo_gr", ASCENDING), ("ano_convo", DESCENDING)],
+            name="cod_grupo_gr_1_ano_convo_-1",
+        )
+
+    def _configure_snapshot_source(self, source_config):
+        release_name = str(source_config.get("release_name") or "")
+        if not release_name or release_name == "current":
+            raise ValueError("snapshot mode requires an explicit immutable release_name")
+        release = self.openadata_db["scienti_final_release_publications"].find_one(
+            {"_id": release_name}
+        ) or {}
+        audit = self.openadata_db["scienti_final_release_audits"].find_one(
+            {"_id": release.get("audit")}
+        ) or {}
+        collections = release.get("collections") or {}
+        materialization_runs = release.get("materialization_runs") or {}
+        evidence = (audit.get("evidence") or {}).get("affiliations") or {}
+        collection_name = str(collections.get("affiliations") or "")
+        configured_collection = str(source_config.get("collection_name") or "")
+        if (
+            release.get("status") != "published"
+            or release.get("entity_count") != 6
+            or set(collections) != SNAPSHOT_ENTITIES
+            or set(materialization_runs) != SNAPSHOT_ENTITIES
+            or audit.get("status") != "passed"
+            or audit.get("release_name") != release_name
+            or audit.get("collections") != collections
+            or audit.get("materialization_runs") != materialization_runs
+            or int(audit.get("critical_anomalies") or 0)
+            or evidence.get("collection") != collection_name
+            or evidence.get("materialization_run")
+            != materialization_runs.get("affiliations")
+            or (configured_collection and configured_collection != collection_name)
+            or collection_name not in self.openadata_db.list_collection_names()
+        ):
+            raise RuntimeError("six-entity affiliation snapshot is not proven and published")
+        actual = self.openadata_db[collection_name].count_documents({})
+        if actual != int(evidence.get("documents") or -1):
+            raise RuntimeError("affiliation snapshot count changed after release audit")
+        self.snapshot_release_name = release_name
+        self.snapshot_audit_name = audit["_id"]
+        self.snapshot_materialization_run = materialization_runs["affiliations"]
+        self.snapshot_documents = actual
+        self.snapshot_collection_name = collection_name
+        self.openadata_collection = self.openadata_db[collection_name]
+
     def rename_institution(self, name):
-        if name == "Colegio Mayor Nuestra Señora del Rosario".lower() or name == "Colegio Mayor de Nuestra Señora del Rosario".lower() or name == 'Colegio Mayor Nuestra Senora Del Rosario'.lower():
+        if name in {
+            "colegio mayor nuestra señora del rosario",
+            "colegio mayor de nuestra señora del rosario",
+            "colegio mayor nuestra senora del rosario",
+        }:
             return "universidad del rosario"
         elif name == "universidad de la guajira":
             return "guajira"
@@ -292,7 +364,6 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             "addresses": 1,
             "external_ids": 1,
             "relations": 1,
-            "score": {"$meta": "textScore"}
         }
         base_query = {
             "types.type": {"$ne": "group"},
@@ -304,10 +375,21 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
         }
         candidates = []
         seen = set()
+        exact_query = deepcopy(base_query)
+        exact_query["names.name"] = {
+            "$regex": "^{}$".format(re.escape(inst_aval)), "$options": "i"
+        }
+        for candidate in self.collection.find(exact_query, projection).limit(100):
+            candidates.append(candidate)
+            seen.add(candidate["_id"])
+        if candidates:
+            return candidates
+        text_projection = deepcopy(projection)
+        text_projection["score"] = {"$meta": "textScore"}
         for search in ['"{}"'.format(inst_aval), inst_aval]:
             query = base_query.copy()
             query["$text"] = {"$search": search}
-            cursor = self.collection.find(query, projection).sort(
+            cursor = self.collection.find(query, text_projection).sort(
                 [("score", {"$meta": "textScore"})]).limit(100)
             for candidate in cursor:
                 if candidate["_id"] not in seen:
@@ -493,13 +575,21 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
                         "level": 0,
                         "name": reg["nme_gran_area_gr"] if "nme_gran_area_gr" in reg.keys() else "",
                         "id": "",
-                        "external_ids": [{"source": "OECD", "id": reg["id_area_con_gr"][0] if "id_area_con_gr" in reg.keys() else ""}]
+                        "external_ids": [{
+                            "source": "OECD",
+                            "id": reg["id_area_con_gr"][0]
+                            if "id_area_con_gr" in reg else "",
+                        }]
                     },
                     {
                         "level": 1,
                         "name": reg["nme_area_gr"] if "nme_area_gr" in reg.keys() else "",
                         "id": "",
-                        "external_ids": [{"source": "OECD", "id": reg["id_area_con_gr"][1] if "id_area_con_gr" in reg.keys() else ""}]
+                        "external_ids": [{
+                            "source": "OECD",
+                            "id": reg["id_area_con_gr"][1]
+                            if "id_area_con_gr" in reg else "",
+                        }]
                     },
                 ]
             })
@@ -517,6 +607,184 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             self.collection.insert_one(entry)
             if verbose > 4:
                 print("Inserted group {}".format(idgr))
+
+    def snapshot_address_context(self, reg):
+        address = (reg.get("addresses") or [{}])[0]
+        return {
+            "nme_departamento_gr": address.get("state", ""),
+            "nme_municipio_gr": address.get("city", ""),
+            "nme_pais_gr": address.get("country", ""),
+            "addresses": reg.get("addresses", []),
+        }
+
+    def resolve_snapshot_relations(self, reg, entry, collection):
+        context = self.snapshot_address_context(reg)
+        for source_relation in reg.get("relations", []) or []:
+            name = str(source_relation.get("name") or "").strip()
+            relation_id = str(source_relation.get("id") or "")
+            institution = collection.find_one({"_id": relation_id}) if relation_id else None
+            if not institution and name:
+                institution = self.get_or_create_aval_institution(
+                    name, collection, context
+                )
+            if not institution:
+                continue
+            synthetic_id = self.aval_institution_id(name) if name else ""
+            if synthetic_id and institution["_id"] != synthetic_id:
+                entry["relations"] = [
+                    relation for relation in entry["relations"]
+                    if relation.get("id") != synthetic_id
+                ]
+            relation = {
+                "types": institution.get("types", []),
+                "id": institution["_id"],
+                "name": self.get_institution_name(institution) or name,
+            }
+            if not any(
+                value.get("id") == relation["id"]
+                for value in entry["relations"]
+            ):
+                entry["relations"].append(relation)
+            self.append_unique(
+                entry["addresses"],
+                self.affiliation_address_from_institution(institution, context),
+            )
+
+    def process_snapshot_one(self, reg, collection, verbose):
+        group_code = str(reg.get("_id") or "")
+        if not re.fullmatch(r"COL\d{7}", group_code):
+            raise RuntimeError("affiliation snapshot contains an invalid group code")
+        if set(reg) != {"_id"} | SNAPSHOT_FIELDS:
+            raise RuntimeError("affiliation snapshot does not follow the Kahi schema")
+        entry = collection.find_one({"external_ids.id": group_code})
+        if not entry:
+            entry = collection.find_one({"_id": group_code})
+        action = "updated" if entry else "inserted"
+        if not entry:
+            entry = self.empty_affiliation()
+            entry["_id"] = group_code
+        entry.setdefault("relations", [])
+        for field in SNAPSHOT_LIST_FIELDS:
+            entry.setdefault(field, [])
+            for value in reg.get(field, []) or []:
+                self.append_unique(entry[field], deepcopy(value))
+        if entry.get("year_established") in (None, ""):
+            entry["year_established"] = reg.get("year_established")
+        self.resolve_snapshot_relations(reg, entry, collection)
+        payload = {
+            field: entry[field]
+            for field in SNAPSHOT_LIST_FIELDS
+        }
+        payload["relations"] = entry["relations"]
+        payload["year_established"] = entry.get("year_established")
+        collection.update_one(
+            {"_id": entry["_id"]},
+            {
+                "$set": payload,
+                "$setOnInsert": {"citation_count": [], "products_count": 0},
+            },
+            upsert=True,
+        )
+        if verbose > 4:
+            print("{} group {} from audited snapshot".format(action, group_code))
+        return action
+
+    def _process_snapshot_batch(self, batch, counters):
+        results = Parallel(
+            n_jobs=self.n_jobs,
+            verbose=self.verbose,
+            backend="threading",
+        )(
+            delayed(self.process_snapshot_one)(reg, self.collection, self.verbose)
+            for reg in batch
+        )
+        for action in ("inserted", "updated"):
+            counters[action] += results.count(action)
+
+    def process_snapshot(self, previous):
+        counters = deepcopy(previous.get("counters") or {
+            "processed": 0, "inserted": 0, "updated": 0,
+        })
+        last_id = previous.get("last_id")
+        query = {"_id": {"$gt": last_id}} if last_id is not None else {}
+        cursor = self.openadata_collection.find(query).sort("_id", 1).batch_size(
+            self.batch_size
+        )
+        batch = []
+        for reg in cursor:
+            batch.append(reg)
+            if len(batch) < self.batch_size:
+                continue
+            self._process_snapshot_batch(batch, counters)
+            counters["processed"] += len(batch)
+            last_id = batch[-1]["_id"]
+            self.runs.update_one(
+                {"_id": self.run_id},
+                {"$set": {"last_id": last_id, "counters": deepcopy(counters)}},
+            )
+            batch.clear()
+        if batch:
+            self._process_snapshot_batch(batch, counters)
+            counters["processed"] += len(batch)
+            last_id = batch[-1]["_id"]
+            self.runs.update_one(
+                {"_id": self.run_id},
+                {"$set": {"last_id": last_id, "counters": deepcopy(counters)}},
+            )
+        if counters["processed"] != self.snapshot_documents:
+            raise RuntimeError("affiliation snapshot processing count mismatch")
+        return counters
+
+    def _run_snapshot(self):
+        previous = self.runs.find_one({"_id": self.run_id}) or {}
+        identity = {
+            "contract_version": CONTRACT_VERSION,
+            "release": self.snapshot_release_name,
+            "audit": self.snapshot_audit_name,
+            "materialization_run": self.snapshot_materialization_run,
+            "source_collection": self.snapshot_collection_name,
+            "source_documents": self.snapshot_documents,
+        }
+        if previous and any(
+            previous.get(key) != value for key, value in identity.items()
+        ):
+            raise RuntimeError(
+                "affiliation import run exists with different source evidence"
+            )
+        if previous.get("status") == "complete":
+            return deepcopy(previous["summary"])
+        now = int(time())
+        if not previous:
+            previous = {
+                "_id": self.run_id, "status": "pending",
+                "created_at": now, **identity,
+            }
+            self.runs.insert_one(previous)
+        self.runs.update_one(
+            {"_id": self.run_id},
+            {"$set": {"status": "running", "started_at": now},
+             "$inc": {"attempts": 1}, "$unset": {"error": ""}},
+        )
+        try:
+            counters = self.process_snapshot(previous)
+            summary = {**identity, **counters}
+            self.runs.update_one(
+                {"_id": self.run_id},
+                {"$set": {
+                    "status": "complete", "finished_at": int(time()),
+                    "summary": deepcopy(summary),
+                }},
+            )
+            return summary
+        except Exception as error:
+            self.runs.update_one(
+                {"_id": self.run_id},
+                {"$set": {
+                    "status": "failed", "finished_at": int(time()),
+                    "error": str(error),
+                }},
+            )
+            raise
 
     def process_openadata(self):
         # Pipeline to find duplicate documents and keep the one with the highest edad_anos_gr in each group
@@ -554,6 +822,13 @@ class Kahi_minciencias_opendata_affiliations(KahiBase):
             client.close()
 
     def run(self):
-        self.process_openadata()
-        self.client.close()
-        return 0
+        try:
+            result = (
+                self._run_snapshot()
+                if self.source_mode == "snapshot"
+                else self.process_openadata()
+            )
+            return result if self.source_mode == "snapshot" else 0
+        finally:
+            self.client.close()
+            self.openadata_client.close()

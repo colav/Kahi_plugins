@@ -1,5 +1,21 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- Audited ingestion from Yuku's atomic six-entity ScienTI release.
+- Direct reuse of the Kahi affiliation schema and deterministic run summary.
+- Batch checkpoints and immutable import-run evidence for safe resumption.
+
+### Changed
+
+- Source mode must be explicit; `snapshot` is the production path and
+  `legacy_open_data` preserves the former reader.
+- Endorsing institutions from snapshot relations are resolved against existing
+  affiliations before the strict `IUA` fallback is considered.
+- Snapshot mode treats DAM as read-only and creates no source indexes.
+
 ## 0.1.4 - 2026-09-03
 
 ### Added
