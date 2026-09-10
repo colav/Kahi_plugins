@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1 - 2026-09-09
 
 - Read DOI `author_count` evidence from `person.related_works` before works are
   ingested, retaining the works lookup as a conservative complement.
