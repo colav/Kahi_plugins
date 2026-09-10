@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.1-beta - 2026-09-09
 
 - Replace the legacy GrupLAC parser with bounded, resumable ingestion from an
   explicit audited six-entity projects snapshot.
