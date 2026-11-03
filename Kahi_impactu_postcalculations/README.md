@@ -85,7 +85,7 @@ Notes:
 - Type-mapping warnings are emitted only with `verbose: 4` or higher. Type
   mappings are compiled once per source and reused by all workers.
 - Type rules come from the shared catalog JSON bundled by
-  `Kahi_impactu_type_catalog==0.1.0`.
+  `Kahi_impactu_type_catalog==0.2.0`.
 
 
 # License
