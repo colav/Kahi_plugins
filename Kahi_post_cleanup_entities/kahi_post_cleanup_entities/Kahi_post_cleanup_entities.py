@@ -105,6 +105,36 @@ class Kahi_post_cleanup_entities(KahiBase):
             return 1
         return 0
 
+    def cleanup_affiliations_until_stable(self):
+        """Remove orphan affiliations until no deletion exposes a new orphan."""
+        total_removed = 0
+        round_number = 0
+        while True:
+            round_number += 1
+            affiliations = self.affiliations.find({}, {"_id": 1})
+            out = Parallel(
+                n_jobs=self.n_jobs,
+                verbose=self.verbose,
+                backend="threading", pre_dispatch="2*n_jobs",
+                return_as="generator_unordered",
+            )(
+                delayed(self.cleanup_affiliation)(affiliation)
+                for affiliation in affiliations
+            )
+            removed = sum(out)
+            total_removed += removed
+            print(
+                "INFO: {} {} affiliations in cleanup round {}".format(
+                    "Would remove" if self.dry_run else "Removed",
+                    removed,
+                    round_number,
+                )
+            )
+            # A dry run does not change the graph, so another round would
+            # necessarily report the same candidates forever.
+            if self.dry_run or removed == 0:
+                return total_removed
+
     def run(self):
         """
         Run the post cleanup process for authors and affiliations
@@ -122,16 +152,7 @@ class Kahi_post_cleanup_entities(KahiBase):
         print("INFO: {} {} authors".format(
             "Would remove" if self.dry_run else "Removed", sum(out)))
 
-        affiliations = self.affiliations.find({}, {"_id": 1})
-        out = Parallel(
-            n_jobs=self.n_jobs,
-            verbose=self.verbose,
-            backend="threading", pre_dispatch="2*n_jobs",
-            return_as="generator_unordered")(
-            delayed(self.cleanup_affiliation)(
-                affiliation
-            ) for affiliation in affiliations
-        )
-        print("INFO: {} {} affiliations".format(
-            "Would remove" if self.dry_run else "Removed", sum(out)))
+        removed = self.cleanup_affiliations_until_stable()
+        print("INFO: {} {} affiliations in total".format(
+            "Would remove" if self.dry_run else "Removed", removed))
         return 0
