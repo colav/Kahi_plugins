@@ -13,6 +13,12 @@
 - Record the exception reason and supporting name evidence in graph audit
   records only; entity documents retain their existing schema.
 
+- Optionally supplement DOI author counts from an OpenAlex works collection.
+- Preserve affiliations from every merged member without duplicating ids.
+- Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
+  joblib progress output disabled (`verbose=0`).
+- Require `kahi>=0.1.3a0`.
+
 ## 0.1.1 - 2026-09-09
 
 - Read DOI `author_count` evidence from `person.related_works` before works are
