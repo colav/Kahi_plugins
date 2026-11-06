@@ -1,7 +1,28 @@
+from time import time
+from urllib.parse import quote
+
+from joblib import Parallel, delayed
+from kahi.progress import ProgressLogger
 from kahi.KahiBase import KahiBase
 from pymongo import MongoClient
-from time import time
-from joblib import Parallel, delayed
+
+
+def commons_file_url(filename):
+    """Build a valid Wikimedia Commons redirect URL for a file claim."""
+    normalized = str(filename).strip().replace(" ", "_")
+    return (
+        "https://commons.wikimedia.org/w/index.php?title="
+        f"Special:Redirect/file/{quote(normalized, safe='')}&width=300"
+    )
+
+
+def claim_file(claims, property_id):
+    """Return the first non-empty file value for a Wikidata claim."""
+    for claim in claims.get(property_id, []):
+        value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
+        if value:
+            return value
+    return None
 
 
 def process_one(kahi_col, wikid_col, inst, verbose):
@@ -19,9 +40,6 @@ def process_one(kahi_col, wikid_col, inst, verbose):
         institution record
     verbose: int
     """
-    for name in inst["names"]:
-        if name["source"] == "wikidata":
-            return
     wikidata_id = None
     for j in inst["external_ids"]:
         if j["source"] == "wikidata":
@@ -35,28 +53,49 @@ def process_one(kahi_col, wikid_col, inst, verbose):
     if not rec:
         if verbose > 4:
             print(f"WARNING: record with id {wikidata_id} not found")
-        return
-    for lang in rec["labels"].keys():
-        name = {"name": rec["labels"][lang]["value"], "lang": lang,
-                "source": "wikidata", "provenance": "wikidata"}
-        inst["names"].append(name)
-    if "P154" in rec["claims"].keys() and len(rec["claims"]["P154"]) > 0:
-        if "datavalue" in rec["claims"]["P154"][0]["mainsnak"].keys():
-            img = rec["claims"]["P154"][0]["mainsnak"]["datavalue"]["value"]
-            url_img = f"https: //commons.wikimedia.org/w/index.php?title=Special: Redirect/file/{img}&width=300"
-            inst["external_urls"].append(
-                {"provenance": "wikidata", "source": "logo", "url": url_img})
-    elif "P18" in rec["claims"].keys() and len(rec["claims"]["P18"]) > 0:
-        if "datavalue" in rec["claims"]["P18"][0]["mainsnak"].keys():
-            img = rec["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"]
-            url_img = f"https: //commons.wikimedia.org/w/index.php?title=Special: Redirect/file/{img}&width=300"
-            inst["external_urls"].append(
-                {"provenance": "wikidata", "source": "logo", "url": url_img})
-    inst["updated"].append({"source": "wikidata", "time": int(time())})
+        return "sin_registro_wikidata"
+    names = inst.setdefault("names", [])
+    known_names = {
+        (name.get("source"), name.get("lang"), name.get("name")) for name in names
+    }
+    for lang, label in rec.get("labels", {}).items():
+        key = ("wikidata", lang, label["value"])
+        if key not in known_names:
+            names.append({"name": label["value"], "lang": lang,
+                          "source": "wikidata", "provenance": "wikidata"})
+            known_names.add(key)
+
+    claims = rec.get("claims", {})
+    img = claim_file(claims, "P154") or claim_file(claims, "P18")
+    if img:
+        external_urls = inst.setdefault("external_urls", [])
+        external_urls[:] = [
+            item for item in external_urls
+            if not (
+                item.get("provenance") == "wikidata"
+                and item.get("source") == "logo"
+            )
+        ]
+        external_urls.append({
+            "provenance": "wikidata",
+            "source": "logo",
+            "url": commons_file_url(img),
+        })
+
+    now = int(time())
+    updated = inst.setdefault("updated", [])
+    wikidata_update = next(
+        (item for item in updated if item.get("source") == "wikidata"), None
+    )
+    if wikidata_update:
+        wikidata_update["time"] = now
+    else:
+        updated.append({"source": "wikidata", "time": now})
     kahi_col.update_one({"_id": inst["_id"]},
-                        {"$set": {"names": inst["names"],
-                                  "external_urls": inst["external_urls"],
-                                  "updated": inst["updated"]}})
+                        {"$set": {"names": names,
+                                  "external_urls": inst.get("external_urls", []),
+                                  "updated": updated}})
+    return "actualizados"
 
 
 class Kahi_wikidata_affiliations(KahiBase):
@@ -108,13 +147,21 @@ class Kahi_wikidata_affiliations(KahiBase):
         institutions = list(self.collection.find(
             {"external_ids.source": "wikidata"}))
 
+        progress = ProgressLogger(
+            "wikidata_affiliations", total=len(institutions)).start(
+            f"num_jobs={self.n_jobs}")
+
+        def tracked(kahi_col, wikid_col, inst, verbose):
+            progress.step(process_one(kahi_col, wikid_col, inst, verbose))
+
         Parallel(
             n_jobs=self.n_jobs,
             backend="threading",
-            verbose=10
-        )(delayed(process_one)(
+            verbose=0
+        )(delayed(tracked)(
             self.collection, self.wikidata_col,
             inst, self.verbose) for inst in institutions)
+        progress.done()
 
     def run(self):
         self.process_wikidata()
