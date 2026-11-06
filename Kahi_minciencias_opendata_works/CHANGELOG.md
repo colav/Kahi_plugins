@@ -5,6 +5,12 @@
 * Refuse missing/conflicting book-family evidence against a known book/chapter; retain normal enrichment between the same kind. Bind the rule and catalog alias digest to non-DOI checkpoints.
 * No work schema changes, source rewrites or changes to the DOI ingestion branch.
 
+* Add dedup plan/merge, work-id migration/repair and publication-metadata
+  backfill scripts with tests.
+* Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
+  joblib progress output disabled (`verbose=0`).
+* Require `kahi>=0.1.3a0` and declare runtime dependencies.
+
 ## 0.1.4
 
 * Add optional Elasticsearch/Mohan similarity to snapshot task=nodoi, after scoped identifiers and exact title candidates.
