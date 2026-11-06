@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-10-16
+## 0.1.6 - 2026-11-06
 
 - Treat GrupLAC's trailing endorsement marker as status, not name: exclude
   declarations marked `- (No Avalado)` from group relations (a relation means
@@ -37,7 +37,7 @@
 
 - Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
   joblib progress output disabled (`verbose=0`).
-- Require `kahi>=0.1.3a0`.
+- Require `kahi>=0.1.3`.
 
 ## Unreleased - 2026-10-12
 
