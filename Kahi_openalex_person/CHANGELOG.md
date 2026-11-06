@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.6 - 2026-11-06
 
 - Import only last_known_institutions and merge OpenAlex affiliation
   years as a sorted union, never erasing existing years or dates
@@ -15,4 +15,4 @@
 - Fix README title/config key; add tests
 
 - Report START/progress/DONE with kahi ProgressLogger; joblib verbose=0
-- Require kahi>=0.1.3a0
+- Require kahi>=0.1.3
