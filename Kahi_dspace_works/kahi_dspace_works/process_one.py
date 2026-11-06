@@ -1,10 +1,17 @@
-from kahi_impactu_utils.Utils import compare_author
+from kahi_impactu_utils.Mongo import insert_only_update
+from kahi_impactu_utils.Work import (
+    work_titles_match,
+    AmbiguousWorkDOI, canonical_work_doi, claim_work_doi,
+    find_work_by_doi, insert_work_by_doi, prepare_work_doi, skip_work_doi_conflicts,
+)
+from kahi_impactu_utils.Utils import compare_author, normalize_publication_year
 from kahi_dspace_works.parser import parse_dspace
 from kahi_dspace_works.utils import set_source, get_doi, check_work, str_normilize, title_similarity
 from bson import ObjectId
 from unidecode import unidecode
 from threading import Lock
 from unicodedata import normalize as unicode_normalize
+import re
 
 
 _DSPACE_LOCKS = tuple(Lock() for _ in range(1024))
@@ -27,6 +34,16 @@ def dspace_query(value):
             "$elemMatch": {"source": "dspace", "id": value}
         }
     }
+
+
+def _prepare_dspace_doi(entry):
+    # Preserve get_doi's rejection of unresolved repository templates even
+    # when a parsed record reaches an insert/update through similarity.
+    value = entry.get("doi")
+    if isinstance(value, str) and re.search(r"%(?![0-9A-Fa-f]{2})", value):
+        entry.pop("_doi_key", None)
+        return None
+    return prepare_work_doi(entry, "dspace")
 
 
 def _normalized_title(value):
@@ -154,6 +171,9 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
     verbose : int
         verbosity level.
     """
+    doi = _prepare_dspace_doi(entry)
+    if doi:
+        claim_work_doi(collection, colav_reg, doi)
     # merging the two entries
     colav_reg["updated"].extend(entry["updated"])
 
@@ -166,8 +186,10 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
             colav_reg["titles"].append(title)
             existing_titles.add(_normalized_title(title.get("title")))
 
-    if entry["year_published"] and not colav_reg["year_published"]:
-        colav_reg["year_published"] = entry["year_published"]
+    year = normalize_publication_year(colav_reg.get("year_published"))
+    if year is None:
+        year = normalize_publication_year(entry.get("year_published"))
+    colav_reg["year_published"] = year
 
     if entry["doi"] and not colav_reg["doi"]:
         colav_reg["doi"] = entry["doi"]
@@ -218,9 +240,9 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
                     author_reg, author_db, len(colav_reg["authors"]))
             if name_match:
                 author["type"] = author_reg["type"]
+                existing_ids = {
+                    item.get("id") for item in author["affiliations"]}
                 if affiliation is not None:
-                    existing_ids = {
-                        item.get("id") for item in author["affiliations"]}
                     if affiliation.get("id") not in existing_ids:
                         author["affiliations"].append(affiliation)
                         existing_ids.add(affiliation.get("id"))
@@ -244,24 +266,26 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
     collection.update_one(
         {"_id": colav_reg["_id"]},
         {"$set": {
-            "updated": colav_reg["updated"],
             "abstracts": colav_reg["abstracts"],
             "doi": colav_reg["doi"],
             "year_published": colav_reg["year_published"],
-            "titles": colav_reg["titles"],
-            "external_ids": colav_reg["external_ids"],
             "external_urls": colav_reg["external_urls"],
             "types": colav_reg["types"],
             "authors": colav_reg["authors"],
             "author_count": colav_reg["author_count"],
             "source": colav_reg["source"],
             "rights": colav_reg["rights"],
+        }, "$addToSet": {
+            "updated": {"$each": colav_reg["updated"]},
+            "titles": {"$each": colav_reg["titles"]},
+            "external_ids": {"$each": colav_reg["external_ids"]},
         }}
     )
 
 
+@skip_work_doi_conflicts
 def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
-                       es_semaphore=None):
+                       es_semaphore=None, lock_dspace_id=True):
     """
     Insert the entry in the works collection.
 
@@ -327,22 +351,54 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
         item.get("id") for item in entry.get("external_ids", [])
         if item.get("source") == "dspace" and item.get("id")
     ), None)
-    if dspace_id:
-        with _dspace_lock(dspace_id):
+    doi = _prepare_dspace_doi(entry)
+    outcome = "nuevos"
+    if doi:
+        existing = (collection.find_one(dspace_query(dspace_id))
+                    if dspace_id else None)
+        if existing and not work_titles_match(entry.get("titles"), existing.get("titles")):
+            existing = None
+        owner = find_work_by_doi(collection, doi, titles=entry.get("titles"),
+                                 allow_distinct_titles=True)
+        if existing and owner and existing["_id"] != owner["_id"]:
+            raise AmbiguousWorkDOI(
+                f"DSpace record {dspace_id} and DOI {doi} identify different works")
+        existing = existing or owner
+        if existing:
+            work_id = None
+        else:
+            work_id, existing = insert_work_by_doi(collection, entry,
+                                                  allow_distinct_titles=True)
+        if existing:
+            process_one_update(entry, existing, affiliation, db,
+                               collection, verbose)
+            work_id = existing["_id"]
+            outcome = "actualizados"
+    elif dspace_id:
+        def upsert_by_dspace_id():
             response = collection.update_one(
-                dspace_query(dspace_id), {"$setOnInsert": entry}, upsert=True
+                dspace_query(dspace_id), insert_only_update(entry), upsert=True
             )
             work_id = response.upserted_id
             if work_id is None:
                 existing = collection.find_one(
                     dspace_query(dspace_id), {"_id": 1})
                 work_id = existing.get("_id") if existing else None
+            return work_id
+
+        if lock_dspace_id:
+            with _dspace_lock(dspace_id):
+                work_id = upsert_by_dspace_id()
+        else:
+            work_id = upsert_by_dspace_id()
     else:
         response = collection.insert_one(entry)
         work_id = response.inserted_id
     ensure_es_work(entry, work_id, es_handler, es_semaphore)
+    return outcome
 
 
+@skip_work_doi_conflicts
 def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
                 es_handler, similarity, thresholds, verbose=0,
                 es_semaphore=None):
@@ -372,15 +428,12 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
     """
     dspace_id = dspace_reg.get("_id")
     if not dspace_id:
-        return
+        return "omitidos"
     existing = collection.find_one(dspace_query(dspace_id))
-    if existing:
+    doi = canonical_work_doi(get_doi(dspace_reg))
+    if existing and not doi:
         ensure_es_work(existing, existing["_id"], es_handler, es_semaphore)
-        if verbose > 4:
-            print(
-                "Record with id {} already exists in the works collection".format(
-                    dspace_reg["_id"]))
-        return
+        return "existentes"
     # processing bad dois as well
     entry = parse_dspace(dspace_reg, empty_work,
                          base_url, verbose)
@@ -393,15 +446,38 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
             print(
                 "No title found in dspace record {}".format(
                     dspace_reg["_id"]))
-        return
+        return "omitidos"
     set_source(entry, db)  # setting source to entry
+    if doi:
+        # DOI lookup also precedes title similarity for theses with DOI.
+        if existing and not work_titles_match(entry.get("titles"), existing.get("titles")):
+            existing = None
+        with _dspace_lock(doi):
+            owner = find_work_by_doi(collection, doi, titles=entry.get("titles"),
+                                     allow_distinct_titles=True)
+            if owner and existing and owner["_id"] != existing["_id"]:
+                raise AmbiguousWorkDOI(
+                    f"DSpace record {dspace_id} and DOI {doi} identify different works")
+            target = owner or existing
+            if target:
+                process_one_update(entry, target, affiliation, db,
+                                   collection, verbose)
+                ensure_es_work(target, target["_id"], es_handler, es_semaphore)
+                outcome = "actualizados"
+            else:
+                outcome = process_one_insert(entry, affiliation, db, collection,
+                                             es_handler, verbose, es_semaphore,
+                                             lock_dspace_id=False)
+        return outcome
+    if existing:
+        ensure_es_work(existing, existing["_id"], es_handler, es_semaphore)
+        return "existentes"
     # setting affiliation to authors
     # set_affiliation(entry, affiliation, db['person'])
     if similarity:
         if es_handler is None:
-            process_one_insert(entry, affiliation, db,
-                               collection, es_handler, verbose, es_semaphore)
-            return
+            return process_one_insert(entry, affiliation, db,
+                                      collection, es_handler, verbose, es_semaphore)
         work = {}
         work["title"] = entry["titles"][0]["title"]
         work["source"] = (
@@ -461,7 +537,7 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
                         process_one_update(
                             entry, colav_reg, affiliation, db, collection,
                             verbose)
-                        return
+                        return "actualizados"
                     else:
                         if verbose > 4:
                             print(
@@ -470,7 +546,7 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
                         found = False
                         continue
             if not found:
-                process_one_insert(
+                return process_one_insert(
                     entry,
                     affiliation,
                     db,
@@ -479,36 +555,8 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
                     verbose,
                     es_semaphore)
         else:  # insert new register
-            process_one_insert(entry, affiliation, db,
-                               collection, es_handler, verbose, es_semaphore)
-    else:  # if doi
-        doi = get_doi(dspace_reg)
-        if doi:
-            colav_reg = collection.find_one({"external_ids.id": doi})
-            if colav_reg:
-                if title_similarity(entry["titles"], colav_reg["titles"]):
-                    process_one_update(
-                        entry, colav_reg, affiliation, db, collection,
-                        verbose)
-                else:  # if the dois are equal but the titles are not similar
-                    process_one_insert(
-                        entry,
-                        affiliation,
-                        db,
-                        collection,
-                        es_handler,
-                        verbose,
-                        es_semaphore)
-
-            else:
-                process_one_insert(
-                    entry,
-                    affiliation,
-                    db,
-                    collection,
-                    es_handler,
-                    verbose,
-                    es_semaphore)
-        else:
-            print(
-                f"WARNING: invalid doi found in dspace record {dspace_reg['_id']} ")
+            return process_one_insert(entry, affiliation, db,
+                                      collection, es_handler, verbose, es_semaphore)
+    else:
+        print(f"WARNING: invalid doi found in dspace record {dspace_reg['_id']} ")
+        return "omitidos"

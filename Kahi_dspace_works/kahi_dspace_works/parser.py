@@ -1,5 +1,5 @@
 from time import time
-from kahi_impactu_utils.Utils import lang_poll, get_name_connector, doi_processor
+from kahi_impactu_utils.Utils import lang_poll, get_name_connector, doi_processor, normalize_publication_year
 from kahi_impactu_utils.String import parse_mathml, parse_html
 from kahi_impactu_utils.String import text_to_inverted_index
 from kahi_dspace_works.utils import get_dim_fields, get_oai_pmh_url, is_thesis
@@ -201,6 +201,7 @@ def parse_dspace(
     """
     entry = empty_work.copy()
     entry["updated"] = [{"source": "dspace", "time": int(time())}]
+    entry["year_published"] = None
     thesis = False
     for field in get_dim_fields(reg):
 
@@ -226,11 +227,10 @@ def parse_dspace(
             if "#text" in field and field["#text"] and len(
                     field["#text"]) >= 4:
                 if field["#text"][:4].isdigit():
-                    if entry["year_published"]:
-                        if entry["year_published"] >= int(field["#text"][:4]):
-                            entry["year_published"] = int(field["#text"][:4])
-                    else:
-                        entry["year_published"] = int(field["#text"][:4])
+                    year = normalize_publication_year(field["#text"][:4])
+                    if year is not None:
+                        previous = normalize_publication_year(entry.get("year_published"))
+                        entry["year_published"] = min(previous, year) if previous is not None else year
         # Abstract
         if (field["@element"] ==
                 "description" and "@qualifier" in field and field["@qualifier"] == "abstract"):

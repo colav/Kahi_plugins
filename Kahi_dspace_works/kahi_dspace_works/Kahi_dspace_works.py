@@ -1,9 +1,11 @@
 from joblib import Parallel, delayed
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from mohan.Similarity import Similarity
 from pymongo import MongoClient
 from threading import BoundedSemaphore
 from elasticsearch import Elasticsearch
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
 
 from kahi_dspace_works.process_one import process_one
 from kahi_dspace_works.utils import (
@@ -52,6 +54,15 @@ def title_query():
             "#text": {"$exists": True, "$nin": [None, ""]},
         }
     )
+
+
+def counted_records(cursor, accept, progress):
+    """Yield accepted records and count the rest as skipped."""
+    for work in cursor:
+        if accept(work):
+            yield work
+        else:
+            progress.step("omitidos")
 
 
 def _dim_query(condition):
@@ -149,6 +160,7 @@ class Kahi_dspace_works(KahiBase):
             collation={"locale": "es", "strength": 1},
         )
         self.collection.create_index("external_ids.id")
+        ensure_work_doi_indexes(self.collection)
 
     def _repositories(self, source_db):
         """Resolve explicit repositories or discover every ``*_records`` collection."""
@@ -173,35 +185,46 @@ class Kahi_dspace_works(KahiBase):
         for collection_name in collection_names:
             identity_name = collection_name[: -len("records")] + "identity"
             identity = source_db[identity_name].find_one(
-                {}, {"base_url": 1}) or {}
+                {}, {"base_url": 1, "ror": 1}) or {}
+            institution_id = (
+                affiliations[collection_name]
+                if collection_name in affiliations
+                else identity.get("ror")
+            )
             yield {
                 "collection_name": collection_name,
-                "institution_id": affiliations.get(collection_name),
+                "institution_id": institution_id,
                 "repository_url": normalize_repository_url(identity.get("base_url")),
             }
 
     def process_repository(self, affiliation, base_url, dspace_collection):
+        query = doi_query() if self.task == "doi" else title_query()
+        progress = ProgressLogger(
+            "dspace_works:{}:{}".format(
+                "doi" if self.task == "doi" else "nodoi", dspace_collection.name),
+            total=dspace_collection.count_documents(query),
+        ).start(f"num_jobs={self.n_jobs}")
         if self.task == "doi":
             cursor = dspace_collection.find(
-                doi_query()).batch_size(
+                query).batch_size(
                 self.batch_size)
-            records = (
-                work
-                for work in cursor
-                if get_doi(work) and not is_thesis_work(work)
+            records = counted_records(
+                cursor,
+                lambda work: get_doi(work) and not is_thesis_work(work),
+                progress,
             )
             similarity = False
         else:
             cursor = dspace_collection.find(
-                title_query()).batch_size(
+                query).batch_size(
                 self.batch_size)
-            records = (work for work in cursor if is_similarity_reg(work))
+            records = counted_records(cursor, is_similarity_reg, progress)
             similarity = True
 
         try:
             results = Parallel(
                 n_jobs=self.n_jobs,
-                verbose=self.verbose,
+                verbose=0,
                 backend="threading",
                 pre_dispatch="2*n_jobs",
                 return_as="generator_unordered",
@@ -221,10 +244,11 @@ class Kahi_dspace_works(KahiBase):
                 )
                 for work in records
             )
-            for _ in results:
-                pass
+            for outcome in results:
+                progress.step(outcome or "omitidos")
         finally:
             cursor.close()
+        progress.done()
 
     def run(self):
         print(

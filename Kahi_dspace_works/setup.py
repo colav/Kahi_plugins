@@ -70,7 +70,7 @@ def main():
         long_description_content_type="text/markdown",
         # Dependent packages (distributions)
         # put you packages here
-        install_requires=["kahi", "kahi_impactu_utils"],
+        install_requires=["kahi>=0.1.3a0", "kahi_impactu_utils"],
     )
 
 

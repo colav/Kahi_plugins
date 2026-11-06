@@ -1,3 +1,5 @@
+import re
+
 from kahi_impactu_utils.Utils import doi_processor
 from thefuzz import process, fuzz
 from unidecode import unidecode
@@ -38,6 +40,11 @@ def get_doi(reg):
         if field["@element"] == "identifier" and "@qualifier" in field:
             if field["@qualifier"] == "doi":
                 doi = doi_processor(field["#text"])
+                # Reject unresolved templates and malformed percent escapes.
+                # Some repositories publish values such as ``.../%x`` which
+                # otherwise collapse hundreds of unrelated works onto one DOI.
+                if doi and re.search(r"%(?![0-9A-Fa-f]{2})", doi):
+                    return None
                 return doi
     return None
 

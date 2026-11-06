@@ -5,6 +5,11 @@ from time import sleep
 from unittest.mock import MagicMock, patch
 
 import mongomock
+import pytest
+import os
+from uuid import uuid4
+from pymongo import MongoClient
+from importlib import import_module
 from kahi.KahiBase import KahiBase
 
 from kahi_dspace_works.Kahi_dspace_works import (
@@ -14,6 +19,7 @@ from kahi_dspace_works.Kahi_dspace_works import (
     normalize_repository_url,
     title_query,
 )
+from kahi_dspace_works.utils import get_doi
 import kahi_dspace_works.Kahi_dspace_works as plugin_module
 from kahi_dspace_works.process_one import (
     get_units_affiliations,
@@ -22,6 +28,33 @@ from kahi_dspace_works.process_one import (
     process_one_update,
     run_es_operation,
 )
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
+
+
+@pytest.fixture
+def mongo_db():
+    url = os.environ.get("KAHI_TEST_MONGODB_URL")
+    if not url:
+        pytest.skip("Set KAHI_TEST_MONGODB_URL for isolated MongoDB tests")
+    client = MongoClient(url, serverSelectionTimeoutMS=5000)
+    name = "kahi_dspace_doi_test_" + uuid4().hex
+    try:
+        db = client[name]
+        ensure_work_doi_indexes(db.works)
+        yield db
+    finally:
+        client.drop_database(name)
+        client.close()
+
+
+@pytest.fixture(autouse=True)
+def mock_insert_only_storage(monkeypatch):
+    # mongomock cannot evaluate $type in an update pipeline. Exercise the
+    # same insert-only semantics here; Mongo.py has isolated real-server tests.
+    monkeypatch.setattr(
+        import_module("kahi_dspace_works.process_one"), "insert_only_update",
+        lambda document: {"$setOnInsert": document},
+    )
 
 
 class FakeCollection:
@@ -73,6 +106,38 @@ def test_repository_discovery_uses_identity_and_affiliation_map():
             "repository_url": "https://example.edu",
         }
     ]
+
+
+def test_repository_discovery_uses_ror_from_identity():
+    plugin = Kahi_dspace_works.__new__(Kahi_dspace_works)
+    plugin.config = {"dspace_works": {}}
+    source_db = FakeDatabase()
+    source_db.collections["dspace_demo_identity"].document["ror"] = (
+        "https://ror.org/02yr3f298"
+    )
+
+    repositories = list(plugin._repositories(source_db))
+
+    assert repositories[0]["institution_id"] == "https://ror.org/02yr3f298"
+
+
+def test_explicit_affiliation_overrides_identity_ror():
+    plugin = Kahi_dspace_works.__new__(Kahi_dspace_works)
+    plugin.config = {
+        "dspace_works": {
+            "repository_affiliations": {
+                "dspace_demo_records": "https://ror.org/explicit"
+            }
+        }
+    }
+    source_db = FakeDatabase()
+    source_db.collections["dspace_demo_identity"].document["ror"] = (
+        "https://ror.org/identity"
+    )
+
+    repositories = list(plugin._repositories(source_db))
+
+    assert repositories[0]["institution_id"] == "https://ror.org/explicit"
 
 
 def test_oai_endpoint_normalization():
@@ -129,6 +194,57 @@ def dspace_record(identifier="oai:example.edu:123/456"):
     }
 
 
+def dspace_doi_record(identifier, doi):
+    record = dspace_record(identifier)
+    fields = record["OAI-PMH"]["GetRecord"]["record"]["metadata"][
+        "dim:dim"]["dim:field"]
+    fields.append({
+        "@element": "identifier",
+        "@qualifier": "doi",
+        "#text": doi,
+    })
+    return record
+
+
+def test_get_doi_rejects_unresolved_repository_template():
+    record = dspace_doi_record(
+        "oai:example.edu:123/template", "10.33881/2011-7191.%x")
+
+    assert get_doi(record) is None
+
+
+def test_doi_insert_does_not_acquire_a_nested_dspace_lock(monkeypatch, mongo_db):
+    class NonReentrantGuard:
+        def __init__(self):
+            self.active = False
+            self.entries = 0
+
+        def __enter__(self):
+            if self.active:
+                raise RuntimeError("nested lock acquisition")
+            self.active = True
+            self.entries += 1
+
+        def __exit__(self, *_args):
+            self.active = False
+
+    db = mongo_db
+    guard = NonReentrantGuard()
+    process_module = import_module("kahi_dspace_works.process_one")
+    monkeypatch.setattr(process_module, "_dspace_lock", lambda _value: guard)
+    record = dspace_doi_record(
+        "oai:example.edu:123/doi", "10.1000/valid-doi")
+
+    process_one(
+        record, None, "https://example.edu", db, db.works,
+        empty_work(), None, False,
+        {"author_thd": 65, "paper_thd_low": 90, "paper_thd_high": 95},
+    )
+
+    assert guard.entries == 1
+    assert db.works.count_documents({}) == 1
+
+
 class FakeES:
     es_index = "works"
 
@@ -154,16 +270,56 @@ def test_no_doi_retry_is_idempotent_and_reconciles_elasticsearch():
     es = FakeES()
     record = dspace_record()
 
-    for _ in range(2):
+    outcomes = [
         process_one(
             record, None, "https://example.edu", db, db.works,
             empty_work(), es, True,
             {"author_thd": 65, "paper_thd_low": 90, "paper_thd_high": 95},
         )
+        for _ in range(2)
+    ]
 
+    assert outcomes == ["nuevos", "existentes"]
     assert db.works.count_documents({}) == 1
     assert len(es.inserted) == 1
     assert db.works.find_one()["external_ids"][-1]["id"] == record["_id"]
+
+
+def test_concurrent_doi_records_preserve_every_dspace_identifier():
+    db = mongomock.MongoClient().db
+    doi = "https://doi.org/10.1000/shared"
+    work = empty_work()
+    work.update({
+        "titles": [{
+            "title": "Trabajo DSpace controlado",
+            "lang": "es",
+            "source": "openalex",
+        }],
+        "updated": [{"source": "openalex", "time": 1}],
+        "external_ids": [{"source": "doi", "id": doi}],
+    })
+    db.works.insert_one(work)
+    records = [
+        dspace_doi_record(f"oai:example.edu:123/{index}", doi)
+        for index in range(20)
+    ]
+
+    def load(record):
+        process_one(
+            record, None, "https://example.edu", db, db.works,
+            empty_work(), None, False,
+            {"author_thd": 65, "paper_thd_low": 90, "paper_thd_high": 95},
+        )
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        list(executor.map(load, records))
+
+    saved = db.works.find_one({"external_ids.id": doi})
+    dspace_ids = {
+        item["id"] for item in saved["external_ids"]
+        if item.get("source") == "dspace"
+    }
+    assert dspace_ids == {record["_id"] for record in records}
 
 
 def test_stale_elasticsearch_hit_does_not_drop_the_dspace_record():
@@ -226,7 +382,9 @@ def test_repository_cursor_is_streamed_and_closed():
 
     cursor = Cursor()
     collection = MagicMock()
+    collection.name = "dspace_test_records"
     collection.find.return_value = cursor
+    collection.count_documents.return_value = 1
     plugin = Kahi_dspace_works.__new__(Kahi_dspace_works)
     plugin.task = None
     plugin.batch_size = 500
@@ -254,6 +412,10 @@ def test_repository_cursor_is_streamed_and_closed():
     assert cursor.batch == 500
     assert cursor.iterations == 1
     assert cursor.closed
+    assert (
+        collection.count_documents.call_args.args[0]
+        == collection.find.call_args.args[0]
+    )
 
 
 def seed_internal_units(db):
@@ -389,6 +551,35 @@ def test_dspace_update_propagates_units_to_matched_author():
 
     with patch("kahi_dspace_works.process_one.compare_author", return_value=True):
         process_one_update(incoming, existing, parent, db, db.works, 0)
+
+    author = db.works.find_one({"_id": "work-1"})["authors"][0]
+    assert [item["id"] for item in author["affiliations"]] == [
+        parent["id"], faculty["id"], department["id"]]
+
+
+def test_dspace_update_without_repository_affiliation_does_not_crash():
+    db = mongomock.MongoClient().db
+    parent, faculty, department, _group, _unrelated, _person = seed_internal_units(db)
+    existing = empty_work()
+    existing.update({
+        "_id": "work-1",
+        "authors": [{
+            "id": "person-1",
+            "full_name": "adriana panader torres",
+            "affiliations": [deepcopy(parent)],
+        }],
+        "author_count": 1,
+    })
+    db.works.insert_one(deepcopy(existing))
+    incoming = empty_work()
+    incoming["authors"] = [{
+        "full_name": "Adriana Panader Torres",
+        "type": "author",
+        "affiliations": [],
+    }]
+
+    with patch("kahi_dspace_works.process_one.compare_author", return_value=True):
+        process_one_update(incoming, existing, None, db, db.works, 0)
 
     author = db.works.find_one({"_id": "work-1"})["authors"][0]
     assert [item["id"] for item in author["affiliations"]] == [
