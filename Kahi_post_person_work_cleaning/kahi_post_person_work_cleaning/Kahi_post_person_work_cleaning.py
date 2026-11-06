@@ -2,8 +2,10 @@ from kahi.KahiBase import KahiBase
 from pymongo import MongoClient
 from joblib import Parallel, delayed
 from functools import lru_cache
+from copy import deepcopy
 import re
 import unicodedata
+from pymongo import UpdateOne
 
 
 class Kahi_post_person_work_cleaning(KahiBase):
@@ -18,14 +20,17 @@ class Kahi_post_person_work_cleaning(KahiBase):
 
         self.db = self.client[config["database_name"]]
         self.works = self.db["works"]
+        self.projects = self.db["projects"]
         self.person = self.db["person"]
         self.affiliations = self.db["affiliations"]
         plugin_config = config.get("post_person_work_cleaning", {})
         self.dry_run = plugin_config.get("dry_run", True)
         self.n_jobs = plugin_config.get("num_jobs", 1)
         self.verbose = plugin_config.get("verbose", 0)
+        self.progress_interval = plugin_config.get("progress_interval", 1000)
 
         self.works.create_index("authors.id")
+        self.projects.create_index("authors.id")
         self.person.create_index(
             [("full_name", 1), ("affiliations.id", 1)],
             name="full_name_affiliation_es",
@@ -187,6 +192,108 @@ class Kahi_post_person_work_cleaning(KahiBase):
                             )
         return changed
 
+    @staticmethod
+    def consolidate_authors(authors):
+        """Merge repeated, non-empty author IDs while preserving author order."""
+        consolidated = []
+        positions = {}
+        removed = 0
+        for author in authors:
+            author_id = author.get("id")
+            if author_id in (None, ""):
+                consolidated.append(deepcopy(author))
+                continue
+            try:
+                position = positions.get(author_id)
+            except TypeError:
+                consolidated.append(deepcopy(author))
+                continue
+            if position is None:
+                positions[author_id] = len(consolidated)
+                consolidated.append(deepcopy(author))
+                continue
+
+            target = consolidated[position]
+            removed += 1
+            for key, value in author.items():
+                if key == "id":
+                    continue
+                current = target.get(key)
+                if isinstance(value, list):
+                    if not isinstance(current, list):
+                        target[key] = deepcopy(value)
+                    else:
+                        for item in value:
+                            if item not in current:
+                                current.append(deepcopy(item))
+                elif isinstance(value, dict):
+                    if not isinstance(current, dict):
+                        target[key] = deepcopy(value)
+                    else:
+                        for subkey, subvalue in value.items():
+                            if current.get(subkey) in (None, "", [], {}):
+                                current[subkey] = deepcopy(subvalue)
+                elif key == "full_name":
+                    if value and len(str(value).strip()) > len(str(current or "").strip()):
+                        target[key] = value
+                elif current in (None, "") and value not in (None, ""):
+                    target[key] = value
+        return consolidated, removed
+
+    def consolidate_duplicate_entity_authors(self, collection, entity_name):
+        """Consolidate entities containing a repeated, non-empty author ID."""
+        pipeline = [
+            {"$match": {"authors.1": {"$exists": True}}},
+            {"$project": {
+                "authors": 1,
+                "author_count": 1,
+                "nonempty_author_ids": {"$filter": {
+                    "input": "$authors.id",
+                    "as": "author_id",
+                    "cond": {"$and": [
+                        {"$ne": ["$$author_id", None]},
+                        {"$ne": ["$$author_id", ""]},
+                    ]},
+                }},
+            }},
+            {"$match": {"$expr": {"$lt": [
+                {"$size": {"$setUnion": ["$nonempty_author_ids", []]}},
+                {"$size": "$nonempty_author_ids"},
+            ]}}},
+        ]
+        operations = []
+        entities_changed = 0
+        references_removed = 0
+        for entity in collection.aggregate(pipeline, allowDiskUse=True):
+            authors, removed = self.consolidate_authors(entity.get("authors", []))
+            if not removed:
+                continue
+            entities_changed += 1
+            references_removed += removed
+            if not self.dry_run:
+                operations.append(UpdateOne(
+                    {"_id": entity["_id"]},
+                    {"$set": {"authors": authors, "author_count": len(authors)}},
+                ))
+                if len(operations) >= 1000:
+                    collection.bulk_write(operations, ordered=False)
+                    operations = []
+            if self.verbose and entities_changed % self.progress_interval == 0:
+                print(
+                    f"INFO: duplicate-author cleanup: {entities_changed} "
+                    f"{entity_name}, "
+                    f"{references_removed} references removed"
+                )
+        if operations:
+            collection.bulk_write(operations, ordered=False)
+        return entities_changed, references_removed
+
+    def consolidate_duplicate_work_authors(self):
+        """Preserve the public helper used by previous versions and tests."""
+        return self.consolidate_duplicate_entity_authors(
+            self.works, "works"
+        )
+
     def run(self):
         # https://github.com/colav/impactu/issues/141
         # only authors from scienti, staff or ciarp
@@ -201,4 +308,19 @@ class Kahi_post_person_work_cleaning(KahiBase):
         total = sum(results)
         print(
             f"INFO: {'Would relink' if self.dry_run else 'Relinked'} {total} work authors")
+        works_changed, references_removed = self.consolidate_duplicate_work_authors()
+        print(
+            f"INFO: {'Would consolidate' if self.dry_run else 'Consolidated'} "
+            f"{works_changed} works, {references_removed} duplicate author references"
+        )
+        projects_changed, references_removed = (
+            self.consolidate_duplicate_entity_authors(
+                self.projects, "projects"
+            )
+        )
+        print(
+            f"INFO: {'Would consolidate' if self.dry_run else 'Consolidated'} "
+            f"{projects_changed} projects, {references_removed} "
+            "duplicate author references"
+        )
         return 0
