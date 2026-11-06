@@ -25,7 +25,13 @@ def test_null_principal_is_ignored():
     assert entry["authors"] == []
 
 
-def test_retry_is_idempotent_by_code():
+def test_retry_is_idempotent_by_code(monkeypatch):
+    from importlib import import_module
+    # The ordered pipeline is verified separately against a real MongoDB.
+    monkeypatch.setattr(
+        import_module("kahi_siiu_projects.process_one"), "insert_only_update",
+        lambda document: {"$setOnInsert": document},
+    )
     db = mongomock.MongoClient().db
     for _ in range(2):
         process_one(record(), db, db.projects, empty(), None)
