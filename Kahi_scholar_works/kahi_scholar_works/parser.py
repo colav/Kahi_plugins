@@ -1,5 +1,5 @@
 from thefuzz import fuzz
-from kahi_impactu_utils.Utils import lang_poll, doi_processor
+from kahi_impactu_utils.Utils import lang_poll, doi_processor, normalize_publication_year
 from time import time
 from kahi_impactu_utils.String import text_to_inverted_index
 
@@ -31,15 +31,7 @@ def parse_scholar(
         entry["titles"].append(
             {"title": reg["title"], "lang": lang, "source": "scholar"}
         )
-    if reg.get("year") not in (None, ""):
-        year = ""
-        try:
-            year = int(str(reg["year"]).strip())
-        except Exception as e:
-            if verbose > 4:
-                print(f"""Could not convert year to int in {reg["doi"]}""")
-                print(e)
-        entry["year_published"] = year
+    entry["year_published"] = normalize_publication_year(reg.get("year"))
     if reg.get("doi"):
         doi = doi_processor(reg["doi"])
         if doi:

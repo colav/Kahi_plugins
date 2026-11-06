@@ -57,13 +57,19 @@ def target_work(**overrides):
         "bibliographic_info": {},
         "external_urls": [],
         "citations_count": [],
+        "doi": "",
+        "date_published": None,
+        "year_published": None,
+        "source": {},
     }
     work.update(overrides)
     return work
 
 
 def updated_fields(collection):
-    return collection.update_one.call_args.args[1]["$set"]
+    update = collection.update_one.call_args.args[1]
+    return {**update.get("$set", {}),
+            **{field: spec["$each"] for field, spec in update.get("$addToSet", {}).items()}}
 
 
 def test_update_skips_existing_normalized_title_and_abstract_processing():
@@ -141,7 +147,7 @@ def test_update_adds_abstract_only_when_missing_and_adds_new_title():
     ]
 
 
-def test_already_updated_work_backfills_only_missing_abstract():
+def test_already_updated_work_backfills_abstract_and_core_metadata():
     work = target_work(updated=[{"source": "scholar", "time": 1}])
     collection = MagicMock()
 
@@ -154,13 +160,20 @@ def test_already_updated_work_backfills_only_missing_abstract():
             scholar_record(), work, collection, empty_work()
         )
 
-    assert set(updated_fields(collection)) == {"abstracts"}
+    assert set(updated_fields(collection)) == {
+        "abstracts", "year_published"}
+    assert any(call.args[1].get("$set", {}).get("doi") == "https://doi.org/10.1000/test"
+               for call in collection.update_one.call_args_list)
     assert updated_fields(collection)["abstracts"][0]["source"] == "scholar"
+    assert updated_fields(collection)["year_published"] == 2024
 
 
 def test_process_one_uses_minimal_work_projection():
     collection = MagicMock()
-    collection.find_one.return_value = target_work()
+    target = target_work()
+    target["titles"] = [{"title": scholar_record()["title"], "source": "openalex"}]
+    collection.find.return_value = [target]
+    collection.find_one.return_value = None
 
     with patch.object(process_module, "process_one_update") as update:
         process_module.process_one(
@@ -173,7 +186,8 @@ def test_process_one_uses_minimal_work_projection():
         )
 
     assert (
-        collection.find_one.call_args.args[1] == process_module.WORK_UPDATE_PROJECTION
+        any(call.kwargs.get("projection") == process_module.WORK_UPDATE_PROJECTION
+            for call in collection.find.call_args_list)
     )
     update.assert_called_once()
 
@@ -214,6 +228,7 @@ def test_process_scholar_streams_cursor_with_projection():
     cursor = Cursor()
     source_collection = MagicMock()
     source_collection.find.return_value = cursor
+    source_collection.count_documents.return_value = 1
     client = MagicMock()
     instance = object.__new__(scholar_module.Kahi_scholar_works)
     instance.task = "doi"
@@ -245,6 +260,10 @@ def test_process_scholar_streams_cursor_with_projection():
     assert (
         source_collection.find.call_args.args[1]
         == scholar_module.SCHOLAR_SOURCE_PROJECTION
+    )
+    assert (
+        source_collection.count_documents.call_args.args[0]
+        == source_collection.find.call_args.args[0]
     )
     assert cursor.batch == 1000
     assert cursor.closed
@@ -311,13 +330,16 @@ def test_existing_scholar_cid_is_reconciled_without_duplicate_insert():
     es_handler.es_index = "works"
     es_handler.es.exists.return_value = True
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         scholar_record(doi=""), MagicMock(), collection, empty_work(),
         similarity=True, es_handler=es_handler,
     )
 
+    assert outcome == "actualizados"
+
     collection.find_one.assert_called_once_with(
-        process_module.scholar_cid_query("scholar:123"), {"_id": 1}
+        process_module.scholar_cid_query("scholar:123"),
+        process_module.WORK_UPDATE_PROJECTION,
     )
     es_handler.search_work.assert_not_called()
     es_handler.insert_work.assert_not_called()
@@ -351,10 +373,12 @@ def test_blank_title_is_skipped_before_database_or_es_queries():
     collection = MagicMock()
     es_handler = MagicMock()
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         scholar_record(doi="", title="  "), MagicMock(), collection,
         empty_work(), similarity=True, es_handler=es_handler,
     )
+
+    assert outcome == "omitidos"
 
     collection.find_one.assert_not_called()
     es_handler.search_work.assert_not_called()

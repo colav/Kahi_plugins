@@ -1,10 +1,12 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 
 from mohan.Similarity import Similarity
 from kahi_scholar_works.process_one import process_one
 from threading import BoundedSemaphore
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
 
 
 SCHOLAR_SOURCE_PROJECTION = {
@@ -27,6 +29,7 @@ SCHOLAR_SOURCE_PROJECTION = {
 
 
 def configure_work_indexes(collection, task):
+    ensure_work_doi_indexes(collection)
     collection.create_index("external_ids.id")
     collection.create_index("year_published")
     collection.create_index("authors.affiliations.id")
@@ -157,15 +160,17 @@ class Kahi_scholar_works(KahiBase):
         """
         # selects papers with doi according to task variable
         if self.task == "doi":
-            paper_cursor = self.scholar_collection.find(
-                {"$and": [{"doi": {"$ne": ""}}, {"doi": {"$ne": None}}]},
-                SCHOLAR_SOURCE_PROJECTION,
-            ).batch_size(1000)
+            query = {"$and": [{"doi": {"$ne": ""}}, {"doi": {"$ne": None}}]}
         else:
-            paper_cursor = self.scholar_collection.find(
-                {"$or": [{"doi": {"$eq": ""}}, {"doi": {"$eq": None}}]},
-                SCHOLAR_SOURCE_PROJECTION,
-            ).batch_size(1000)
+            query = {"$or": [{"doi": {"$eq": ""}}, {"doi": {"$eq": None}}]}
+        progress = ProgressLogger(
+            "scholar_works:" + ("doi" if self.task == "doi" else "nodoi"),
+            total=self.scholar_collection.count_documents(query),
+        ).start(f"num_jobs={self.n_jobs}")
+        paper_cursor = self.scholar_collection.find(
+            query,
+            SCHOLAR_SOURCE_PROJECTION,
+        ).batch_size(1000)
 
         client = MongoClient(self.mongodb_url)
         db = client[self.config["database_name"]]
@@ -173,7 +178,7 @@ class Kahi_scholar_works(KahiBase):
         try:
             results = Parallel(
                 n_jobs=self.n_jobs,
-                verbose=self.verbose,
+                verbose=0,
                 backend="threading",
                 pre_dispatch="2*n_jobs",
                 return_as="generator_unordered",
@@ -190,11 +195,12 @@ class Kahi_scholar_works(KahiBase):
                 )
                 for paper in paper_cursor
             )
-            for _ in results:
-                pass
+            for outcome in results:
+                progress.step(outcome or "omitidos")
         finally:
             paper_cursor.close()
             client.close()
+        progress.done()
 
     def run(self):
         """
