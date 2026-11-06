@@ -1,6 +1,7 @@
 from kahi.KahiBase import KahiBase
 from pymongo import MongoClient
 from time import time
+from kahi.progress import ProgressLogger
 
 
 class Kahi_doaj_sources(KahiBase):
@@ -80,7 +81,7 @@ class Kahi_doaj_sources(KahiBase):
             if ref_found is False:
                 entry["external_urls"].append({"source": ref, "url": url})
 
-        entry["review_process"] = reg["editorial"]["review_process"]
+        entry["review_processes"] = reg["editorial"]["review_process"]
         entry["plagiarism_detection"] = reg["plagiarism"]["detection"]
         entry["publication_time_weeks"] = reg["publication_time_weeks"]
         entry["copyright"] = reg["copyright"]
@@ -124,6 +125,7 @@ class Kahi_doaj_sources(KahiBase):
 
     def process_doaj(self, verbose=0):
         reg_list = list(self.doaj_collection.find())
+        progress = ProgressLogger("doaj_sources", total=len(reg_list)).start()
         for i, oldreg in enumerate(reg_list):
             reg = oldreg["bibjson"]
             reg["record_type"] = self._record_type(oldreg, reg)
@@ -137,6 +139,7 @@ class Kahi_doaj_sources(KahiBase):
                     if entry:
                         self.collection.update_one(
                             {"_id": _id}, {"$set": entry})
+                    progress.step("actualizados")
                     continue
             if "pissn" in reg.keys():
                 reg_db = self.collection.find_one(
@@ -148,6 +151,7 @@ class Kahi_doaj_sources(KahiBase):
                     if entry:
                         self.collection.update_one(
                             {"_id": _id}, {"$set": entry})
+                    progress.step("actualizados")
                     continue
 
             entry = self.empty_source()
@@ -163,7 +167,7 @@ class Kahi_doaj_sources(KahiBase):
             ) else None
             entry["external_urls"] = [
                 {"source": ref, "url": url} for ref, url in reg["ref"].items()]
-            entry["review_process"] = reg["editorial"]["review_process"]
+            entry["review_processes"] = reg["editorial"]["review_process"]
             entry["plagiarism_detection"] = reg["plagiarism"]["detection"]
             entry["publication_time_weeks"] = reg["publication_time_weeks"]
             entry["copyright"] = reg["copyright"]
@@ -208,22 +212,15 @@ class Kahi_doaj_sources(KahiBase):
             entry["waiver"] = reg["waiver"]
 
             self.collection.insert_one(entry)
-            if verbose > 4:
-                if i % 1000 == 0:
-                    print(
-                        f"""Processed  {i} of {len(reg_list)}""")
+            progress.step("nuevos")
             for ext in entry["external_ids"]:
                 self.already_in_db.append(ext["id"])
 
-        if verbose >= 4:
-            print(
-                f"""Inserted {self.collection.count_documents({"updated.source": "doaj"})} sources""")
+        progress.done(
+            total_doaj_en_db=self.collection.count_documents({"updated.source": "doaj"}))
 
         self.client.close()
 
     def run(self):
-        start_time = time()
         self.process_doaj(verbose=self.verbose)
-        print("Execution time: {} minutes".format(
-            round((time() - start_time) / 60, 2)))
         return 0
