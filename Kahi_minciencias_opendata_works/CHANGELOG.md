@@ -9,7 +9,7 @@
   backfill scripts with tests.
 * Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
   joblib progress output disabled (`verbose=0`).
-* Require `kahi>=0.1.3a0` and declare runtime dependencies.
+* Require `kahi>=0.1.3` and declare runtime dependencies.
 
 ## 0.1.4
 
