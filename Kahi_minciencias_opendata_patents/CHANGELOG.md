@@ -1,6 +1,12 @@
 # Changelog
 
+## Unreleased - 2026-11-06
+
 - Restore an explicit isolated `legacy` reader for `gruplac_production_data`.
+- Resolve a COD_RH shared by several people through strict name
+  compatibility; fail only when the match is ambiguous.
+- Build snapshot documents in KahiBase template field order.
+- Declare runtime dependencies.
 
 ## 0.1.1-beta - 2026-09-09
 
