@@ -1,5 +1,7 @@
 # Changelog
 
+- Restore an explicit isolated `legacy` reader for `gruplac_production_data`.
+
 ## 0.1.1-beta - 2026-09-09
 
 - Consume only the audited six-entity ScienTI events snapshot.

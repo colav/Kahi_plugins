@@ -1,10 +1,13 @@
 """Import the audited ScienTI events snapshot into Kahi."""
 
 from copy import deepcopy
+from difflib import SequenceMatcher
 import re
 from time import time
+from unicodedata import normalize as unicode_normalize
 
 from kahi.KahiBase import KahiBase
+from kahi_impactu_utils.Mongo import order_document
 from pymongo import MongoClient, ReplaceOne, TEXT
 
 
@@ -31,10 +34,44 @@ def append_unique(values, item):
         values.append(deepcopy(item))
 
 
+def normalized_name(value):
+    value = unicode_normalize("NFKD", str(value or ""))
+    value = "".join(char for char in value if not 0x300 <= ord(char) <= 0x36F)
+    return " ".join(re.sub(r"[^a-z0-9]+", " ", value.lower()).split())
+
+
+def strict_name_match(left, right):
+    left = normalized_name(left)
+    right = normalized_name(right)
+    if not left or not right:
+        return False, 0.0
+    ratio = SequenceMatcher(None, left, right).ratio()
+    sorted_ratio = SequenceMatcher(
+        None, " ".join(sorted(left.split())), " ".join(sorted(right.split()))
+    ).ratio()
+    return left == right or ratio >= 0.94 or sorted_ratio >= 0.96, max(
+        ratio, sorted_ratio
+    )
+
+
 class Kahi_minciencias_opendata_events(KahiBase):
     """Consume only the events member of an audited six-entity release."""
 
     def __init__(self, config):
+        source_config = config["minciencias_opendata_events"]
+        self.source_mode = str(source_config.get("source_mode", "snapshot"))
+        if self.source_mode == "legacy":
+            from kahi_minciencias_opendata_events.legacy import (
+                Kahi_minciencias_opendata_events as LegacyReader,
+            )
+            legacy_config = deepcopy(config)
+            legacy_config["minciencias_opendata_events"].setdefault(
+                "collection_name", "gruplac_production_data"
+            )
+            self._legacy = LegacyReader(legacy_config)
+            return
+        if self.source_mode != "snapshot":
+            raise ValueError("source_mode must be 'snapshot' or 'legacy'")
         self.config = config
         self.client = MongoClient(config["database_url"])
         self.db = self.client[config["database_name"]]
@@ -44,12 +81,14 @@ class Kahi_minciencias_opendata_events(KahiBase):
         self.collection.create_index([("titles.title", TEXT)])
         self.collection.create_index("external_ids.id")
 
-        source_config = config["minciencias_opendata_events"]
         forbidden = {
-            "source_mode", "task", "insert_all", "thresholds", "num_jobs",
+            "task", "insert_all", "thresholds", "num_jobs",
             "es_index", "es_url", "es_user", "es_password",
         }
-        legacy = sorted(forbidden.intersection(source_config))
+        legacy = sorted(
+            key for key in forbidden
+            if key in source_config and source_config[key] is not None
+        )
         if legacy:
             raise ValueError(
                 "legacy event options are no longer supported: {}".format(
@@ -153,24 +192,59 @@ class Kahi_minciencias_opendata_events(KahiBase):
             and COD_RH_RE.fullmatch(str(item.get("id", {}).get("COD_RH") or ""))
         }
 
+    @staticmethod
+    def _resolve_duplicate_person(code, candidates, source_names):
+        matches = []
+        for person in candidates:
+            variants = [person.get("full_name", ""), *person.get("aliases", [])]
+            scores = [
+                score
+                for source_name in source_names
+                for variant in variants
+                for accepted, score in [strict_name_match(source_name, variant)]
+                if accepted
+            ]
+            if scores:
+                matches.append((max(scores), str(person["_id"]), person))
+        matches.sort(key=lambda item: (-item[0], item[1]))
+        if not matches or (len(matches) > 1 and matches[0][0] == matches[1][0]):
+            raise RuntimeError(
+                "COD_RH {} does not resolve to one name-compatible Kahi person".format(
+                    code
+                )
+            )
+        return matches[0][2]
+
     def _reference_maps(self, batch):
         author_codes = set()
+        author_names = {}
         group_codes = set()
         for document in batch:
             self._validate_document(document)
             authors, groups = self._source_codes(document)
             author_codes.update(authors)
+            for author in document.get("authors", []):
+                code = str(author.get("id") or "")
+                name = str(author.get("full_name") or "").strip()
+                if code and name:
+                    author_names.setdefault(code, set()).add(name)
             group_codes.update(groups)
 
-        people = {}
+        candidates = {}
         for person in self.db["person"].find(
             {"external_ids.id.COD_RH": {"$in": list(author_codes)}},
-            {"full_name": 1, "affiliations": 1, "external_ids": 1},
+            {"full_name": 1, "aliases": 1, "affiliations": 1, "external_ids": 1},
         ):
             for code in self._person_codes(person).intersection(author_codes):
-                if code in people and people[code]["_id"] != person["_id"]:
-                    raise RuntimeError("a COD_RH resolves to multiple Kahi people")
-                people[code] = person
+                candidates.setdefault(code, {})[person["_id"]] = person
+        people = {}
+        for code, documents in candidates.items():
+            options = list(documents.values())
+            people[code] = options[0] if len(options) == 1 else (
+                self._resolve_duplicate_person(
+                    code, options, author_names.get(code, set())
+                )
+            )
         missing_people = sorted(author_codes - set(people))
         if missing_people:
             raise RuntimeError(
@@ -243,7 +317,7 @@ class Kahi_minciencias_opendata_events(KahiBase):
         return output
 
     def _event(self, source, people, groups):
-        output = {field: deepcopy(source[field]) for field in EVENT_FIELDS}
+        output = {field: deepcopy(source[field]) for field in self.empty_event()}
         output["_id"] = source["_id"]
         output["authors"] = [
             self._resolve_author(author, people, groups)
@@ -299,7 +373,7 @@ class Kahi_minciencias_opendata_events(KahiBase):
                 groups_output.append(deepcopy(group))
                 group_ids.add(group.get("id"))
         output["author_count"] = len(authors)
-        return output
+        return order_document(output, self.empty_event())
 
     @staticmethod
     def _bulk_replace(collection, documents):
@@ -364,6 +438,8 @@ class Kahi_minciencias_opendata_events(KahiBase):
         return counters
 
     def run(self):
+        if self.source_mode == "legacy":
+            return self._legacy.run()
         previous = self.runs.find_one({"_id": self.run_id}) or {}
         identity = {
             "contract_version": CONTRACT_VERSION,

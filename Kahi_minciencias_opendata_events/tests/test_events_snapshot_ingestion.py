@@ -9,6 +9,7 @@ plugin_module = importlib.import_module(
     "kahi_minciencias_opendata_events.Kahi_minciencias_opendata_events"
 )
 Plugin = plugin_module.Kahi_minciencias_opendata_events
+legacy_module = importlib.import_module("kahi_minciencias_opendata_events.legacy")
 ENTITIES = ("works", "projects", "patents", "events", "persons", "affiliations")
 
 
@@ -171,3 +172,18 @@ def test_rejects_legacy_options_current_and_four_entity_release(monkeypatch):
     prepare(monkeypatch, entity_count=4)
     with pytest.raises(RuntimeError, match="six-entity event snapshot"):
         Plugin(config())
+
+
+def test_explicit_legacy_mode_uses_gruplac_production(monkeypatch):
+    captured = {}
+
+    class DummyLegacy:
+        def __init__(self, value):
+            captured.update(value["minciencias_opendata_events"])
+
+        def run(self):
+            return "legacy"
+
+    monkeypatch.setattr(legacy_module, "Kahi_minciencias_opendata_events", DummyLegacy)
+    assert Plugin(config(source_mode="legacy")).run() == "legacy"
+    assert captured["collection_name"] == "gruplac_production_data"
