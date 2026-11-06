@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.0.2-alpha - 2026-11-06
 
 - Remove orphan affiliations in rounds until no deletion exposes a new
   orphan; a dry run stops after one round
