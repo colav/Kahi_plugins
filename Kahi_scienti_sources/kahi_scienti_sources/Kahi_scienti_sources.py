@@ -4,6 +4,7 @@ from time import time
 from langid import classify
 from kahi_impactu_utils.Utils import check_date_format
 import re
+from kahi.progress import ProgressLogger
 
 
 class Kahi_scienti_sources(KahiBase):
@@ -168,6 +169,7 @@ class Kahi_scienti_sources(KahiBase):
         if ops:
             # Execute all operations in bulk
             self.collection.bulk_write(ops, ordered=False)
+        return len(ops)
 
     def update_scienti(self, reg, entry, issn):
         updated_scienti = False
@@ -270,6 +272,9 @@ class Kahi_scienti_sources(KahiBase):
             "details.book.editorial.COD_EDITORIAL"))
         editorials_list = [str(code) for code in editorials_list]
 
+        progress = ProgressLogger(
+            f"scienti_sources:{config['database_name']}", total=len(issn_list)).start(
+            f"unidad=ISSN editoriales={len(editorials_list)}")
         for issn in issn_list:
             reg_db = self._find_source_by_issn(issn)
             if reg_db:
@@ -277,12 +282,18 @@ class Kahi_scienti_sources(KahiBase):
                     self._journal_query_for_issn(issn))
                 if reg_scienti:
                     self.update_scienti(reg_scienti, reg_db, issn)
+                    progress.step("actualizados")
+                else:
+                    progress.step("omitidos")
             else:
                 reg_scienti = self.scienti_collection.find_one(
                     self._journal_query_for_issn(issn))
+                if not reg_scienti:
+                    progress.step("omitidos")
                 if reg_scienti:
                     journal = None
                     if "details" not in reg_scienti.keys():
+                        progress.step("omitidos")
                         continue
                     for detail in reg_scienti["details"]:
                         if "article" in detail.keys():
@@ -294,6 +305,7 @@ class Kahi_scienti_sources(KahiBase):
                                 journal = paper["journal_others"][0]
                                 break
                     if not journal:
+                        progress.step("omitidos")
                         continue
                     entry = self.empty_source()
                     entry["updated"] = [
@@ -356,18 +368,16 @@ class Kahi_scienti_sources(KahiBase):
                                     dates[idx] = (date1, date2)
                     entry["ranking"] = rankings_list
                     self.collection.insert_one(entry)
+                    progress.step("nuevos")
 
+        new_editorials = 0
         if editorials_list:
-            self.process_editorials(editorials_list)
+            new_editorials = self.process_editorials(editorials_list)
+        progress.done(editoriales_nuevas=new_editorials)
 
         self.scienti_client.close()
 
     def run(self):
-        start_time = time()
         for config in self.config["scienti_sources"]["databases"]:
-            print("Processing {}.{} database".format(
-                config["database_name"], config["collection_name"]))
             self.process_scienti(config, verbose=5)
-        print("Execution time: {} minutes".format(
-            round((time() - start_time) / 60, 2)))
         return 0
