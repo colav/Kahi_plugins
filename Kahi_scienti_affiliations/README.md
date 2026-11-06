@@ -56,15 +56,35 @@ workflow:
     verbose: 2
 ```
 
-The plugin consolidates the root `institution` collections before processing
-groups. It enriches existing affiliations or inserts missing institutions using
-the current affiliation schema, and links hierarchical units through
-`COD_INST_MACRO`.
+The plugin consolidates the root `institution` collections as a lookup catalog
+before processing groups. It does not insert that catalog wholesale: only
+institutions referenced by a processed group are enriched or materialized.
+New source-only institutions use the exact `COD_INST` as `_id`.
+
+Groups use `ANO_FORMACAO` for `year_established` when it is a four-digit year
+between 1500 and the current year. The month is not required. Existing years
+are preserved; missing values (`null`, empty string or `-1`) can be filled.
+The plugin does not create `birthdate` for affiliations. `campuses` is always
+the final field when inserting an affiliation, defaulting to `[]`.
+
+SNIES campuses embedded in a principal affiliation resolve directly to that
+principal and are not materialized as separate Scienti affiliations. Other
+source units may retain their own identifiers for lineage, but group relations
+record only an authoritative ROR/SNIES principal when one is available.
+Institution name matching requires the same distinctive terms on both sides.
+
+With `verbose: 1`, progress is printed immediately for catalog loading,
+institution ingestion, hierarchy relations and groups in each source database.
+Each phase reports its total, completed records, percentage, elapsed seconds
+and processing rate, plus a final summary. Existing groups are also counted
+as processed. `verbose: 0` disables these progress messages.
+
+Optional plugin parameters: `progress_interval: 1000` and `progress_seconds: 60`.
+A message is emitted after either threshold is reached, at the end of a record;
+a single slow database operation is not interrupted to emit progress.
 
 # License
 BSD-3-Clause License 
 
 # Links
 http://colav.udea.edu.co/
-
-

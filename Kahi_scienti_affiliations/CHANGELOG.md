@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.6 - 2026-10-18
+
+- Store valid group formation years in `year_established` instead of `birthdate`.
+- Fill missing group years while preserving existing years; select the matching
+  source group when a product contains multiple groups.
+- Keep `campuses` last when inserting affiliations.
+
+- Use the exact `COD_INST` for source-only institution ids.
+- Keep the Scienti institution catalog read-only and materialize only group avaladoras.
+- Add both the selected unit/campus and its canonical parent to group relations.
 ## 0.1.5 - 2026-09-03
 
 ### Added
