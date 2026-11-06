@@ -1,14 +1,16 @@
 import copy
 import re
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from itertools import combinations
 from time import time
 from typing import Any, Callable, Dict, List, Sequence, Tuple
 from urllib.parse import parse_qs, urlparse
 
 from joblib import Parallel, delayed
+from kahi_impactu_utils.Mongo import order_document
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from kahi_impactu_utils.Utils import (
     compare_author,
     doi_processor,
@@ -41,6 +43,10 @@ ID_TASKS = {
     "wos",
 }
 TRUSTED_SOURCES = {"staff", "scienti", "minciencias", "scholar"}
+NAME_PARTICLES = {
+    "da", "das", "de", "del", "do", "dos", "la", "las", "los", "y",
+    "van", "von",
+}
 NATIONAL_ID_SOURCES = {
     "Cédula de Ciudadanía",
     "Cédula de Extranjería",
@@ -542,18 +548,85 @@ class ComponentResolver:
 
     @classmethod
     def _name_features(cls, document: dict) -> dict:
+        full_name = normalize_name(document.get("full_name", ""))
+        ordered_full_tokens = tuple(
+            token for token in full_name.split()
+            if token not in NAME_PARTICLES
+        )
+        full_tokens = cls._normalized_full_name_tokens(document)
+        first_names = cls._normalized_name_parts(document, "first_names")
         return {
-            "full_name": normalize_name(document.get("full_name", "")),
-            "full_tokens": cls._normalized_full_name_tokens(document),
-            "first_names": cls._normalized_name_parts(document, "first_names"),
+            "full_name": full_name,
+            "ordered_full_tokens": ordered_full_tokens,
+            "substantive_full_name_token_count": sum(
+                len(token) > 1 and "." not in token
+                for token in ordered_full_tokens
+            ),
+            "full_tokens": full_tokens,
+            "first_names": first_names,
+            "complete_given_names": {
+                token for token in first_names.intersection(full_tokens)
+                if token not in NAME_PARTICLES and "." not in token
+            },
             "last_names": cls._normalized_name_parts(document, "last_names"),
             "variants": cls._name_variants(document),
         }
+
+    @staticmethod
+    def _tokens_are_abbreviation(shorter: Sequence[str], longer: Sequence[str]) -> bool:
+        """Return true when every short token maps to one long token."""
+        if len(shorter) > len(longer) or len(shorter) < 2:
+            return False
+        available = list(longer)
+        # Preserve exact tokens before consuming candidates for initials.
+        for token in (value for value in shorter if len(value) > 1):
+            if token not in available:
+                return False
+            available.remove(token)
+        for token in (value for value in shorter if len(value) == 1):
+            match = next(
+                (value for value in available if value.startswith(token)), None
+            )
+            if match is None:
+                return False
+            available.remove(match)
+        return True
+
+    @classmethod
+    def _safe_abbreviation_match(cls, left: dict, right: dict) -> bool:
+        """Validate containment/reordering while anchoring at least one surname."""
+        left_tokens = left["ordered_full_tokens"]
+        right_tokens = right["ordered_full_tokens"]
+        compatible = (
+            cls._tokens_are_abbreviation(left_tokens, right_tokens)
+            or cls._tokens_are_abbreviation(right_tokens, left_tokens)
+        )
+        if not compatible:
+            return False
+        left_full = set(left_tokens)
+        right_full = set(right_tokens)
+        return bool(
+            left["last_names"].intersection(right_full)
+            or right["last_names"].intersection(left_full)
+        )
+
+    @classmethod
+    def _contradictory_complete_given_names(cls, left: dict, right: dict) -> bool:
+        """Do not let aliases or initials override explicit different names."""
+        if left["full_name"] == right["full_name"]:
+            return False
+        if not cls._name_parts_conflict(
+            left["complete_given_names"], right["complete_given_names"]
+        ):
+            return False
+        return not cls._safe_abbreviation_match(left, right)
 
     @classmethod
     def _name_features_conflict(cls, left: dict, right: dict) -> bool:
         if left["full_name"] == right["full_name"]:
             return False
+        if cls._contradictory_complete_given_names(left, right):
+            return True
         first_conflict = cls._name_parts_conflict(
             left["first_names"],
             right["first_names"],
@@ -698,6 +771,12 @@ class ComponentResolver:
         shared_affiliation_ids = cls._shared_affiliation_ids(
             left, right, valid_affiliation_ids
         )
+        exact_name = (
+            left_name_features["full_name"]
+            == right_name_features["full_name"]
+        )
+        left_identity = cls._authoritative_ids(left)
+        right_identity = cls._authoritative_ids(right)
         return {
             "source": group.source,
             "key": group.key,
@@ -705,9 +784,14 @@ class ComponentResolver:
             "right_id": right_id,
             "compare_author": True,
             "direct_doi": group.source == "doi",
-            "exact_normalized_name": (
-                left_name_features["full_name"]
-                == right_name_features["full_name"]
+            "exact_normalized_name": exact_name,
+            "exact_name_substantive_token_count": (
+                left_name_features["substantive_full_name_token_count"]
+                if exact_name else 0
+            ),
+            "shared_authoritative_identity": any(
+                left_identity[source] & right_identity[source]
+                for source in left_identity
             ),
             "shared_affiliation": bool(shared_affiliation_ids),
             "shared_affiliation_ids": sorted(
@@ -720,10 +804,13 @@ class ComponentResolver:
                     right_name_features["full_tokens"]
                 )
             ),
-            "left_orcids": sorted(cls._valid_orcid_ids(left)),
-            "right_orcids": sorted(cls._valid_orcid_ids(right)),
-            "left_national_ids": sorted(cls._national_ids(left)),
-            "right_national_ids": sorted(cls._national_ids(right)),
+            "safe_abbreviation_match": cls._safe_abbreviation_match(
+                left_name_features, right_name_features
+            ),
+            "left_orcids": sorted(left_identity["orcid"]),
+            "right_orcids": sorted(right_identity["orcid"]),
+            "left_national_ids": sorted(left_identity["national_id"]),
+            "right_national_ids": sorted(right_identity["national_id"]),
             "shared_external_ids": cls._shared_external_ids(left, right),
             "conflicting_external_ids": cls._conflicting_external_ids(left, right),
         }
@@ -803,6 +890,44 @@ class ComponentResolver:
             for value in source.get(field, []):
                 if value not in target_values:
                     target_values.append(copy.deepcopy(value))
+
+        self._merge_affiliations(target, source)
+
+    @staticmethod
+    def _merge_affiliations(target: dict, source: dict) -> None:
+        """Preserve affiliations from every member without duplicating IDs."""
+        target_values = target.setdefault("affiliations", [])
+        by_id = {
+            value.get("id"): value
+            for value in target_values
+            if isinstance(value, dict) and value.get("id") not in (None, "")
+        }
+        for value in source.get("affiliations", []):
+            if not isinstance(value, dict):
+                if value not in target_values:
+                    target_values.append(copy.deepcopy(value))
+                continue
+            affiliation_id = value.get("id")
+            current = by_id.get(affiliation_id)
+            if affiliation_id in (None, "") or current is None:
+                if value not in target_values:
+                    copied = copy.deepcopy(value)
+                    target_values.append(copied)
+                    if affiliation_id not in (None, ""):
+                        by_id[affiliation_id] = copied
+                continue
+            for field, incoming in value.items():
+                if field == "id":
+                    continue
+                if isinstance(incoming, list):
+                    existing = current.setdefault(field, [])
+                    if not isinstance(existing, list):
+                        continue
+                    for item in incoming:
+                        if item not in existing:
+                            existing.append(copy.deepcopy(item))
+                elif current.get(field) in (None, "", [], {}):
+                    current[field] = copy.deepcopy(incoming)
 
     @staticmethod
     def _evidence_from_edges(
@@ -983,6 +1108,15 @@ class CandidateEdgeBuilder:
             else None
         )
         if alias_only_match:
+            safe_abbreviation_match = any(
+                detail.get("alias_name_match")
+                and not detail.get("compare_author")
+                and detail.get("safe_abbreviation_match")
+                for detail in details
+            )
+            if not safe_abbreviation_match:
+                return "medium", 70, [
+                    "alias_without_safe_abbreviation", "shared_doi"]
             shared_name_token_count = max(
                 (
                     int(detail.get("shared_name_token_count", 0))
@@ -1015,6 +1149,34 @@ class CandidateEdgeBuilder:
             detail["shared_affiliation"] for detail in details)
         if len(doi_keys) >= 2:
             return "high", 90, ["multiple_shared_dois"]
+        if (
+            len(doi_keys) == 1
+            and single_doi_author_count is not None
+            and single_doi_author_count
+            > self.single_doi_exact_name_max_authors
+        ):
+            for detail in details:
+                if not (
+                    detail.get("compare_author")
+                    and detail.get("exact_normalized_name")
+                    and detail.get("exact_name_substantive_token_count", 0) >= 3
+                    and (
+                        detail.get("shared_affiliation")
+                        or detail.get("shared_authoritative_identity")
+                    )
+                ):
+                    continue
+                support = (
+                    "shared_authoritative_identity_support"
+                    if detail.get("shared_authoritative_identity")
+                    else "shared_affiliation_support"
+                )
+                return "high", 85, [
+                    "exact_normalized_long_name",
+                    "shared_doi",
+                    support,
+                    "author_count_limit_exception",
+                ]
         if (
             doi_keys
             and exact_name
@@ -1118,6 +1280,13 @@ class Kahi_unicity_person_graph(KahiBase):
         self.works_collection_name = plugin_config.get(
             "works_collection_name", "works"
         )
+        self.openalex_works = None
+        openalex_database = plugin_config.get("openalex_database_name")
+        if openalex_database:
+            openalex_collection = plugin_config.get("openalex_collection_name", "works")
+            if openalex_collection not in self.client[openalex_database].list_collection_names():
+                raise ValueError("Configured OpenAlex works collection does not exist")
+            self.openalex_works = self.client[openalex_database][openalex_collection]
         self.affiliations_collection_name = plugin_config.get(
             "affiliations_collection_name", "affiliations"
         )
@@ -1295,6 +1464,8 @@ class Kahi_unicity_person_graph(KahiBase):
                 {"$match": {"$expr": {"$gt": [{"$size": "$member_ids"}, 1]}}},
                 {"$sort": {"_id": 1}},
             ]
+            progress = ProgressLogger(
+                f"unicity_person_graph:{task}").start("grupos candidatos")
             for record in self.collection.aggregate(
                     pipeline, allowDiskUse=True):
                 member_ids = tuple(
@@ -1308,6 +1479,8 @@ class Kahi_unicity_person_graph(KahiBase):
                         member_ids,
                         order))
                 order += 1
+                progress.step()
+            progress.done()
 
         if "doi" in self.tasks:
             size_conditions = [{"$gt": [{"$size": "$member_ids"}, 1]}]
@@ -1374,6 +1547,8 @@ class Kahi_unicity_person_graph(KahiBase):
                 },
                 {"$sort": {"_id": 1}},
             ]
+            progress = ProgressLogger("unicity_person_graph:doi").start(
+                f"grupos candidatos max_profiles_per_doi={self.max_profiles_per_doi}")
             for record in self.collection.aggregate(
                     pipeline, allowDiskUse=True):
                 member_ids = tuple(
@@ -1403,8 +1578,44 @@ class Kahi_unicity_person_graph(KahiBase):
                     )
                 )
                 order += 1
+                progress.step()
+            progress.done()
 
-        return groups
+        return self._enrich_openalex_counts(groups)
+
+    def _enrich_openalex_counts(self, groups):
+        collection = getattr(self, "openalex_works", None)
+        if collection is None:
+            return groups
+        counts = {}
+        keys = sorted({group.key for group in groups if group.source == "doi"})
+        progress = ProgressLogger(
+            "unicity_person_graph:openalex_counts", total=len(keys),
+        ).start(collection.full_name)
+        for start in range(0, len(keys), 500):
+            for work in collection.find(
+                {"doi": {"$in": keys[start:start + 500]}},
+                {"doi": 1, "authors_count": 1, "authorships.author.id": 1},
+            ):
+                declared = work.get("authors_count")
+                declared = int(declared) if isinstance(declared, (int, float)) and declared > 0 else 0
+                count = max(declared, len(work.get("authorships") or []))
+                if count:
+                    counts[work["doi"]] = max(counts.get(work["doi"], 0), count)
+            progress.step(n=len(keys[start:start + 500]))
+        progress.done()
+        enriched = []
+        for group in groups:
+            count = counts.get(group.key) if group.source == "doi" else None
+            if count:
+                sources = [group.work_author_count_source, collection.full_name]
+                group = replace(
+                    group,
+                    work_author_count=max(group.work_author_count or 0, count),
+                    work_author_count_source="+".join(source for source in sources if source),
+                )
+            enriched.append(group)
+        return enriched
 
     def discover_candidate_edges(
         self,
@@ -1425,6 +1636,9 @@ class Kahi_unicity_person_graph(KahiBase):
             "affiliations": 1,
             "updated": 1,
         }
+        progress = ProgressLogger(
+            "unicity_person_graph:edges", total=len(groups),
+        ).start(f"batch_size={self.candidate_group_batch_size}")
         for start in range(0, len(groups), self.candidate_group_batch_size):
             batch = groups[start:start + self.candidate_group_batch_size]
             member_ids = {
@@ -1449,6 +1663,8 @@ class Kahi_unicity_person_graph(KahiBase):
                 )
             }
             builder.add_groups(batch, snapshot, valid_affiliation_ids)
+            progress.step(n=len(batch))
+        progress.done()
         return builder.finish()
 
     def run(self):
@@ -1471,6 +1687,9 @@ class Kahi_unicity_person_graph(KahiBase):
                 ),
                 "max_profiles_per_doi": self.max_profiles_per_doi,
                 "works_collection_name": self.works_collection_name,
+                "openalex_works_collection": (
+                    self.openalex_works.full_name if self.openalex_works is not None else None
+                ),
                 "affiliations_collection_name": self.affiliations_collection_name,
             }
         )
@@ -1506,13 +1725,18 @@ class Kahi_unicity_person_graph(KahiBase):
             )
             rejected_weak_bridges = 0
 
+            progress = ProgressLogger(
+                "unicity_person_graph:components", total=len(components),
+            ).start(
+                f"dry_run={self.dry_run} num_jobs={self.n_jobs} "
+                f"batch_size={self.component_batch_size}")
             for start in range(0, len(components), self.component_batch_size):
                 component_batch = components[start:start +
                                              self.component_batch_size]
                 snapshot = self._load_snapshot(component_batch)
                 results = Parallel(
                     n_jobs=self.n_jobs,
-                    verbose=self.verbose,
+                    verbose=0,
                     backend="threading",
                 )(
                     delayed(resolver.resolve)(component, snapshot)
@@ -1526,7 +1750,7 @@ class Kahi_unicity_person_graph(KahiBase):
                     self._store_review_plans(results, run_id)
                     Parallel(
                         n_jobs=self.n_jobs,
-                        verbose=self.verbose,
+                        verbose=0,
                         backend="threading",
                     )(
                         delayed(self._apply_component)(result, run_id)
@@ -1617,6 +1841,14 @@ class Kahi_unicity_person_graph(KahiBase):
                         }
                     },
                 )
+                merged_components = sum(bool(result.plans) for result in results)
+                progress.step("fusionados", n=merged_components)
+                progress.step("omitidos", n=len(results) - merged_components)
+            progress.done(
+                planes_fusion=plan_count,
+                planes_revision=review_plan_count,
+                absorbidos=absorbed_count,
+            )
 
             self.runs_collection.update_one(
                 {"_id": run_id},
@@ -1840,7 +2072,7 @@ class Kahi_unicity_person_graph(KahiBase):
                     )
                 self.collection.replace_one(
                     {"_id": plan.target_id},
-                    plan.merged_document,
+                    order_document(plan.merged_document, self.empty_person()),
                     session=session,
                 )
                 self.collection.delete_many(
