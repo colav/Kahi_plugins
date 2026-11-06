@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.2-beta - 2026-11-06
 
 - Restore an explicit isolated `legacy` reader for `gruplac_production_data`.
 - Resolve a COD_RH shared by several people through strict name
