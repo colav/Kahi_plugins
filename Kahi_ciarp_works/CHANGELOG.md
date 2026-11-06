@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.1-beta - 2026-11-06
 
 - Add work affiliations only when the author's dated parent affiliation
   covers the publication year or the previous one; missing start date
@@ -18,4 +18,4 @@
   README contracts and tests
 
 - Report START/progress/DONE with kahi ProgressLogger per institution
-- Require kahi>=0.1.3a0
+- Require kahi>=0.1.3
