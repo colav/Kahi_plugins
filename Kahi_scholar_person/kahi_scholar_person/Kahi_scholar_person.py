@@ -1,8 +1,12 @@
 from kahi_scholar_person.parser import parse_scholar
 from kahi_scholar_person.process_one import external_scholar_id, merge_author_entries, process_one
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
+
+OUTCOMES = {"inserted": "nuevos", "updated": "actualizados",
+            "skipped_without_id": "omitidos"}
 
 
 class Kahi_scholar_person(KahiBase):
@@ -67,6 +71,9 @@ class Kahi_scholar_person(KahiBase):
 
         We use the process_one function to process each paper in parallel.
         """
+        papers = ProgressLogger(
+            "scholar_person:articulos",
+            total=self.scholar_collection.estimated_document_count()).start()
         paper_cursor = self.scholar_collection.find(
             {},
             {"author": 1, "profiles": 1, "cid": 1, "doi": 1},
@@ -84,25 +91,32 @@ class Kahi_scholar_person(KahiBase):
                     merge_author_entries(authors_by_id[scholar_id], author)
                 else:
                     authors_by_id[scholar_id] = author
+            papers.step()
+        papers.done(perfiles_unicos=len(authors_by_id))
 
-        if self.verbose:
-            print(
-                f"INFO: Processing {len(authors_by_id)} unique Scholar profiles")
+        progress = ProgressLogger(
+            "scholar_person:perfiles", total=len(authors_by_id)).start(
+            f"num_jobs={self.n_jobs}")
+
+        def tracked(author, collection, verbose):
+            result = process_one(author, collection, verbose=verbose)
+            progress.step(OUTCOMES.get(result, result))
 
         client = MongoClient(self.mongodb_url)
         db = client[self.config["database_name"]]
         collection = db["person"]
         Parallel(
             n_jobs=self.n_jobs,
-            verbose=self.verbose,
+            verbose=0,
             backend="threading")(
-            delayed(process_one)(
+            delayed(tracked)(
                 author,
                 collection,
                 verbose=self.verbose
             ) for author in authors_by_id.values()
         )
         client.close()
+        progress.done()
 
     def run(self):
         """
