@@ -4,8 +4,8 @@
 Kahi uses this plugin to import the audited ScienTI projects snapshot.
 
 # Description
-The plugin streams `projects` from an explicit immutable six-entity Yuku
-release. It does not parse `gruplac_production_data` or modify DAM.
+Snapshot mode streams `projects` from an immutable six-entity Yuku release.
+Explicit legacy mode reads `gruplac_production_data` without modifying DAM.
 
 Authors identified by `COD_RH` and groups identified by `COL...` are resolved
 against Kahi. Empty author identifiers remain empty and are never matched by
@@ -35,6 +35,7 @@ workflow:
   minciencias_opendata_projects:
     database_url: localhost:27017
     database_name: dam
+    source_mode: snapshot
     release_name: scienti_kahi_release_YYYYMMDD
     batch_size: 500
     verbose: 1
@@ -43,6 +44,8 @@ workflow:
 `release_name` cannot be `current`. Progress and source evidence are stored in
 `minciencias_opendata_projects_runs`, allowing interrupted imports to resume.
 Affiliations, people and person unicity must run first; SIIU should run later.
+For the historical reader use `source_mode: legacy`; `collection_name` defaults
+to `gruplac_production_data`.
 
 # License
 BSD-3-Clause License 
