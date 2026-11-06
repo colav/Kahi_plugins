@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.6 - 2026-11-06
 
 - Merge staff evidence into people inserted by other sources instead of
   skipping them; add repair_missing_parent_affiliations.py
@@ -14,4 +14,4 @@
 
 - Report START/progress/DONE with kahi ProgressLogger
   (nuevos/actualizados)
-- Require kahi>=0.1.3a0
+- Require kahi>=0.1.3
