@@ -3,8 +3,8 @@ from datetime import datetime
 import re
 from time import time
 
-from joblib import Parallel, delayed
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from kahi_impactu_utils.String import title_case
 from pymongo import MongoClient, TEXT
 from thefuzz import fuzz
@@ -37,6 +37,14 @@ PROTECTED_NAME_SEGMENTS = {
 TEMPORARY_SEARCH_ALIASES = {
     "universidad fucs": "Fundación Universitaria de Ciencias de la Salud",
 }
+GENERIC_INSTITUTION_TOKENS = {
+    "asociacion", "centro", "colegio", "corporacion", "educacion", "escuela",
+    "fundacion", "institucion", "instituto", "superior", "tecnica", "tecnico",
+    "tecnologica", "tecnologico", "universidad", "universitaria", "universitario",
+}
+NAME_STOPWORDS = {
+    "a", "de", "del", "e", "el", "en", "la", "las", "los", "para", "por", "y",
+}
 
 
 def clean_text(value):
@@ -56,6 +64,12 @@ def normalize_name(value):
     for token in ["(", ")", ".", ",", "-", "_", "/"]:
         value = value.replace(token, " ")
     return " ".join(value.split())
+
+
+def distinctive_name_tokens(value):
+    """Exclude legal-form words that cannot identify an institution alone."""
+    return set(normalize_name(value).split()) - (
+        GENERIC_INSTITUTION_TOKENS | NAME_STOPWORDS)
 
 
 def get_first(reg, keys):
@@ -207,17 +221,73 @@ def find_by_snies_code(collection, code):
     """
     if not code:
         return None
-    return collection.find_one(
-        {
-            "$or": [
-                {"external_ids": {"$elemMatch": {"source": SOURCE, "id": code}}},
-                {"_id": f"snies_{code}"},
-            ]
-        }
-    )
+    affiliation = collection.find_one({
+        "external_ids": {"$elemMatch": {
+            "source": SOURCE, "id": code, "provenance": SOURCE,
+        }},
+    })
+    if affiliation:
+        return affiliation
+    return collection.find_one({"_id": f"snies_{code}"})
 
 
-def find_by_name(collection, name, country=COUNTRY, verbose=0):
+def snies_parent_code(reg):
+    return normalize_snies_code(get_first(
+        reg, ["CÓDIGO_IES_PADRE", "CODIGO_IES_PADRE"]))
+
+
+def is_snies_sectional(reg):
+    code = normalize_snies_code(get_first(
+        reg, ["CÓDIGO_INSTITUCIÓN", "CODIGO_INSTITUCION"]))
+    parent = snies_parent_code(reg)
+    return bool(code and parent and code != parent)
+
+
+def snies_campus(reg):
+    """Map an official SNIES sectional into compact parent metadata."""
+    code = normalize_snies_code(get_first(
+        reg, ["CÓDIGO_INSTITUCIÓN", "CODIGO_INSTITUCION"]))
+    if not code:
+        return None
+    address = snies_address(reg)
+    status = snies_status(reg)
+    return {
+        "id": "snies_{}".format(code),
+        "name": snies_title(get_first(
+            reg, ["NOMBRE_INSTITUCIÓN", "NOMBRE_INSTITUCION"])),
+        "types": [{
+            "provenance": SOURCE, "source": SOURCE, "type": "campus",
+        }],
+        "external_ids": snies_external_ids(reg),
+        "addresses": [address] if address else [],
+        "status": [status] if status else [],
+    }
+
+
+def embed_snies_campus(collection, reg):
+    """Insert or refresh a sectional inside its principal affiliation."""
+    if not is_snies_sectional(reg):
+        return False
+    parent = find_by_snies_code(collection, snies_parent_code(reg))
+    campus = snies_campus(reg)
+    if not parent or not campus:
+        return False
+    campuses = parent.get("campuses", [])
+    current = next((item for item in campuses
+                    if item.get("id") == campus["id"]), None)
+    if current == campus:
+        return False
+    if current:
+        current.clear()
+        current.update(campus)
+    else:
+        campuses.append(campus)
+    collection.update_one(
+        {"_id": parent["_id"]}, {"$set": {"campuses": campuses}})
+    return True
+
+
+def find_by_name(collection, name, code="", country=COUNTRY, verbose=0):
     """
     Find an affiliation by name using the same text/fuzzy approach used by other Kahi plugins.
     """
@@ -225,18 +295,21 @@ def find_by_name(collection, name, country=COUNTRY, verbose=0):
         return None
 
     direct_match = find_by_name_value(collection, name, country=country)
-    if direct_match:
+    if (direct_match and distinctive_name_tokens(name)
+            and not has_different_snies_code(direct_match, code)):
         return direct_match
 
     alias = TEMPORARY_SEARCH_ALIASES.get(normalize_name(name))
     if alias:
-        alias_match = find_by_name(collection, alias, country=country, verbose=verbose)
+        alias_match = find_by_name(
+            collection, alias, code=code, country=country, verbose=verbose)
         if alias_match:
             return alias_match
 
     query = build_text_query(name) or normalize_name(name)
     source_name = normalize_name(name)
-    match = match_name_candidates(get_name_candidates(collection, query, country), source_name)
+    match = match_name_candidates(
+        get_name_candidates(collection, query, country), source_name, code)
     if match:
         return match
 
@@ -246,7 +319,8 @@ def find_by_name(collection, name, country=COUNTRY, verbose=0):
         regex_filter = {"names.name": {"$regex": token[:4], "$options": "i"}}
         if country:
             regex_filter["addresses.country"] = country
-        match = match_name_candidates(collection.find(regex_filter).limit(100), source_name)
+        match = match_name_candidates(
+            collection.find(regex_filter).limit(100), source_name, code)
         if match:
             return match
 
@@ -312,22 +386,29 @@ def find_by_name_value(collection, name, country=COUNTRY):
     return collection.find_one(regex_filter)
 
 
+def has_different_snies_code(candidate, code):
+    """Prevent a name match from attaching a second SNIES institution code."""
+    codes = {
+        str(item.get("id"))
+        for item in candidate.get("external_ids", [])
+        if item.get("source") == SOURCE and item.get("id")
+    }
+    return bool(code and codes and str(code) not in codes)
+
+
 def candidate_match_score(candidate, source_name):
     """
     Score one candidate using the improved DAM affiliation matching logic.
     """
     best = None
-    stopwords = {"de", "del", "la", "las", "los", "el", "y", "e", "en", "para", "por", "a"}
-    source_tokens = set(source_name.split())
-    distinctive_source_tokens = source_tokens - stopwords
+    distinctive_source_tokens = distinctive_name_tokens(source_name)
 
     for name in get_candidate_names(candidate):
         candidate_name = normalize_name(name)
         if not candidate_name:
             continue
 
-        candidate_tokens = set(candidate_name.split())
-        distinctive_candidate_tokens = candidate_tokens - stopwords
+        distinctive_candidate_tokens = distinctive_name_tokens(candidate_name)
         distinctive_token_overlap = len(
             distinctive_source_tokens & distinctive_candidate_tokens
         ) / max(1, min(len(distinctive_source_tokens), len(distinctive_candidate_tokens)))
@@ -360,8 +441,13 @@ def is_candidate_match(match, source_name):
         return False
 
     scores = match["scores"]
-    exact_match = match["normalized_name"] == source_name
-    high_direct_score = scores["ratio"] >= 92 or scores["token_sort_ratio"] >= 95
+    has_distinctive_overlap = match["distinctive_token_overlap"] > 0
+    exact_match = (
+        match["normalized_name"] == source_name
+        and match["distinctive_name_token_count"] > 0
+    )
+    high_direct_score = has_distinctive_overlap and (
+        scores["ratio"] >= 92 or scores["token_sort_ratio"] >= 95)
     token_subset_match = all(
         [
             scores["token_set_ratio"] >= 92,
@@ -392,12 +478,14 @@ def is_candidate_match(match, source_name):
     )
 
 
-def match_name_candidates(candidates, source_name):
+def match_name_candidates(candidates, source_name, code=""):
     """
     Return the best candidate that passes the SNIES name matching thresholds.
     """
     matches = []
     for candidate in candidates:
+        if has_different_snies_code(candidate, code):
+            continue
         match = candidate_match_score(candidate, source_name)
         if is_candidate_match(match, source_name):
             matches.append((candidate, match))
@@ -432,7 +520,10 @@ def snies_external_ids(reg):
 
 def normalize_nit(value):
     """
-    Remove punctuation and verification digit from a Colombian NIT.
+    Return a plausible Colombian NIT without its verification digit.
+
+    SNIES contains placeholders and malformed values that must never be used
+    as identity evidence.
     """
     value = clean_text(value)
     if not value:
@@ -440,6 +531,13 @@ def normalize_nit(value):
 
     value = value.split("-", maxsplit=1)[0]
     value = "".join(char for char in value if char.isdigit())
+    invalid = {
+        "000000000", "000000010", "111111111", "123456789", "999999999",
+    }
+    if not 7 <= len(value) <= 10:
+        return ""
+    if value in invalid or len(set(value)) == 1:
+        return ""
     return value
 
 
@@ -490,13 +588,31 @@ def snies_external_urls(reg):
     """
     Build standard external_urls entries from SNIES public URL fields.
     """
-    urls = []
-    website = get_first(reg, ["PÁGINA_WEB", "PAGINA_WEB"])
-    if website:
-        if not website.startswith(("http://", "https://")):
-            website = "https://" + website
-        urls.append({"provenance": SOURCE, "source": "site", "url": website})
-    return urls
+    website = normalize_website(get_first(reg, ["PÁGINA_WEB", "PAGINA_WEB"]))
+    if not website:
+        return []
+    return [{"provenance": SOURCE, "source": "site", "url": website}]
+
+
+def normalize_website(value):
+    """Normalize a usable SNIES website and reject placeholders."""
+    value = re.sub(r"\s+", "", clean_text(value))
+    if not value:
+        return ""
+
+    scheme = "http" if value.lower().startswith("http://") else "https"
+    host_and_path = re.sub(
+        r"^(?:(?:https?)://)+", "", value, flags=re.IGNORECASE
+    ).strip("/")
+    host = host_and_path.split("/", 1)[0].lower()
+    if (
+        "." not in host
+        or normalize_name(host_and_path) in {
+            "no disponible", "no aplica", "n a", "na", "ninguna", "ninguno", "1"
+        }
+    ):
+        return ""
+    return f"{scheme}://{host_and_path}"
 
 
 def parse_unix_date(value):
@@ -572,13 +688,20 @@ def mark_updated(entry):
         if updated.get("source") == SOURCE:
             updated["time"] = now
             return
-    entry["updated"].append({"time": now, "source": SOURCE})
+    entry["updated"].append({"source": SOURCE, "time": now})
 
 
 def apply_snies_data(entry, reg):
     """
     Add SNIES values to an affiliation document without creating custom fields.
     """
+    # SNIES names are Spanish, including names already supplied by SNIES.
+    names = []
+    for item in entry["names"]:
+        if item.get("source") == SOURCE:
+            item["lang"] = "es"
+        add_unique(names, item)
+    entry["names"] = names
     name = get_first(reg, ["NOMBRE_INSTITUCIÓN", "NOMBRE_INSTITUCION"])
     if name:
         add_unique(entry["names"], {"source": SOURCE, "name": snies_title(name), "lang": "es"})
@@ -668,16 +791,128 @@ def process_one(reg, collection, empty_affiliation, verbose=0):
     name = snies_title(get_first(reg, ["NOMBRE_INSTITUCIÓN", "NOMBRE_INSTITUCION"]))
 
     if not code and not name:
-        return
+        return "omitidos"
+    # Official sectionals are compact metadata of the principal institution;
+    # link_snies_hierarchy embeds them after every principal has been loaded.
+    if is_snies_sectional(reg):
+        return "seccionales"
 
     affiliation = find_by_snies_code(collection, code)
-    if not affiliation:
-        affiliation = find_by_name(collection, name, verbose=verbose)
+    if not affiliation and not is_snies_sectional(reg):
+        affiliation = find_by_name(
+            collection, name, code=code, verbose=verbose)
 
     if affiliation:
         update_affiliation(collection, affiliation, reg, verbose=verbose)
-    else:
-        insert_affiliation(collection, empty_affiliation, reg, verbose=verbose)
+        return "actualizados"
+    insert_affiliation(collection, empty_affiliation, reg, verbose=verbose)
+    return "nuevos"
+
+
+def link_snies_hierarchy(collection, records):
+    """Embed each official SNIES sectional in its principal institution."""
+    return sum(embed_snies_campus(collection, reg) for reg in records)
+
+
+def repair_snies_code_fusions(collection, records, verbose=0):
+    """Remove unrelated SNIES codes previously merged into a ROR affiliation."""
+    names_by_code = {}
+    records_by_code = {}
+    for reg in records:
+        code = normalize_snies_code(get_first(
+            reg, ["CÓDIGO_INSTITUCIÓN", "CODIGO_INSTITUCION"]))
+        name = snies_title(get_first(
+            reg, ["NOMBRE_INSTITUCIÓN", "NOMBRE_INSTITUCION"]))
+        if code and name:
+            names_by_code.setdefault(code, set()).add(name)
+            records_by_code.setdefault(code, []).append(reg)
+
+    repaired = set()
+    query = {
+        "external_ids": {"$elemMatch": {"source": SOURCE}},
+        "types.type": {"$ne": "group"},
+    }
+    for affiliation in collection.find(query):
+        codes = {
+            str(item.get("id"))
+            for item in affiliation.get("external_ids", [])
+            if item.get("source") == SOURCE
+            and str(item.get("id")) in names_by_code
+        }
+        if len(codes) < 2:
+            continue
+        canonical = [
+            distinctive_name_tokens(item.get("name"))
+            for item in affiliation.get("names", [])
+            if item.get("source") == "ror" and item.get("name")
+        ]
+        canonical = [tokens for tokens in canonical if tokens]
+        if not canonical:
+            continue
+        retained = {
+            code for code in codes
+            if any(
+                distinctive_name_tokens(name) in canonical
+                for name in names_by_code[code]
+            )
+        }
+        if not retained or retained == codes:
+            continue
+
+        entry = deepcopy(affiliation)
+        for field in [
+                "updated", "names", "abbreviations", "types", "status",
+                "addresses", "external_urls", "external_ids", "ranking"]:
+            entry.setdefault(field, [])
+        entry["names"] = [
+            item for item in entry.get("names", [])
+            if item.get("source") != SOURCE
+        ]
+        for field in ["external_ids", "external_urls", "types", "ranking"]:
+            entry[field] = [
+                item for item in entry.get(field, [])
+                if item.get("provenance") != SOURCE
+            ]
+        entry["updated"] = [
+            item for item in entry.get("updated", [])
+            if item.get("source") != SOURCE
+        ]
+        source_acronyms = {
+            acronym
+            for code in codes
+            for reg in records_by_code[code]
+            for acronym in strip_snies_acronyms(get_first(
+                reg, ["NOMBRE_INSTITUCIÓN", "NOMBRE_INSTITUCION"]))[1]
+        }
+        entry["abbreviations"] = [
+            item for item in entry.get("abbreviations", [])
+            if item not in source_acronyms
+        ]
+        for code in sorted(retained):
+            for reg in records_by_code[code]:
+                apply_snies_data(entry, reg)
+        collection.update_one(
+            {"_id": affiliation["_id"]},
+            {"$set": {
+                "updated": entry["updated"],
+                "names": entry["names"],
+                "types": entry["types"],
+                "external_urls": entry["external_urls"],
+                "external_ids": entry["external_ids"],
+                "ranking": entry["ranking"],
+                "abbreviations": entry["abbreviations"],
+                "addresses": entry["addresses"],
+                "status": entry["status"],
+            }},
+        )
+        repaired.add(affiliation["_id"])
+        if verbose > 0:
+            print(
+                "Repaired SNIES affiliation {}: retained {} code(s), separated {}".format(
+                    affiliation["_id"], len(retained), len(codes - retained)),
+                flush=True,
+            )
+    return repaired
 
 
 class Kahi_snies_affiliations(KahiBase):
@@ -696,6 +931,7 @@ class Kahi_snies_affiliations(KahiBase):
         self.collection = self.db["affiliations"]
 
         self.collection.create_index("external_ids.id")
+        self.collection.create_index("campuses.external_ids.id")
         self.collection.create_index("names.name")
         self.collection.create_index("types.type")
         self.collection.create_index([("names.name", TEXT)])
@@ -722,7 +958,6 @@ class Kahi_snies_affiliations(KahiBase):
             )
 
         self.snies_collection = self.snies_db[source_collection_name]
-        self.n_jobs = config["snies_affiliations"].get("num_jobs", 1)
         self.verbose = config["snies_affiliations"].get("verbose", 0)
 
         self.snies_collection.create_index("CÓDIGO_INSTITUCIÓN")
@@ -733,9 +968,9 @@ class Kahi_snies_affiliations(KahiBase):
         """
         Process all raw SNIES institution records from the configured source collection.
         """
-        institutions = self.snies_collection.find()
-        print(
-            "Processing {}.{}...".format(
+        institutions = list(self.snies_collection.find())
+        progress = ProgressLogger("snies_affiliations", total=len(institutions)).start(
+            "origen={}.{}".format(
                 self.config["snies_affiliations"]["database_name"],
                 self.config["snies_affiliations"]["collection_name"],
             )
@@ -744,11 +979,15 @@ class Kahi_snies_affiliations(KahiBase):
         with MongoClient(self.mongodb_url) as client:
             db = client[self.config["database_name"]]
             collection = db["affiliations"]
+            repaired = repair_snies_code_fusions(
+                collection, institutions, verbose=self.verbose)
 
-            Parallel(n_jobs=self.n_jobs, verbose=self.verbose, backend="threading")(
-                delayed(process_one)(reg, collection, self.empty_affiliation(), self.verbose)
-                for reg in institutions
-            )
+            ordered = sorted(institutions, key=is_snies_sectional)
+            for reg in ordered:
+                progress.step(process_one(
+                    reg, collection, self.empty_affiliation(), self.verbose))
+            linked = link_snies_hierarchy(collection, ordered)
+        progress.done(fusiones_reparadas=len(repaired), seccionales_enlazadas=linked)
 
     def run(self):
         self.process_snies()
