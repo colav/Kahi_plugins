@@ -15,6 +15,12 @@
   `gruplac_production_data` and immutable raw CvLAC HTML, ignores employment
   experiences and retains only DOI-related works.
 
+- Add the `clean_cvlac_experience_affiliations.py` maintenance script.
+- Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
+  joblib progress output disabled (`verbose=0`).
+- Require `kahi>=0.1.3a0`; declare `joblib`, `beautifulsoup4` and
+  `kahi_impactu_utils`.
+
 ## 0.1.5-beta - 2026-09-09
 
 - Replace the legacy multi-collection reader and global aggregations with direct
