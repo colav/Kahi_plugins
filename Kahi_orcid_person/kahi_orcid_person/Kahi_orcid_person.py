@@ -1,5 +1,6 @@
 from kahi.KahiBase import KahiBase
-from kahi_impactu_utils.Utils import split_name_part
+from kahi.progress import ProgressLogger
+from kahi_impactu_utils.Utils import split_name_part, parse_orcid_id_from_url
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 import copy
@@ -74,8 +75,8 @@ class Kahi_orcid_person(KahiBase):
 
         Returns
         -------
-        dict
-            The update fields used to update the document.
+        str
+            "actualizados", the outcome reported to the progress logger.
         """
         update_operation = {
             "$addToSet": {
@@ -99,10 +100,10 @@ class Kahi_orcid_person(KahiBase):
             update_operation["$addToSet"]["aliases"] = {"$each": aliases}
 
         result = person_collection.update_one(query, update_operation)
-        if self.verbose > 0:
+        if self.verbose > 4:
             print(
                 f"ORCID: {orcid} - Updated: Matched documents: {result.matched_count}, Modified documents: {result.modified_count}")
-        return update_fields
+        return "actualizados"
 
     def process_one_insert(self, person_reg, query, update_fields, person_collection, empty_person, orcid):
         """
@@ -125,8 +126,8 @@ class Kahi_orcid_person(KahiBase):
 
         Returns
         -------
-        dict
-            The inserted document's data (update fields used).
+        str
+            "nuevos", the outcome reported to the progress logger.
         """
         # Create a new document using the empty person template
         entry = copy.deepcopy(empty_person)
@@ -144,7 +145,7 @@ class Kahi_orcid_person(KahiBase):
         if self.verbose > 4:
             print(
                 f"ORCID: {orcid} - Inserted document with id: {result.inserted_id}")
-        return update_fields
+        return "nuevos"
 
     def process_one(self, orcid_author, person_collection, empty_person, related_works):
         """
@@ -164,12 +165,14 @@ class Kahi_orcid_person(KahiBase):
 
         Returns
         -------
-        dict or None:
-            The update or insert fields used to modify the document, or None if no ORCID was found.
+        str or None:
+            "actualizados" or "nuevos", or None if the record was skipped (no ORCID or no name).
         """
         # Extract the record and retrieve the ORCID URI
         record = orcid_author.get("record:record", {})
         orcid = record.get("common:orcid-identifier", {}).get("common:uri", "")
+        if orcid:
+            orcid = parse_orcid_id_from_url(orcid)
         # If ORCID is not found, log a message if verbose is enabled and return None
         if not orcid:
             if self.verbose > 4:
@@ -244,13 +247,21 @@ class Kahi_orcid_person(KahiBase):
         # Placeholder for related works; might be used in future versions
         related_works = []
 
+        progress = ProgressLogger(
+            "orcid_person",
+            total=self.orcid_collection.estimated_document_count(),
+        ).start(f"num_jobs={self.n_jobs}")
+
+        def tracked(*args):
+            progress.step(self.process_one(*args) or "omitidos")
+
         # Process each ORCID record in parallel using a threading backend
         Parallel(
             n_jobs=self.n_jobs,
-            verbose=self.verbose,
+            verbose=0,
             backend="threading"
         )(
-            delayed(self.process_one)(
+            delayed(tracked)(
                 author,
                 person_collection,
                 self.empty_person(),
@@ -259,6 +270,7 @@ class Kahi_orcid_person(KahiBase):
         )
         # Close the main database connection after processing
         client.close()
+        progress.done()
 
     def run(self):
         """
