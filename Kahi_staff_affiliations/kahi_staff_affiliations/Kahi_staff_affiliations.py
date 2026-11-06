@@ -1,14 +1,53 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from copy import deepcopy
 from pymongo import MongoClient, TEXT
 from pandas import DataFrame, read_excel
 from time import time
 from kahi_impactu_utils.String import title_case
+from kahi_impactu_utils.Mapping import canonical_ror_url
+import hashlib
+import re
+import unicodedata
 
 
 def has_text(value):
     return value is not None and str(value).strip().lower() not in {
         "", "nan", "nat", "none"}
+
+
+def normalized_unit_name(value):
+    text = unicodedata.normalize("NFKD", str(value or "")).casefold()
+    text = "".join(char for char in text if not unicodedata.combining(char))
+    return " ".join(re.sub(r"[^\w]+", " ", text).split())
+
+
+def unit_component(code, name):
+    """Use the source code, or a stable name fingerprint when it is absent."""
+    if has_text(code):
+        return str(code).strip()
+    normalized = normalized_unit_name(name)
+    if not normalized:
+        return ""
+    digest = hashlib.sha1(normalized.encode("utf-8")).hexdigest()[:12]
+    return f"name_{digest}"
+
+
+def staff_faculty_id(institution_id, record):
+    component = unit_component(
+        record.get("código_unidad_académica"),
+        record.get("unidad_académica"),
+    )
+    return f"{institution_id}_{component}" if component else ""
+
+
+def staff_department_id(institution_id, record):
+    faculty_id = staff_faculty_id(institution_id, record)
+    component = unit_component(
+        record.get("código_subunidad_académica"),
+        record.get("subunidad_académica"),
+    )
+    return f"{faculty_id}_{component}" if faculty_id and component else ""
 
 
 def inherit_parent_addresses(entry, parent):
@@ -69,17 +108,11 @@ class Kahi_staff_affiliations(KahiBase):
             - For other values: "RORID_CODIGO_UNIDAD_CODIGO_SUBUNIDAD"
         """
 
-        _id = ""
-        # Generate the identifier based on the provided unit code
         if unit == "código_unidad_académica":
-            _id = f"{institution_id}_{reg['código_unidad_académica']}"
+            return staff_faculty_id(institution_id, reg)
         if unit == "código_subunidad_académica":
-            _id = (
-                f"{institution_id}_{reg['código_unidad_académica']}_"
-                f"{reg['código_subunidad_académica']}"
-            )
-
-        return _id
+            return staff_department_id(institution_id, reg)
+        return ""
 
     def _source_collection(self, config):
         source_url = config.get("database_url", self.config["database_url"])
@@ -150,15 +183,21 @@ class Kahi_staff_affiliations(KahiBase):
             institution_name,
             staff_reg):
         # inserting faculties and departments
+        progress = ProgressLogger(
+            f"staff_affiliations:{institution_id}", total=len(data)).start(
+            f"institucion={institution_name}")
+        units = {"facultades_nuevas": 0, "facultades_existentes": 0,
+                 "departamentos_nuevos": 0, "departamentos_existentes": 0}
         for idx, reg in data.iterrows():
             if not has_text(reg["unidad_académica"]):
+                progress.step("filas_sin_unidad")
                 continue
 
             name = title_case(reg["unidad_académica"])
             _id = self._id_creator(institution_id, reg,
                                    staff_reg, "código_unidad_académica")
 
-            if name not in self.facs_inserted.keys():
+            if _id not in self.facs_inserted:
                 is_in_db = self.collection.find_one({"_id": _id})
                 if is_in_db:
                     if inherit_parent_addresses(is_in_db, staff_reg):
@@ -166,16 +205,16 @@ class Kahi_staff_affiliations(KahiBase):
                             {"_id": is_in_db["_id"]},
                             {"$set": {"addresses": is_in_db["addresses"]}},
                         )
-                    if name not in self.facs_inserted.keys():
-                        self.facs_inserted[name] = is_in_db["_id"]
-                        print(name, f" already in db {_id}")
+                    if _id not in self.facs_inserted:
+                        self.facs_inserted[_id] = is_in_db["_id"]
+                        units["facultades_existentes"] += 1
                     # continue
                     # may be updatable, check accordingly
                 else:
                     entry = self.empty_affiliation()
                     entry["_id"] = _id
                     entry["updated"].append(
-                        {"time": int(time()), "source": "staff"})
+                        {"source": "staff", "time": int(time())})
                     entry["names"].append(
                         {"name": name, "lang": "es", "source": "staff"})
                     entry["types"].append(
@@ -183,23 +222,22 @@ class Kahi_staff_affiliations(KahiBase):
                     entry["relations"].append(
                         {"id": staff_reg["_id"], "name": institution_name, "types": staff_reg["types"]})
                     inherit_parent_addresses(entry, staff_reg)
-                    if reg["código_unidad_académica"]:
+                    if has_text(reg["código_unidad_académica"]):
                         entry["external_ids"].append(
                             {"source": "staff", "id": str(reg["código_unidad_académica"])})
 
                     fac = self.collection.insert_one(entry)
-                    self.facs_inserted[name] = fac.inserted_id
+                    self.facs_inserted[_id] = fac.inserted_id
+                    units["facultades_nuevas"] += 1
 
             if has_text(reg["subunidad_académica"]):
                 name_dep = title_case(reg["subunidad_académica"])
-                name_dep_id = str(reg["código_unidad_académica"]) + \
-                    "_" + title_case(reg["subunidad_académica"])
                 _id = self._id_creator(
                     institution_id,
                     reg,
                     staff_reg,
                     "código_subunidad_académica")
-                if name_dep_id not in self.deps_inserted.keys():
+                if _id not in self.deps_inserted:
                     is_in_db = self.collection.find_one({"_id": _id})
                     if is_in_db:
                         if inherit_parent_addresses(is_in_db, staff_reg):
@@ -207,16 +245,16 @@ class Kahi_staff_affiliations(KahiBase):
                                 {"_id": is_in_db["_id"]},
                                 {"$set": {"addresses": is_in_db["addresses"]}},
                             )
-                        if name_dep_id not in self.deps_inserted.keys():
-                            self.deps_inserted[name_dep_id] = is_in_db["_id"]
-                            print(name_dep, f" already in db {_id}")
+                        if _id not in self.deps_inserted:
+                            self.deps_inserted[_id] = is_in_db["_id"]
+                            units["departamentos_existentes"] += 1
                         # continue
                         # may be updatable, check accordingly
                     else:
                         entry = self.empty_affiliation()
                         entry["_id"] = _id
                         entry["updated"].append(
-                            {"time": int(time()), "source": "staff"})
+                            {"source": "staff", "time": int(time())})
                         entry["names"].append(
                             {"name": name_dep, "lang": "es", "source": "staff"})
                         entry["types"].append(
@@ -224,20 +262,23 @@ class Kahi_staff_affiliations(KahiBase):
                         entry["relations"].append(
                             {"id": staff_reg["_id"], "name": institution_name, "types": staff_reg["types"]})
                         inherit_parent_addresses(entry, staff_reg)
-                        if reg["código_subunidad_académica"]:
+                        if has_text(reg["código_subunidad_académica"]):
                             entry["external_ids"].append(
                                 {"source": "staff", "id": str(reg["código_subunidad_académica"])})
 
                         dep = self.collection.insert_one(entry)
-                        self.deps_inserted[name_dep_id] = dep.inserted_id
+                        self.deps_inserted[_id] = dep.inserted_id
+                        units["departamentos_nuevos"] += 1
 
-                if (name, name_dep_id) not in self.fac_dep:
-                    self.fac_dep.append((name, name_dep_id))
+                faculty_id = staff_faculty_id(institution_id, reg)
+                if (faculty_id, _id) not in self.fac_dep:
+                    self.fac_dep.append((faculty_id, _id))
+            progress.step()
 
         # Creating relations between faculties and departments
-        for fac, dep in self.fac_dep:
-            fac_id = self.facs_inserted[fac]
-            dep_id = self.deps_inserted[dep]
+        for faculty_key, department_key in self.fac_dep:
+            fac_id = self.facs_inserted[faculty_key]
+            dep_id = self.deps_inserted[department_key]
             dep_reg = self.collection.find_one({"_id": dep_id})
             fac_reg = self.collection.find_one({"_id": fac_id})
             if dep_reg["_id"] == fac_reg["_id"]:
@@ -257,12 +298,10 @@ class Kahi_staff_affiliations(KahiBase):
                         "id": fac_reg["_id"],
                         "name": title_case(fac_reg["names"][0]["name"]),
                         "types": fac_reg["types"]}}})
+        progress.done(**units, relaciones_fac_dep=len(self.fac_dep))
         return 0
 
     def run(self):
-        if self.verbose > 4:
-            start_time = time()
-
         for institution_id in self._institution_ids():
             config = self._config_for_institution(institution_id)
             self.facs_inserted = {}
@@ -271,7 +310,7 @@ class Kahi_staff_affiliations(KahiBase):
             staff_reg = self.collection.find_one({"_id": institution_id})
             if not staff_reg:
                 staff_reg = self.collection.find_one(
-                    {"external_ids.id": f"https: //ror.org/{institution_id}"})
+                    {"external_ids.id": canonical_ror_url(institution_id)})
             if not staff_reg:
                 print("Institution not found in database")
                 raise ValueError(
@@ -284,18 +323,7 @@ class Kahi_staff_affiliations(KahiBase):
                 if institution_name == "":  # if en not available take any
                     institution_name = staff_reg["names"][0]["name"]
 
-            if self.verbose > 1:
-                print("Processing staff affiliations for institution: ",
-                      institution_name)
-
             data = self._load_staff_data(config, institution_id)
-            if self.verbose > 4:
-                # Print shape of the data
-                print("Data shape: ", data.shape)
             self.staff_affiliation(data, institution_id,
                                    institution_name, staff_reg)
-
-        if self.verbose > 4:
-            print("Execution time: {} minutes".format(
-                round((time() - start_time) / 60, 2)))
         return 0
