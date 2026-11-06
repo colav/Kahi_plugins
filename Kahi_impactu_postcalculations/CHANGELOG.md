@@ -28,6 +28,11 @@
   auditable staging, dry-run support, parallel batches and idempotent
   application to `person.primary_topic` and `person.topics`.
 
+- Refuse persistent-id migration from empty ids; add a repair script for
+  affected migrations and an optional blank-id author reconciliation phase.
+- Classify CvLAC/GrupLAC snapshot types through unique ImpactU catalog aliases.
+- Add a targeted works denormalization script.
+
 ## 0.1.4 - 2026-09-09
 
 ### Added
