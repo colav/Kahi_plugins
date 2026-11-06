@@ -1,4 +1,4 @@
-from kahi_impactu_utils.Utils import doi_processor, lang_poll
+from kahi_impactu_utils.Utils import doi_processor, lang_poll, normalize_publication_year
 from time import time
 import copy
 from iso639 import is_valid639_1
@@ -56,10 +56,7 @@ def parse_ciarp(reg, affiliation, empty_work):
     if not entry["source"]:
         entry["source"] = {
             "name": reg["revista"], "external_ids": []}
-    try:
-        entry["year_published"] = int(reg["año"])
-    except (TypeError, ValueError):
-        entry["year_published"] = None
+    entry["year_published"] = normalize_publication_year(reg.get("año"))
     if reg["volumen"]:
         entry["bibliographic_info"]["volume"] = reg["volumen"]
     if reg["issue"]:
@@ -94,22 +91,8 @@ def parse_ciarp(reg, affiliation, empty_work):
         "full_name": "",
         "affiliations": [aff]
     }
-    if reg["código_unidad_académica"]:
-        unit = {
-            "external_ids": [{"provenance": "ciarp", "source": "ciarp", "id": f'{affiliation["_id"]}_{reg["código_unidad_académica"]}'}],
-            "name": "",
-            "types": [{"type": "faculty"}]
-        }
-        if unit not in author["affiliations"]:
-            author["affiliations"].append(unit)
-    if reg["código_subunidad_académica"]:
-        subunit = {
-            "external_ids": [{"provenance": "ciarp", "source": "ciarp", "id": f'{affiliation["_id"]}_{reg["código_unidad_académica"]}_{reg["código_subunidad_académica"]}'}],
-            "name": "",
-            "types": [{"type": "department"}]
-        }
-        if subunit not in author["affiliations"]:
-            author["affiliations"].append(subunit)
+    # Academic units are chosen from the identified person's dated history in
+    # process_one. CIARP row codes must not invent affiliations absent there.
 
     if author not in entry["authors"]:
         entry["authors"].append(author)
