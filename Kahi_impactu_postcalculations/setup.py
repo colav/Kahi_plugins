@@ -85,6 +85,7 @@ def main():
             'spacy',
             'joblib',
             'datetime',
+            'Babel>=2.12,<3',
             'Kahi_impactu_type_catalog==0.2.0',
         ],
     )

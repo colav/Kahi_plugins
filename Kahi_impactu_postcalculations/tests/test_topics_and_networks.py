@@ -1,4 +1,5 @@
 from kahi_impactu_postcalculations import topics
+import pytest
 from kahi_impactu_postcalculations import process_one
 from kahi_impactu_postcalculations.process_one import (
     split_network_edges,
@@ -56,7 +57,9 @@ def test_topic_inference_updates_and_deduplicates(monkeypatch):
     assert topics.process_topic(works, _OpenAlexTopics(), work)
     assert len(works.operations) == 1
     operation = works.operations[0]
-    assert operation._filter == {"_id": "w1", "primary_topic": {}}
+    assert operation._filter == {
+        "_id": "w1", "primary_topic": {"$in": [{}, None]}
+    }
     saved = operation._doc["$set"]
     assert saved["primary_topic"]["id"] == "https://openalex.org/T123"
     assert len(saved["topics"]) == 1
@@ -103,6 +106,28 @@ def test_topic_batch_uses_one_request_and_one_bulk_write(monkeypatch):
     assert len(works.operations) == 2
 
 
+def test_topic_inference_accepts_null_primary_topic(monkeypatch):
+    monkeypatch.setattr(
+        topics, "request_topic_inference_batch", lambda *a, **k: _Response()
+    )
+    works = _Works()
+    work = {
+        "_id": "w-null",
+        "titles": [{"title": "A title"}],
+        "abstracts": [{"abstract": {"word": [0]}}],
+        "primary_topic": None,
+        "topics": [],
+    }
+    cache = {
+        "https://openalex.org/T123": {
+            "id": "https://openalex.org/T123", "display_name": "Topic"
+        }
+    }
+
+    assert topics.process_topic_batch(works, cache, [work]) == 1
+    assert works.operations[0]._filter["primary_topic"] == {"$in": [{}, None]}
+
+
 def test_topic_batch_retries_before_writing(monkeypatch):
     responses = [
         type("Failure", (), {"status_code": 500, "text": "temporary"})(),
@@ -129,6 +154,74 @@ def test_topic_batch_retries_before_writing(monkeypatch):
 
     assert topics.process_topic_batch(works, cache, [work], retries=2) == 1
     assert not responses
+
+
+def test_topic_endpoint_pool_processes_each_batch_once(monkeypatch):
+    from threading import Barrier
+
+    calls = []
+    startup = Barrier(2)
+
+    def fake_process(col, cache, batch, endpoint, timeout, retries):
+        calls.append((batch[0]["_id"], endpoint))
+        if len(calls) <= 2:
+            startup.wait()
+        return 1
+
+    monkeypatch.setattr(
+        topics, "process_topic_batch_resilient",
+        lambda *args: (fake_process(*args), 0),
+    )
+    batches = [[{"_id": f"w{index}"}] for index in range(8)]
+    progress = topics.process_topic_batches_pool(
+        object(), {}, iter(batches),
+        ["http://model-1/invocations", "http://model-2/invocations"],
+        progress_interval=0,
+    )
+
+    assert {work_id for work_id, _ in calls} == {f"w{i}" for i in range(8)}
+    assert {endpoint for _, endpoint in calls} == {
+        "http://model-1/invocations", "http://model-2/invocations"
+    }
+    assert progress == {
+        "batches": 8, "works": 8, "modified": 8, "failed": 0
+    }
+
+
+def test_topic_batch_resilient_isolates_bad_work(monkeypatch):
+    calls = []
+
+    def fake_process(col, cache, batch, endpoint, timeout, retries):
+        ids = [work["_id"] for work in batch]
+        calls.append(ids)
+        if "bad" in ids:
+            raise topics.TopicBatchRejected("invalid model input")
+        return len(batch)
+
+    monkeypatch.setattr(topics, "process_topic_batch", fake_process)
+    modified, failed = topics.process_topic_batch_resilient(
+        object(), {},
+        [{"_id": "good-1"}, {"_id": "bad"}, {"_id": "good-2"}],
+    )
+
+    assert modified == 2
+    assert failed == 1
+    assert ["bad"] in calls
+
+
+def test_topic_batch_resilient_does_not_split_endpoint_failure(monkeypatch):
+    calls = []
+
+    def unavailable(*args):
+        calls.append(args[2])
+        raise topics.TopicEndpointUnavailable("tunnel disconnected")
+
+    monkeypatch.setattr(topics, "process_topic_batch", unavailable)
+    with pytest.raises(topics.TopicEndpointUnavailable):
+        topics.process_topic_batch_resilient(
+            object(), {}, [{"_id": "w1"}, {"_id": "w2"}]
+        )
+    assert len(calls) == 1
 
 
 def test_network_split_preserves_every_edge():

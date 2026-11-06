@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "country_aliases": {
+    "Bosnia-Herzegovina": {"name": "Bosnia y Herzegovina", "code": "BA"},
+    "Bonaire, Sint Eustatius, and Saba": {"name": "Caribe neerlandés", "code": "BQ"},
+    "British Virgin Islands": {"name": "Islas Vírgenes Británicas", "code": "VG"},
+    "Congo Republic": {"name": "República del Congo", "code": "CG"},
+    "DR Congo": {"name": "República Democrática del Congo", "code": "CD"},
+    "England": {"name": "Inglaterra", "code": "GB"},
+    "Escocia": {"name": "Escocia", "code": "GB"},
+    "Gales": {"name": "Gales", "code": "GB"},
+    "Inglaterra": {"name": "Inglaterra", "code": "GB"},
+    "Ivory Coast": {"name": "Costa de Marfil", "code": "CI"},
+    "Kosovo": {"name": "Kosovo", "code": "XK"},
+    "Palestine": {"name": "Palestina", "code": "PS"},
+    "Scotland": {"name": "Escocia", "code": "GB"},
+    "St Kitts and Nevis": {"name": "San Cristóbal y Nieves", "code": "KN"},
+    "St Vincent and Grenadines": {"name": "San Vicente y las Granadinas", "code": "VC"},
+    "The Gambia": {"name": "Gambia", "code": "GM"},
+    "The Netherlands": {"name": "Países Bajos", "code": "NL"},
+    "Türkiye": {"name": "Turquía", "code": "TR"},
+    "U.S. Virgin Islands": {"name": "Islas Vírgenes de EE. UU.", "code": "VI"},
+    "Wales": {"name": "Gales", "code": "GB"}
+  },
+  "colombian_departments": [
+    "Amazonas", "Antioquia", "Arauca", "Atlántico", "Bolívar", "Boyacá",
+    "Caldas", "Caquetá", "Casanare", "Cauca", "Cesar", "Chocó", "Córdoba",
+    "Cundinamarca", "Guainía", "Guaviare", "Huila", "La Guajira", "Magdalena",
+    "Meta", "Nariño", "Norte de Santander", "Putumayo", "Quindío", "Risaralda",
+    "Santander", "Sucre", "Tolima", "Valle del Cauca", "Vaupés", "Vichada",
+    "Archipiélago de San Andrés, Providencia y Santa Catalina", "Bogotá, D.C."
+  ],
+  "colombian_department_aliases": {
+    "Bogota D.C.": "Bogotá, D.C.",
+    "Bogotá, D. C.": "Bogotá, D.C.",
+    "San Andres y Providencia": "Archipiélago de San Andrés, Providencia y Santa Catalina"
+  },
+  "city_aliases_by_country": {
+    "AT": {"Vienna": "Viena"},
+    "BE": {"Brussels": "Bruselas"},
+    "CH": {"Geneva": "Ginebra"},
+    "CN": {"Beijing": "Pekín"},
+    "CO": {
+      "Bogota": "Bogotá",
+      "Bogota D.C.": "Bogotá",
+      "Bogotá, D.C.": "Bogotá",
+      "Cartagena": "Cartagena de Indias",
+      "Santiago de Cali": "Cali",
+      "Saint Andrews": "San Andrés"
+    },
+    "CZ": {"Prague": "Praga"},
+    "DE": {"Cologne": "Colonia", "Munich": "Múnich"},
+    "EG": {"Cairo": "El Cairo"},
+    "GB": {"Edinburgh": "Edimburgo", "London": "Londres"},
+    "GR": {"Athens": "Atenas"},
+    "IT": {
+      "Florence": "Florencia", "Milan": "Milán", "Naples": "Nápoles",
+      "Rome": "Roma", "Turin": "Turín"
+    },
+    "JP": {"Tokyo": "Tokio"},
+    "MX": {"Mexico City": "Ciudad de México"},
+    "RU": {"Moscow": "Moscú"},
+    "US": {"New York": "Nueva York"}
+  }
+}

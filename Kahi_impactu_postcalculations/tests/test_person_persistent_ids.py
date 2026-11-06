@@ -4,6 +4,7 @@ from kahi_impactu_postcalculations.person_persistent_ids import (
     persistent_person_id,
     process_person_id,
     recover_person_id_migration,
+    update_product_references,
 )
 
 
@@ -25,6 +26,27 @@ def test_malformed_persistent_id_is_skipped():
         {"external_ids": [{"source": "scienti", "id": "bad"}]},
         "scienti",
     ) is None
+
+
+def test_empty_original_id_never_updates_product_references():
+    works = _Collection()
+    assert update_product_references([works], "", "0000402214") is False
+    assert works.updates == []
+
+
+def test_empty_person_id_is_not_migrated():
+    person = _PersonCollection()
+    products = _Collection()
+    result = process_person_id(
+        _Client(), person, [products],
+        {"_id": "", "external_ids": [{
+            "source": "scienti", "id": {"COD_RH": "0000402214"}
+        }]},
+        "scienti",
+    )
+    assert result is None
+    assert person.insert_session is None
+    assert products.updates == []
 
 
 class _Collection:

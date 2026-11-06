@@ -1,10 +1,24 @@
 from kahi_impactu_type_catalog import get_impactu_catalog
 from kahi_impactu_postcalculations.typing import (
     build_type_lookup,
+    clear_impactu_types,
     functors,
     process_minciencias,
     process_type,
 )
+
+
+def test_clear_impactu_types_removes_only_computed_types():
+    class Result:
+        modified_count = 2
+
+    class Collection:
+        def update_many(self, query, update):
+            assert query == {"types.source": "impactu"}
+            assert update == {"$pull": {"types": {"source": "impactu"}}}
+            return Result()
+
+    assert clear_impactu_types({"works": Collection()}).modified_count == 2
 
 
 def mapping(source, native_type, impactu_type, entity="works"):
@@ -101,6 +115,34 @@ def test_build_type_lookup_returns_mapping_result():
         "crossref",
     )
     assert lookup["by_type"]["journal-article"] == ("article",)
+
+
+def test_cvlac_lookup_derives_hierarchy_without_scienti_codes():
+    lookup = build_type_lookup(
+        [mapping(
+            "scienti",
+            "1: Producción bibliográfica 11: Artículo 111: Publicado en revista especializada",
+            "Artículo de revista",
+        )],
+        "cvlac",
+    )
+    work = {"types": [{
+        "source": "cvlac",
+        "type": "Producción bibliográfica - Artículo - Publicado en revista especializada",
+    }]}
+    assert functors["cvlac"](work, lookup)["type"] == "Artículo de revista"
+
+
+def test_gruplac_lookup_rejects_ambiguous_leaf():
+    lookup = build_type_lookup(
+        [
+            mapping("scienti", "1: Uno 11: Otro", "Otro"),
+            mapping("scienti", "2: Dos 21: Otro", "Código fuente"),
+        ],
+        "gruplac",
+    )
+    work = {"types": [{"source": "gruplac", "type": "Otro"}]}
+    assert functors["gruplac"](work, lookup) == {}
 
 
 def test_process_type_warnings_depend_on_verbose(capsys):

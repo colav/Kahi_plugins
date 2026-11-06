@@ -1,9 +1,19 @@
 import requests
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pymongo import UpdateOne
+from threading import Event, Lock
 from time import sleep
 
 
 type_url_base = "https://openalex.org/T"
+
+
+class TopicBatchRejected(RuntimeError):
+    """The model rejected specific batch contents; splitting may recover it."""
+
+
+class TopicEndpointUnavailable(RuntimeError):
+    """The inference service or its network path is unavailable."""
 
 
 def _topic_payload(work):
@@ -117,7 +127,7 @@ def _topic_update(work, predictions, topic_cache):
     if not primary_topic:
         return None
     return UpdateOne(
-        {"_id": work["_id"], "primary_topic": {}},
+        {"_id": work["_id"], "primary_topic": {"$in": [{}, None]}},
         {"$set": {"primary_topic": primary_topic, "topics": current_topics}},
     )
 
@@ -161,23 +171,35 @@ def process_topic_batch(
                 f"WARNING: Topic batch inference attempt {attempt}/{retries} "
                 "failed; retrying"
             )
-            sleep(attempt)
-    if response is None or response.status_code != 200:
-        raise RuntimeError(
-            f"Topic batch inference failed after {retries} attempts"
+            # Retry quickly at first, then every 30 seconds.  The cap lets a
+            # remote endpoint recover from a long tunnel outage without
+            # making recovery detection progressively slower.
+            sleep(min(attempt, 30))
+    if response is None:
+        raise TopicEndpointUnavailable(
+            f"Topic endpoint {inference_endpoint} unavailable after "
+            f"{retries} attempts"
         ) from last_error
+    if response.status_code != 200:
+        message = (
+            f"Topic endpoint {inference_endpoint} returned HTTP "
+            f"{response.status_code} after {retries} attempts"
+        )
+        if response.status_code == 500:
+            raise TopicBatchRejected(message) from last_error
+        raise TopicEndpointUnavailable(message) from last_error
     try:
         predictions = response.json()
     except ValueError as error:
-        print(f"ERROR: Invalid topic batch inference response: {error}")
-        return 0
+        raise TopicBatchRejected(
+            "Invalid topic batch inference JSON response"
+        ) from error
     if not isinstance(predictions, list) or len(predictions) != len(valid):
-        print(
-            "ERROR: Topic batch inference response size mismatch: "
+        raise TopicBatchRejected(
+            "Topic batch inference response size mismatch: "
             f"expected {len(valid)}, got "
             f"{len(predictions) if isinstance(predictions, list) else 'invalid'}"
         )
-        return 0
 
     operations = []
     for work, work_predictions in zip(valid, predictions):
@@ -188,6 +210,101 @@ def process_topic_batch(
         return 0
     result = col.bulk_write(operations, ordered=False)
     return result.modified_count
+
+
+def process_topic_batch_resilient(
+    col,
+    topic_cache,
+    works,
+    inference_endpoint="http://localhost:8080/invocations",
+    timeout=300,
+    retries=3,
+):
+    """Split a persistently failing batch and isolate invalid single works."""
+    try:
+        return (
+            process_topic_batch(
+                col, topic_cache, works, inference_endpoint, timeout, retries
+            ),
+            0,
+        )
+    except TopicBatchRejected:
+        if len(works) == 1:
+            print(
+                "ERROR: Topic inference skipped irrecoverable work "
+                f"_id={works[0].get('_id')} endpoint={inference_endpoint}"
+            )
+            return 0, 1
+
+        midpoint = len(works) // 2
+        print(
+            "WARNING: Splitting failed topic batch "
+            f"size={len(works)} into {midpoint}+{len(works) - midpoint} "
+            f"endpoint={inference_endpoint}"
+        )
+        left = process_topic_batch_resilient(
+            col, topic_cache, works[:midpoint], inference_endpoint, timeout, 1
+        )
+        right = process_topic_batch_resilient(
+            col, topic_cache, works[midpoint:], inference_endpoint, timeout, 1
+        )
+        return left[0] + right[0], left[1] + right[1]
+
+
+def process_topic_batches_pool(
+    col,
+    topic_cache,
+    batches,
+    inference_endpoints,
+    timeout=300,
+    retries=3,
+    progress_interval=100,
+):
+    """Process a stream of batches with one exclusive worker per endpoint."""
+    endpoints = list(dict.fromkeys(inference_endpoints))
+    if not endpoints:
+        raise ValueError("At least one topic inference endpoint is required")
+
+    iterator = iter(batches)
+    iterator_lock = Lock()
+    progress_lock = Lock()
+    stop = Event()
+    progress = {"batches": 0, "works": 0, "modified": 0, "failed": 0}
+
+    def worker(endpoint):
+        while not stop.is_set():
+            with iterator_lock:
+                try:
+                    batch = next(iterator)
+                except StopIteration:
+                    return
+            try:
+                modified, failed = process_topic_batch_resilient(
+                    col, topic_cache, batch, endpoint, timeout, retries
+                )
+            except BaseException:
+                stop.set()
+                raise
+            with progress_lock:
+                progress["batches"] += 1
+                progress["works"] += len(batch)
+                progress["modified"] += modified
+                progress["failed"] += failed
+                if (
+                    progress_interval > 0
+                    and progress["batches"] % progress_interval == 0
+                ):
+                    print(
+                        "INFO: Topic inference processed "
+                        f"{progress['works']} works in {progress['batches']} batches; "
+                        f"updated {progress['modified']}; failed {progress['failed']}"
+                    )
+
+    with ThreadPoolExecutor(max_workers=len(endpoints)) as executor:
+        futures = [executor.submit(worker, endpoint) for endpoint in endpoints]
+        for future in as_completed(futures):
+            future.result()
+    return progress
 
 
 def process_topic(
