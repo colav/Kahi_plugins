@@ -2,6 +2,7 @@ from kahi.KahiBase import KahiBase
 from pymongo import MongoClient
 from time import time
 from joblib import Parallel, delayed
+from kahi.progress import ProgressLogger
 
 
 def get_global_counts(source):
@@ -136,6 +137,7 @@ def process_one(source, client, db_name, empty_source):
             {"_id": source_db["_id"]},
             {"$set": update_fields},
         )
+        return "actualizados"
     else:
         entry = empty_source.copy()
         entry.update(global_counts)
@@ -196,6 +198,7 @@ def process_one(source, client, db_name, empty_source):
                     {"source": soc["organization"], "url": soc["url"]})
 
         collection.insert_one(entry)
+        return "nuevos"
 
 
 class Kahi_openalex_sources(KahiBase):
@@ -235,20 +238,32 @@ class Kahi_openalex_sources(KahiBase):
         self.client.close()
 
     def process_openalex(self):
+        progress = ProgressLogger(
+            "openalex_sources",
+            total=self.openalex_collection.estimated_document_count(),
+        ).start(f"num_jobs={self.n_jobs}")
+
+        def tracked(source, client, db_name, empty_source):
+            progress.step(process_one(source, client, db_name, empty_source))
+
         source_cursor = self.openalex_collection.find(no_cursor_timeout=True)
         client = MongoClient(self.mongodb_url)
-        Parallel(
-            n_jobs=self.n_jobs,
-            verbose=10,
-            backend="threading")(
-            delayed(process_one)(
-                source,
-                client,
-                self.config["database_name"],
-                self.empty_source(),
-            ) for source in source_cursor
-        )
-        client.close()
+        try:
+            Parallel(
+                n_jobs=self.n_jobs,
+                verbose=0,
+                backend="threading")(
+                delayed(tracked)(
+                    source,
+                    client,
+                    self.config["database_name"],
+                    self.empty_source(),
+                ) for source in source_cursor
+            )
+        finally:
+            source_cursor.close()
+            client.close()
+        progress.done()
 
     def run(self):
         self.process_openalex()
