@@ -1,5 +1,5 @@
 # flake8: noqa
-__version__ = '0.1.5-beta'
+__version__ = '0.1.6-beta'
 
 
 def get_version():

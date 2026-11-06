@@ -81,8 +81,11 @@ def main():
         # Dependent packages (distributions)
         # put you packages here
         install_requires=[
-            'kahi',
-            'pymongo'
+            'kahi>=0.1.3a0',
+            'pymongo',
+            'joblib',
+            'beautifulsoup4',
+            'kahi_impactu_utils'
         ],
     )
 
