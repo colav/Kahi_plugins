@@ -4,7 +4,7 @@ from time import time
 from joblib import Parallel, delayed
 from math import isnan
 from re import split, UNICODE
-from kahi_impactu_utils.Utils import doi_processor, lang_poll
+from kahi_impactu_utils.Utils import doi_processor, lang_poll, normalize_publication_year
 
 
 def parse_scopus(reg, empty_work, verbose=0):
@@ -16,8 +16,7 @@ def parse_scopus(reg, empty_work, verbose=0):
     if "Abstract" in reg.keys():
         if reg["Abstract"] and reg["Abstract"] == reg["Abstract"]:
             entry["abstract"] = reg["Abstract"]
-    if "Year" in reg.keys():
-        entry["year_published"] = reg["Year"]
+    entry["year_published"] = normalize_publication_year(reg.get("Year"))
 
     if "Document Type" in reg.keys():
         entry["types"].append(
@@ -182,6 +181,8 @@ def process_one(scopus_reg, db, collection, empty_work, verbose=0):
             collection.update_one(
                 {"_id": colav_reg["_id"]},
                 {"$set": {
+                    "year_published": (normalize_publication_year(colav_reg.get("year_published"))
+                                       or normalize_publication_year(entry.get("year_published"))),
                     "updated": colav_reg["updated"],
                     "titles": colav_reg["titles"],
                     "external_ids": colav_reg["external_ids"],
