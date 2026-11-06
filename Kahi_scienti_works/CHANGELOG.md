@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.7 - 2026-11-06
 
 - Share DOI lookup, title guard and _kahi_work_identity coordination;
   use insert-only upserts
@@ -12,4 +12,4 @@
 
 - Report START/progress/DONE with kahi ProgressLogger per phase; joblib
   verbose=0
-- Require kahi>=0.1.3a0
+- Require kahi>=0.1.3
