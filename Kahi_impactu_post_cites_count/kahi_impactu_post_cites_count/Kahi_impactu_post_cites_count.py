@@ -36,7 +36,20 @@ class Kahi_impactu_post_cites_count(KahiBase):
             return [
                 {"$unwind": "$authors"},
                 {"$unwind": "$authors.affiliations"},
-                {"$set": {"_entity_id": "$authors.affiliations.id"}},
+                {"$set": {"_direct_affiliation_id": "$authors.affiliations.id"}},
+                {"$match": {"_direct_affiliation_id": {"$nin": [None, ""]}}},
+                {"$graphLookup": {
+                    "from": "affiliations",
+                    "startWith": "$_direct_affiliation_id",
+                    "connectFromField": "relations.id",
+                    "connectToField": "_id",
+                    "as": "_affiliation_hierarchy",
+                    "maxDepth": 8,
+                }},
+                # graphLookup includes the starting affiliation itself and
+                # follows relations.id towards every canonical ancestor.
+                {"$set": {"_entity_id": "$_affiliation_hierarchy._id"}},
+                {"$unwind": "$_entity_id"},
             ]
         if entity == "source":
             return [{"$set": {"_entity_id": "$source.id"}}]

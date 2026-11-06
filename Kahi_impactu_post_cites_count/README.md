@@ -2,7 +2,10 @@
 
 # Kahi impactu post citations count
 This plugin helps to calculate the citations count for the impactu output.
-The citations count is calculated for each institution, faculty, deparment, research group and author.
+The citations count is calculated for each institution, faculty, department,
+research group and author. Affiliation totals follow `relations.id` from the
+direct group/unit to its canonical parents; each work is counted once per
+entity even when it contains both the child and parent affiliation.
 
 
 # Installation
