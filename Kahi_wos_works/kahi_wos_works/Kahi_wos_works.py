@@ -4,7 +4,7 @@ from time import time
 from joblib import Parallel, delayed
 from thefuzz import fuzz
 
-from kahi_impactu_utils.Utils import doi_processor, lang_poll
+from kahi_impactu_utils.Utils import doi_processor, lang_poll, normalize_publication_year
 
 
 def parse_wos(reg, empty_work, verbose=0):
@@ -21,9 +21,7 @@ def parse_wos(reg, empty_work, verbose=0):
         if reg["DT"] and reg["DT"] == reg["DT"]:
             entry["types"].append(
                 {"source": "wos", "type": reg["DT"].strip().lower()})
-    if "PY" in reg.keys():
-        if reg["PY"] and reg["PY"] == reg["PY"]:
-            entry["year_published"] = int(reg["PY"].strip())
+    entry["year_published"] = normalize_publication_year(reg.get("PY"))
     if "BP" in reg.keys():
         if reg["BP"] and reg["BP"] == reg["BP"]:
             entry["bibliographic_info"]["start_page"] = reg["BP"]
@@ -247,6 +245,8 @@ def process_one(wos_reg, db, collection, empty_work, verbose=0):
             collection.update_one(
                 {"_id": colav_reg["_id"]},
                 {"$set": {
+                    "year_published": (normalize_publication_year(colav_reg.get("year_published"))
+                                       or normalize_publication_year(entry.get("year_published"))),
                     "updated": colav_reg["updated"],
                     "titles": colav_reg["titles"],
                     "external_ids": colav_reg["external_ids"],
