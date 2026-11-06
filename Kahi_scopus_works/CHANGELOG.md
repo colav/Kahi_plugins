@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.4-beta - 2026-11-06
 
 - Parse Year with normalize_publication_year
 - On update keep a valid stored year, otherwise use the valid incoming
