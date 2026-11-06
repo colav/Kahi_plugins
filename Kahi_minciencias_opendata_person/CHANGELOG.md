@@ -18,7 +18,7 @@
 - Add the `clean_cvlac_experience_affiliations.py` maintenance script.
 - Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
   joblib progress output disabled (`verbose=0`).
-- Require `kahi>=0.1.3a0`; declare `joblib`, `beautifulsoup4` and
+- Require `kahi>=0.1.3`; declare `joblib`, `beautifulsoup4` and
   `kahi_impactu_utils`.
 
 ## 0.1.5-beta - 2026-09-09
