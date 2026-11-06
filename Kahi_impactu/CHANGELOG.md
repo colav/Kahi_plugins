@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.16] - 2026-11-06
+
+### Changed
+
+- Updated Kahi to 0.1.3, which adds the shared progress logger required by the
+  plugins, and plugin pins to the versions used by the November 2026 workflow.
+
+ 
 ## [0.0.15] - 2026-09-09
 
 ### Changed
