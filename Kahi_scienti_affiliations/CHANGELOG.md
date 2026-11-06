@@ -16,7 +16,7 @@
 - Report per-phase progress on `kahi.progress.ProgressLogger`, keeping
   `progress_interval`/`progress_seconds` (default: 5% of the total, minimum
   1000) and silence with verbose 0.
-- Require `kahi>=0.1.3a0`.
+- Require `kahi>=0.1.3`.
 
 ## 0.1.5 - 2026-09-03
 
