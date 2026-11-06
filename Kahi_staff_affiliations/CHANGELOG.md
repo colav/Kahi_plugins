@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.3-beta - 2026-11-06
 
 - Build faculty/department ids from institution and unit codes, with a
   normalized-name fingerprint when a code is missing; dedupe by id
@@ -10,4 +10,4 @@
 
 - Report START/progress/DONE with kahi ProgressLogger per institution
   with unit counters
-- Require kahi>=0.1.3a0
+- Require kahi>=0.1.3
