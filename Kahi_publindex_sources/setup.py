@@ -50,7 +50,7 @@ def main():
         long_description=open("README.md").read(),
         long_description_content_type="text/markdown",
         install_requires=[
-            "kahi",
+            "kahi>=0.1.3a0",
             "pymongo",
         ],
     )

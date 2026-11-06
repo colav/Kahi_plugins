@@ -4,6 +4,7 @@ import calendar
 import re
 
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import MongoClient
 
 
@@ -482,6 +483,9 @@ class Kahi_publindex_sources(KahiBase):
         self.international_updated += 1
 
     def process_publindex(self):
+        progress = ProgressLogger(
+            "publindex_sources:nacional",
+            total=self.publindex_collection.estimated_document_count()).start()
         cursor = self.publindex_collection.find(no_cursor_timeout=True)
         try:
             for idx, reg in enumerate(cursor, start=1):
@@ -496,30 +500,28 @@ class Kahi_publindex_sources(KahiBase):
                 )
                 if not has_identity:
                     self.skipped += 1
+                    progress.step("omitidos")
                     continue
 
                 source_db = self._find_existing_source(reg)
                 if source_db:
                     self.update_source(reg, source_db)
+                    progress.step("actualizados")
                 else:
                     self.insert_source(reg)
-
-                if self.verbose >= 5 and idx % 1000 == 0:
-                    print(f"Processed {idx} records")
+                    progress.step("nuevos")
         finally:
             cursor.close()
-
-        if self.verbose >= 4:
-            print(
-                f"Publindex finished: inserted={self.inserted}, updated={self.updated}, skipped={self.skipped}"
-            )
+        progress.done()
 
     def process_publindex_international(self):
         if self.publindex_international_collection is None:
-            if self.verbose >= 4:
-                print("Publindex international skipped: collection not found")
+            print("[publindex_sources:internacional] SKIP coleccion no encontrada", flush=True)
             return
 
+        progress = ProgressLogger(
+            "publindex_sources:internacional",
+            total=self.publindex_international_collection.estimated_document_count()).start()
         cursor = self.publindex_international_collection.find(
             no_cursor_timeout=True)
         try:
@@ -528,33 +530,23 @@ class Kahi_publindex_sources(KahiBase):
                 has_identity = bool(identity["name"] or identity["issns"])
                 if not has_identity:
                     self.international_skipped += 1
+                    progress.step("omitidos")
                     continue
 
                 source_db = self._find_existing_international_source(reg)
                 if source_db:
                     self.update_international_source(reg, source_db)
+                    progress.step("actualizados")
                 else:
                     self.insert_international_source(reg)
-
-                if self.verbose >= 5 and idx % 1000 == 0:
-                    print(f"Processed {idx} international records")
+                    progress.step("nuevos")
         finally:
             cursor.close()
-
-        if self.verbose >= 4:
-            print(
-                "Publindex international finished: "
-                f"inserted={self.international_inserted}, "
-                f"updated={self.international_updated}, "
-                f"skipped={self.international_skipped}"
-            )
+        progress.done()
 
     def run(self):
-        start_time = time()
         self.process_publindex()
         self.process_publindex_international()
-        print("Execution time: {} minutes".format(
-            round((time() - start_time) / 60, 2)))
         self.client.close()
         self.publindex_client.close()
         return 0
