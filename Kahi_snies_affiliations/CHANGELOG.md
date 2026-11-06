@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.1.0 - 2026-11-06
 
 - Store official sectionals as campuses of their principal affiliation
   instead of separate affiliations
@@ -15,4 +15,4 @@
 
 - Report START/progress/DONE with kahi ProgressLogger (repaired fusions,
   linked sectionals)
-- Require kahi>=0.1.3a0
+- Require kahi>=0.1.3
