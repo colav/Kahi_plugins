@@ -1,9 +1,32 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import ASCENDING, MongoClient, TEXT
 from joblib import Parallel, delayed
 from kahi_openalex_works.process_one import process_one
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
 from mohan.Similarity import Similarity
-from threading import BoundedSemaphore
+from threading import BoundedSemaphore, Lock
+
+
+def report_completed_tasks(parallel, progress):
+    """Cuenta en el proceso padre las tareas que joblib da por terminadas.
+
+    Con backend multiprocessing los hijos no comparten el ProgressLogger y
+    joblib (1.4.2) no admite salida generadora. joblib si invoca
+    ``print_progress`` en el padre al terminar cada lote (es el hook de su
+    salida verbose), asi que se sustituye por un step sobre
+    ``n_completed_tasks`` sin cambiar el despacho ni el paralelismo.
+    """
+    lock = Lock()
+    reported = [0]
+
+    def print_progress():
+        with lock:
+            completed = parallel.n_completed_tasks
+            progress.step(n=completed - reported[0])
+            reported[0] = completed
+
+    parallel.print_progress = print_progress
 
 
 class Kahi_openalex_works(KahiBase):
@@ -41,6 +64,7 @@ class Kahi_openalex_works(KahiBase):
 
         self.db = self.client[config["database_name"]]
         self.collection = self.db["works"]
+        ensure_work_doi_indexes(self.collection)
 
         self.collection.create_index("year_published")
         self.collection.create_index("authors.affiliations.id")
@@ -115,7 +139,6 @@ class Kahi_openalex_works(KahiBase):
                 "type": {"$ne": "grant"},
             }
             count = self.openalex_collection.count_documents(query)
-            print(f"INFO: proccesing {count} works with DOI")
         else:
             query = {
                 "doi": {"$eq": None},
@@ -123,16 +146,19 @@ class Kahi_openalex_works(KahiBase):
                 "type": {"$ne": "grant"},
             }
             count = self.openalex_collection.count_documents(query)
-            print(f"INFO: proccesing {count} works without DOI")
 
         page_size = self.config["openalex_works"].get(
             "page_size", max(self.n_jobs * 2, 100))
         if page_size < 1:
             raise ValueError("openalex_works.page_size must be greater than zero")
+        progress = ProgressLogger(
+            "openalex_works:{}".format("doi" if self.task == "doi" else "sin_doi"),
+            total=count,
+        ).start("backend={} num_jobs={} page_size={}".format(
+            self.backend, self.n_jobs, page_size))
 
         def paginated_papers():
             last_id = None
-            loaded = 0
             while True:
                 page_query = dict(query)
                 if last_id is not None:
@@ -147,18 +173,24 @@ class Kahi_openalex_works(KahiBase):
                     return
 
                 last_id = page[-1]["_id"]
-                loaded += len(page)
-                if self.verbose > 0 and (
-                        loaded % (page_size * 10) == 0 or loaded == count):
-                    print(f"INFO: loaded {loaded}/{count} works")
                 yield from page
 
-        with Parallel(
-                n_jobs=self.n_jobs,
-                verbose=self.verbose,
-                backend=self.backend,
-                return_as="generator_unordered",
-                batch_size=10) as parallel:
+        parallel_options = {
+            "n_jobs": self.n_jobs,
+            "verbose": 0,
+            "backend": self.backend,
+            "batch_size": 10,
+        }
+        # Joblib's multiprocessing backend does not support generator output.
+        # Threading does, and consuming it incrementally avoids retaining one
+        # result per OpenAlex record.
+        if self.backend == "threading":
+            parallel_options["return_as"] = "generator_unordered"
+
+        outcomes = {}
+        with Parallel(**parallel_options) as parallel:
+            if self.backend != "threading":
+                report_completed_tasks(parallel, progress)
             results = parallel(
                 delayed(process_one)(
                     paper,
@@ -173,9 +205,14 @@ class Kahi_openalex_works(KahiBase):
                 for paper in paginated_papers()
             )
             # Consume results incrementally. process_one writes directly to
-            # MongoDB and returns None, so retaining a result list is wasteful.
-            for _ in results:
-                pass
+            # MongoDB and returns only its outcome (None: DOI conflict skipped).
+            for outcome in results:
+                if self.backend == "threading":
+                    progress.step(outcome or "omitidos")
+                else:  # ya contado por lotes; aqui solo se agregan resultados
+                    outcome = outcome or "omitidos"
+                    outcomes[outcome] = outcomes.get(outcome, 0) + 1
+        progress.done(**outcomes)
 
     def run(self):
         self.process_openalex()

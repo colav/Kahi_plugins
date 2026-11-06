@@ -1,8 +1,21 @@
-from kahi_impactu_utils.Utils import lang_poll
+from kahi_impactu_utils.Utils import lang_poll, normalize_publication_year
 from kahi_impactu_utils.String import parse_mathml, parse_html
+import re
 from time import time
 from datetime import datetime as dt
 from kahi_impactu_utils.String import inverted_index_to_text, text_to_inverted_index
+
+
+def canonical_orcid_url(value):
+    """Return an ORCID identifier with one valid canonical URL prefix."""
+    value = str(value).strip()
+    value = re.sub(
+        r"^(?:(?:https?)\s*:\s*//)?(?:www\.)?orcid\.org/",
+        "",
+        value,
+        flags=re.IGNORECASE,
+    )
+    return f"https://orcid.org/{value.strip('/')}"
 
 
 def parse_openalex(reg, empty_work, verbose=0):
@@ -31,7 +44,7 @@ def parse_openalex(reg, empty_work, verbose=0):
         entry["external_ids"].append(
             {"provenance": "openalex", "source": source, "id": idx})
     entry["doi"] = reg["doi"]
-    entry["year_published"] = reg["publication_year"]
+    entry["year_published"] = normalize_publication_year(reg.get("publication_year"))
     publication_date = reg.get("publication_date")
     if publication_date:
         try:
@@ -146,11 +159,8 @@ def parse_openalex(reg, empty_work, verbose=0):
             author_entry["external_ids"].append(
                 {"source": "openalex", "id": author["id"]})
         if author["orcid"]:
-            orcid = author["orcid"]
-            if not orcid.startswith("https://orcid.org/"):
-                orcid = f"https: //orcid.org/{orcid}"
             author_entry["external_ids"].append(
-                {"source": "orcid", "id": orcid})
+                {"source": "orcid", "id": canonical_orcid_url(author["orcid"])})
         entry["authors"].append(author_entry)
     # concepts section
     subjects = []
@@ -164,6 +174,6 @@ def parse_openalex(reg, empty_work, verbose=0):
     entry["subjects"].append({"source": "openalex", "subjects": subjects})
 
     # topics section
-    entry["primary_topic"] = reg["primary_topic"]
-    entry["topics"] = reg["topics"]
+    entry["primary_topic"] = reg.get("primary_topic") or {}
+    entry["topics"] = reg.get("topics") or []
     return entry

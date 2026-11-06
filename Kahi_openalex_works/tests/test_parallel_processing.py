@@ -110,6 +110,101 @@ def test_process_openalex_paginates_and_consumes_unordered_generator(monkeypatch
     }
 
 
+def test_process_openalex_multiprocessing_uses_supported_return_mode(monkeypatch):
+    processed = []
+    documents = [
+        {"_id": value, "doi": None, "title": f"Work {value}", "type": "article"}
+        for value in range(1, 4)
+    ]
+    instance = object.__new__(plugin_module.Kahi_openalex_works)
+    instance.task = None
+    instance.openalex_collection = FakeOpenAlexCollection(documents)
+    instance.config = {"openalex_works": {"page_size": 2}}
+    instance.n_jobs = 2
+    instance.verbose = 0
+    instance.backend = "multiprocessing"
+    instance.client = None
+    instance.es_handler = None
+    instance.es_semaphore = None
+    instance.empty_work = lambda: {}
+
+    monkeypatch.setattr(plugin_module, "Parallel", FakeParallel)
+    monkeypatch.setattr(plugin_module, "delayed", immediate_delayed)
+    monkeypatch.setattr(
+        plugin_module,
+        "process_one",
+        lambda paper, *_args, **_kwargs: processed.append(paper["_id"]),
+    )
+
+    instance.process_openalex()
+
+    assert processed == [1, 2, 3]
+    assert FakeParallel.kwargs["backend"] == "multiprocessing"
+    assert "return_as" not in FakeParallel.kwargs
+
+
+def outcome_process_one(paper, *_args, **_kwargs):
+    return "nuevos" if paper["_id"] % 2 else "actualizados"
+
+
+def progress_instance(backend, task=None):
+    documents = [
+        {"_id": value, "doi": None, "title": f"Work {value}", "type": "article"}
+        for value in range(1, 4)
+    ]
+    instance = object.__new__(plugin_module.Kahi_openalex_works)
+    instance.task = task
+    instance.openalex_collection = FakeOpenAlexCollection(documents)
+    instance.config = {"openalex_works": {"page_size": 2}}
+    instance.n_jobs = 2
+    instance.verbose = 0
+    instance.backend = backend
+    instance.client = None
+    instance.es_handler = None
+    instance.es_semaphore = None
+    instance.empty_work = lambda: {}
+    return instance
+
+
+def test_process_openalex_threading_reports_outcomes(monkeypatch, capsys):
+    monkeypatch.setattr(plugin_module, "Parallel", FakeParallel)
+    monkeypatch.setattr(plugin_module, "delayed", immediate_delayed)
+    monkeypatch.setattr(plugin_module, "process_one", outcome_process_one)
+
+    progress_instance("threading").process_openalex()
+
+    lines = capsys.readouterr().out.splitlines()
+    assert FakeParallel.kwargs["verbose"] == 0
+    assert lines[0] == ("[openalex_works:sin_doi] START total=3 | "
+                        "backend=threading num_jobs=2 page_size=2")
+    assert lines[-1].startswith("[openalex_works:sin_doi] DONE 3 reg en ")
+    assert lines[-1].endswith("| nuevos=2 actualizados=1")
+
+
+def test_process_openalex_multiprocessing_counts_completed_in_parent(monkeypatch, capsys):
+    # Real joblib: the children cannot step, so the parent counts the
+    # completed batches and aggregates the returned outcomes at the end.
+    monkeypatch.setattr(plugin_module, "process_one", outcome_process_one)
+
+    progress_instance("multiprocessing", task="doi").process_openalex()
+
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0] == ("[openalex_works:doi] START total=3 | "
+                        "backend=multiprocessing num_jobs=2 page_size=2")
+    assert lines[-1].startswith("[openalex_works:doi] DONE 3 reg en ")
+    assert lines[-1].endswith("| nuevos=2 actualizados=1")
+
+
+def test_report_completed_tasks_steps_only_new_completions():
+    parallel = MagicMock(n_completed_tasks=0)
+    progress = plugin_module.ProgressLogger("test", total=30)
+    plugin_module.report_completed_tasks(parallel, progress)
+    for completed in (10, 10, 20, 30):
+        parallel.n_completed_tasks = completed
+        parallel.print_progress()
+    assert progress.processed == 30
+
+
 class FakePersonCollection:
     full_name = "database.person"
 
@@ -195,7 +290,7 @@ def test_elasticsearch_match_updates_existing_work(monkeypatch):
     monkeypatch.setattr(process_module, "process_one_update", update)
     monkeypatch.setattr(process_module, "process_one_insert", insert)
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         openalex_work(),
         {"database_name": "kahi", "openalex_works": {}},
         {},
@@ -205,6 +300,7 @@ def test_elasticsearch_match_updates_existing_work(monkeypatch):
         es_semaphore=BoundedSemaphore(1),
     )
 
+    assert outcome == "actualizados"
     update.assert_called_once()
     insert.assert_not_called()
     assert collection.find_one.call_args_list[1].args[0] == {"_id": matched_id}
@@ -220,11 +316,11 @@ def test_missing_elasticsearch_match_inserts_work(monkeypatch):
     es_handler = MagicMock()
     es_handler.search_work.return_value = None
     update = MagicMock()
-    insert = MagicMock()
+    insert = MagicMock(return_value="nuevos")
     monkeypatch.setattr(process_module, "process_one_update", update)
     monkeypatch.setattr(process_module, "process_one_insert", insert)
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         openalex_work(),
         {"database_name": "kahi", "openalex_works": {}},
         {},
@@ -234,6 +330,7 @@ def test_missing_elasticsearch_match_inserts_work(monkeypatch):
         es_semaphore=BoundedSemaphore(1),
     )
 
+    assert outcome == "nuevos"
     update.assert_not_called()
     insert.assert_called_once()
     assert insert.call_args.kwargs["es_semaphore"] is not None
@@ -374,6 +471,96 @@ def test_update_persists_open_access_and_uses_its_actual_url(monkeypatch):
         "url": "https://open.example/article",
     }]
     assert "open_acess" not in update
+
+
+def test_update_persists_openalex_abstracts_and_topics(monkeypatch):
+    entry = {
+        "titles": [], "external_ids": [], "types": [], "open_access": {},
+        "external_urls": [], "citations_count": [], "subjects": [],
+        "authors": [],
+        "abstracts": [{
+            "abstract": {"texto": [0]}, "lang": "es", "source": "openalex"
+        }],
+        "primary_topic": {"id": "https://openalex.org/T1"},
+        "topics": [{"id": "https://openalex.org/T1"}],
+    }
+    work = {
+        "_id": ObjectId(), "updated": [], "titles": [], "external_ids": [],
+        "types": [], "open_access": {}, "external_urls": [],
+        "citations_count": [], "citations_by_year": [], "subjects": [],
+        "authors": [], "abstracts": [], "primary_topic": None, "topics": [],
+        "bibliographic_info": {},
+    }
+    collection = MagicMock()
+    monkeypatch.setattr(process_module, "parse_openalex", lambda *_a, **_k: entry)
+
+    process_module.process_one_update({}, work, MagicMock(), collection, {})
+
+    update = collection.update_one.call_args.args[1]["$set"]
+    assert update["abstracts"] == entry["abstracts"]
+    assert update["primary_topic"] == entry["primary_topic"]
+    assert update["topics"] == entry["topics"]
+
+
+def test_rerun_repairs_only_missing_openalex_metadata(monkeypatch):
+    entry = {
+        "abstracts": [{"abstract": {"word": [0]}, "source": "openalex"}],
+        "primary_topic": {"id": "https://openalex.org/T2"},
+        "topics": [{"id": "https://openalex.org/T2"}],
+    }
+    work = {
+        "_id": ObjectId(), "updated": [{"source": "openalex", "time": 1}],
+        "abstracts": [], "primary_topic": {}, "topics": [],
+    }
+    collection = MagicMock()
+    monkeypatch.setattr(process_module, "parse_openalex", lambda *_a, **_k: entry)
+
+    process_module.process_one_update({}, work, MagicMock(), collection, {})
+
+    update = collection.update_one.call_args.args[1]["$set"]
+    assert set(update) == {"abstracts", "primary_topic", "topics"}
+    assert len(work["updated"]) == 1
+
+
+def test_rerun_repairs_core_metadata_without_overwriting(monkeypatch):
+    source_id = ObjectId()
+    entry = {
+        "doi": "10.1000/incoming",
+        "date_published": 123456,
+        "year_published": 2024,
+        "source": {"external_ids": [{"id": "https://openalex.org/S1"}]},
+        "abstracts": [],
+        "primary_topic": {},
+        "topics": [],
+    }
+    work = {
+        "_id": ObjectId(),
+        "updated": [{"source": "openalex", "time": 1}],
+        "doi": "10.1000/existing",
+        "date_published": None,
+        "year_published": None,
+        "source": {},
+        "abstracts": [],
+        "primary_topic": {},
+        "topics": [],
+    }
+    sources = MagicMock()
+    sources.find_one.return_value = {
+        "_id": source_id,
+        "names": [{"name": "Journal", "lang": "en"}],
+    }
+    db = {"sources": sources}
+    collection = MagicMock()
+    monkeypatch.setattr(
+        process_module, "parse_openalex", lambda *_a, **_k: entry)
+
+    process_module.process_one_update({}, work, db, collection, {})
+
+    fields = collection.update_one.call_args.args[1]["$set"]
+    assert fields["date_published"] == 123456
+    assert fields["year_published"] == 2024
+    assert fields["source"] == {"id": source_id, "name": "Journal"}
+    assert "doi" not in fields
 
 
 class FakeExternalIdPersonCollection:

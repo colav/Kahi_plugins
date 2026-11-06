@@ -1,3 +1,9 @@
+from kahi_impactu_utils.Mongo import insert_only_update
+from kahi_impactu_utils.Work import (
+    work_titles_match,
+    AmbiguousWorkDOI, canonical_work_doi, claim_work_doi, find_work_by_doi,
+    insert_work_by_doi, merge_work_identifiers, prepare_work_doi, skip_work_doi_conflicts,
+)
 
 from collections import OrderedDict, defaultdict
 from copy import deepcopy
@@ -9,7 +15,7 @@ from time import time
 from bson import ObjectId
 from pymongo import MongoClient
 from mohan.Similarity import Similarity
-from kahi_impactu_utils.Utils import normalize_name
+from kahi_impactu_utils.Utils import normalize_name, normalize_publication_year
 
 
 _AUTHOR_NAME_CACHE = OrderedDict()
@@ -271,6 +277,93 @@ def get_units_affiliations(db, author_db, affiliations):
     return units
 
 
+def _preferred_source_name(source):
+    names = source.get("names") or []
+    if not names:
+        return ""
+    name = names[0].get("name", "")
+    for language in ("es", "en"):
+        candidate = next((
+            item.get("name", "") for item in names
+            if item.get("lang") == language and item.get("name")
+        ), None)
+        if candidate:
+            return candidate
+    return name
+
+
+def _resolve_source(db, source):
+    """Resolve a parsed source to the canonical Kahi source document."""
+    if not isinstance(source, dict):
+        return None
+    for external_id in source.get("external_ids") or []:
+        identifier = external_id.get("id")
+        if identifier in (None, ""):
+            continue
+        source_db = db["sources"].find_one({"external_ids.id": identifier})
+        if source_db:
+            return {
+                "id": source_db["_id"],
+                "name": _preferred_source_name(source_db),
+            }
+    return None
+
+
+def merge_missing_core_metadata(colav_reg, entry, db):
+    """Fill publication metadata only when the Kahi value is empty."""
+    changed = {}
+    year = normalize_publication_year(colav_reg.get("year_published"))
+    if year is None:
+        year = normalize_publication_year(entry.get("year_published"))
+    if colav_reg.get("year_published") != year:
+        colav_reg["year_published"] = year
+        changed["year_published"] = year
+    for field in ("doi", "date_published"):
+        current = colav_reg.get(field)
+        incoming = entry.get(field)
+        if current in (None, "", 0) and incoming not in (None, "", 0):
+            colav_reg[field] = incoming
+            changed[field] = incoming
+
+    current_source = colav_reg.get("source") or {}
+    if not isinstance(current_source.get("id"), ObjectId):
+        source = _resolve_source(db, entry.get("source"))
+        if source:
+            colav_reg["source"] = source
+            changed["source"] = source
+    return changed
+
+
+def merge_openalex_abstracts_and_topics(colav_reg, entry):
+    """Merge OpenAlex metadata omitted by historical update paths."""
+    changed = False
+    abstracts = colav_reg.setdefault("abstracts", [])
+    for abstract in entry.get("abstracts") or []:
+        if abstract not in abstracts:
+            abstracts.append(abstract)
+            changed = True
+
+    primary_topic = colav_reg.get("primary_topic") or {}
+    entry_primary = entry.get("primary_topic") or {}
+    if not primary_topic.get("id") and entry_primary.get("id"):
+        colav_reg["primary_topic"] = entry_primary
+        changed = True
+
+    topics = colav_reg.setdefault("topics", [])
+    topic_ids = {
+        topic.get("id") for topic in topics if isinstance(topic, dict)
+    }
+    for topic in entry.get("topics") or []:
+        if not isinstance(topic, dict):
+            continue
+        topic_id = topic.get("id")
+        if topic_id and topic_id not in topic_ids:
+            topics.append(topic)
+            topic_ids.add(topic_id)
+            changed = True
+    return changed
+
+
 def process_one_update(
         oa_reg,
         colav_reg,
@@ -297,23 +390,33 @@ def process_one_update(
     verbose : int, optional
         Verbosity level. The default is 0.
     """
-    # updated
-    for upd in colav_reg["updated"]:
-        if upd["source"] == "openalex":
-            return None  # Register already on db
-            # Could be updated with new information when openalex database
-            # changes
     entry = parse_openalex(oa_reg, empty_work.copy(), verbose=verbose)
+    prepare_work_doi(entry, "openalex")
+    core_updates = merge_missing_core_metadata(colav_reg, entry, db)
+    merge_work_identifiers(collection, colav_reg, entry)
+    already_updated = any(
+        update.get("source") == "openalex"
+        for update in colav_reg.get("updated", [])
+    )
+    if already_updated:
+        enrichment_changed = merge_openalex_abstracts_and_topics(
+            colav_reg, entry)
+        if core_updates or enrichment_changed:
+            fields = dict(core_updates)
+            fields.update({
+                "abstracts": colav_reg["abstracts"],
+                "primary_topic": colav_reg.get("primary_topic") or {},
+                "topics": colav_reg["topics"],
+            })
+            collection.update_one(
+                {"_id": colav_reg["_id"]},
+                {"$set": fields},
+            )
+        return None
+
     colav_reg["updated"].append(
         {"source": "openalex", "time": int(time())})
-    # titles
-    colav_reg["titles"].extend(entry["titles"])
-    # external_ids
-    ext_ids = [ext["id"] for ext in colav_reg["external_ids"]]
-    for ext in entry["external_ids"]:
-        if ext["id"] not in ext_ids:
-            colav_reg["external_ids"].append(ext)
-            ext_ids.append(ext["id"])
+    # Titles and identifiers were already combined by merge_work_identifiers.
     # types
     colav_reg["types"].extend(entry["types"])
     # open access info
@@ -360,6 +463,8 @@ def process_one_update(
     colav_reg["subjects"].append(
         {"source": "openalex", "subjects": subject_list})
 
+    merge_openalex_abstracts_and_topics(colav_reg, entry)
+
     # authors
     for author in entry["authors"]:
         author_db = resolve_person_by_external_ids(
@@ -383,21 +488,28 @@ def process_one_update(
             if aff_unit.get("id") not in existing_affiliation_ids:
                 target_author.setdefault("affiliations", []).append(aff_unit)
                 existing_affiliation_ids.add(aff_unit.get("id"))
+    fields = {
+        "updated": colav_reg["updated"],
+        "titles": colav_reg["titles"],
+        "external_ids": colav_reg["external_ids"],
+        "types": colav_reg["types"],
+        "open_access": colav_reg["open_access"],
+        "bibliographic_info": colav_reg["bibliographic_info"],
+        "external_urls": colav_reg["external_urls"],
+        "subjects": colav_reg["subjects"],
+        "abstracts": colav_reg["abstracts"],
+        "primary_topic": colav_reg.get("primary_topic") or {},
+        "topics": colav_reg["topics"],
+        "citations_count": colav_reg["citations_count"],
+        "citations_by_year": colav_reg["citations_by_year"],
+        "authors": colav_reg["authors"],
+    }
+    fields.update(core_updates)
+    additions = {field: {"$each": fields.pop(field)}
+                 for field in ("updated", "titles", "external_ids")}
     collection.update_one(
         {"_id": colav_reg["_id"]},
-        {"$set": {
-            "updated": colav_reg["updated"],
-            "titles": colav_reg["titles"],
-            "external_ids": colav_reg["external_ids"],
-            "types": colav_reg["types"],
-            "open_access": colav_reg["open_access"],
-            "bibliographic_info": colav_reg["bibliographic_info"],
-            "external_urls": colav_reg["external_urls"],
-            "subjects": colav_reg["subjects"],
-            "citations_count": colav_reg["citations_count"],
-            "citations_by_year": colav_reg["citations_by_year"],
-            "authors": colav_reg["authors"]
-        }}
+        {"$set": fields, "$addToSet": additions}
     )
 
 
@@ -441,6 +553,7 @@ def index_work_in_elasticsearch(entry, inserted_id, es_handler,
     )
 
 
+@skip_work_doi_conflicts
 def process_one_insert(oa_reg, db, collection, empty_work, es_handler,
                        verbose=0, es_semaphore=None):
     """
@@ -472,6 +585,7 @@ def process_one_insert(oa_reg, db, collection, empty_work, es_handler,
 
     # parse
     entry = parse_openalex(oa_reg, empty_work.copy(), verbose=verbose)
+    prepare_work_doi(entry, "openalex")
     # link
     source_db = None
     if entry["source"]:
@@ -679,20 +793,30 @@ def process_one_insert(oa_reg, db, collection, empty_work, es_handler,
     # insert in mongo
     inserted_id = None
     openalex_id = oa_reg["id"] if "id" in oa_reg.keys() else None
-    if openalex_id:
+    outcome = "nuevos"
+    if canonical_work_doi(entry.get("doi")):
+        inserted_id, existing = insert_work_by_doi(collection, entry)
+        if existing is not None:
+            process_one_update(oa_reg, existing, db, collection, empty_work, verbose=verbose)
+            outcome = "actualizados"
+    elif openalex_id:
         response = collection.update_one(
             {"external_ids": {"$elemMatch": {"source": "openalex", "id": openalex_id}}},
-            {"$setOnInsert": entry},
+            insert_only_update(entry),
             upsert=True
         )
         inserted_id = response.upserted_id
+        if inserted_id is None:
+            outcome = "existentes"
     else:
         response = collection.insert_one(entry)
         inserted_id = response.inserted_id
     index_work_in_elasticsearch(
         entry, inserted_id, es_handler, es_semaphore)
+    return outcome
 
 
+@skip_work_doi_conflicts
 def process_one(oa_reg, config, empty_work, client, es_handler, backend,
                 verbose=0, es_semaphore=None):
     """
@@ -713,6 +837,12 @@ def process_one(oa_reg, config, empty_work, client, es_handler, backend,
         Elasticsearch handler to insert the register in the elasticsearch index, Mohan's Similarity class.
     verbose : int, optional
         Verbosity level. The default is 0.
+
+    Returns
+    -------
+    str
+        Outcome for progress reporting: "nuevos", "actualizados",
+        "existentes" or "omitidos".
     """
     if backend != "threading":
         client = get_process_mongo_client(config["database_url"])
@@ -740,27 +870,36 @@ def process_one(oa_reg, config, empty_work, client, es_handler, backend,
         else:
             es_handler = None
 
-    colav_reg = None
+    doi = canonical_work_doi(oa_reg.get("doi"))
+    colav_reg = find_work_by_doi(collection, oa_reg["doi"], titles=[{"title": oa_reg.get("display_name") or oa_reg.get("title", "")}]) if doi else None
     openalex_id = oa_reg["id"] if "id" in oa_reg.keys() else None
     if openalex_id:
-        colav_reg = collection.find_one(
-            {"external_ids": {"$elemMatch": {"source": "openalex", "id": openalex_id}}}
-        )
+        source_query = {"external_ids": {"$elemMatch": {
+            "source": "openalex", "id": openalex_id}}}
+        source_work = (collection.find_one(source_query, {"_id": 1, "titles": 1})
+                       if colav_reg is not None else collection.find_one(source_query))
+        if doi and source_work and not work_titles_match(
+                [{"title": oa_reg.get("display_name") or oa_reg.get("title", "")}],
+                source_work.get("titles")):
+            source_work = None
+        if (colav_reg is not None and source_work is not None
+                and source_work["_id"] != colav_reg["_id"]):
+            raise AmbiguousWorkDOI(
+                f"OpenAlex {openalex_id} and DOI {doi} resolve to different works")
+        if colav_reg is None:
+            colav_reg = source_work
 
-    doi = oa_reg["doi"]
+    outcome = "omitidos"
     if colav_reg:
+        if doi:
+            claim_work_doi(collection, colav_reg, doi)
         process_one_update(
             oa_reg, colav_reg, db, collection, empty_work, verbose=verbose)
+        outcome = "actualizados"
     elif doi:
-        # fallback: is the doi in colavdb?
-        colav_reg = collection.find_one({"external_ids.id": doi})
-        if colav_reg:  # update the register
-            process_one_update(
-                oa_reg, colav_reg, db, collection, empty_work, verbose=verbose)
-        else:  # insert a new register
-            process_one_insert(
-                oa_reg, db, collection, empty_work, es_handler,
-                verbose=verbose, es_semaphore=es_semaphore)
+        outcome = process_one_insert(
+            oa_reg, db, collection, empty_work, es_handler,
+            verbose=verbose, es_semaphore=es_semaphore)
     else:  # does not have a doi identifier
         # elasticsearch section
         if es_handler:
@@ -781,8 +920,7 @@ def process_one(oa_reg, config, empty_work, client, es_handler, backend,
                 es_handler.search_work,
                 title=oa_reg["title"],
                 source=source,
-                year=(str(oa_reg["publication_year"])
-                      if oa_reg.get("publication_year") is not None else "0"),
+                year=str(normalize_publication_year(oa_reg.get("publication_year")) or 0),
                 authors=authors,
                 volume=oa_reg["biblio"]["volume"],
                 issue=oa_reg["biblio"]["issue"],
@@ -796,23 +934,25 @@ def process_one(oa_reg, config, empty_work, client, es_handler, backend,
                 if colav_reg:
                     process_one_update(oa_reg, colav_reg, db,
                                        collection, empty_work, verbose=verbose)
+                    outcome = "actualizados"
                 else:
                     if verbose > 4:
                         print("Register with {} not found in mongodb".format(
                             response["_id"]))
                         print(response)
-                    process_one_insert(oa_reg, db, collection,
-                                       empty_work, es_handler, verbose=0,
-                                       es_semaphore=es_semaphore)
+                    outcome = process_one_insert(oa_reg, db, collection,
+                                                 empty_work, es_handler, verbose=0,
+                                                 es_semaphore=es_semaphore)
 
             else:  # insert new register
                 if verbose > 4:
                     print("INFO: found no register in elasticsearch")
-                process_one_insert(oa_reg, db, collection,
-                                   empty_work, es_handler, verbose=0,
-                                   es_semaphore=es_semaphore)
+                outcome = process_one_insert(oa_reg, db, collection,
+                                             empty_work, es_handler, verbose=0,
+                                             es_semaphore=es_semaphore)
         else:
             if verbose > 4:
                 print("No elasticsearch index provided")
     if backend != "threading" and es_handler:
         es_handler.close()
+    return outcome
