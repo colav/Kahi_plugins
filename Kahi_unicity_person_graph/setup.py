@@ -28,7 +28,7 @@ setup(
     long_description=(ROOT / "README.md").read_text(),
     long_description_content_type="text/markdown",
     install_requires=[
-        "kahi>=0.1.3a0",
+        "kahi>=0.1.3",
         "pymongo",
         "joblib",
         "kahi_impactu_utils",

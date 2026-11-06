@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.2 - 2026-11-06
 
 - Reject explicit incompatible complete given names before consulting aliases,
   including short initial-and-surname matches and shared identifiers. Preserve
@@ -17,7 +17,7 @@
 - Preserve affiliations from every merged member without duplicating ids.
 - Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
   joblib progress output disabled (`verbose=0`).
-- Require `kahi>=0.1.3a0`.
+- Require `kahi>=0.1.3`.
 
 ## 0.1.1 - 2026-09-09
 
