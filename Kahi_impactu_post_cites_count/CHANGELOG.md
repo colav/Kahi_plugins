@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased - 2026-11-06
+## 0.0.5-alpha - 2026-11-06
 
 - Follow relations.id with $graphLookup so works of groups and units
   also count for their canonical parent affiliations
