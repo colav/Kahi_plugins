@@ -35,6 +35,10 @@
   `institutions-v3-split-lists`, allowing reimport of existing snapshots.
 - Audit remaining compound IUA group links as a migration failure.
 
+- Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
+  joblib progress output disabled (`verbose=0`).
+- Require `kahi>=0.1.3a0`.
+
 ## Unreleased - 2026-10-12
 
 - Share canonical institution relation handling between legacy and snapshot,
