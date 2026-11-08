@@ -4,6 +4,7 @@ from pymongo import MongoClient, TEXT
 from time import time
 from joblib import Parallel, delayed
 from kahi_impactu_utils.Utils import get_id_from_url, split_names
+from kahi_impactu_utils.String import has_dash, normalize_dashes
 from re import search, sub
 from copy import deepcopy
 from itertools import islice
@@ -137,15 +138,18 @@ def process_one_insert(person_db, oa_author, client, db_name, empty_person, rela
     entry = deepcopy(empty_person)
     entry["updated"].append({"source": "openalex", "time": int(time())})
 
-    entry["full_name"] = sub(
+    raw_name = sub(
         r'\s+', ' ', oa_author["display_name"].replace(".", " ")).strip()
     try:
-        author_data = split_names(entry["full_name"])
+        # split_names canonicalises every dash variant before parsing.
+        author_data = split_names(raw_name)
     except Exception as e:
         raise RuntimeError(
-            f"Unable to split OpenAlex author name {entry['full_name']!r}"
+            f"Unable to split OpenAlex author name {raw_name!r}"
         ) from e
-    entry["full_name"] = entry["full_name"].replace("-", " ")
+    entry["full_name"] = normalize_dashes(raw_name)
+    if has_dash(raw_name) and raw_name.lower() not in entry["aliases"]:
+        entry["aliases"].append(raw_name.lower())
     entry["last_names"] = author_data["last_names"]
     entry["first_names"] = author_data["first_names"]
     entry["initials"] = author_data["initials"]
