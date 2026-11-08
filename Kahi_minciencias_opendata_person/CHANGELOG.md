@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.7-beta - 2026-11-07
+- Normalize every hyphen and dash variant in snapshot full_name, first_names and last_names (split into tokens, initials recomputed); keep the dashed full name as an alias; add tests
+- Require kahi_impactu_utils>=0.1.6
 
 ## 0.1.6-beta - 2026-10-18
 

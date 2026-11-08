@@ -9,6 +9,7 @@ from bson import ObjectId
 from kahi.KahiBase import KahiBase
 from kahi.progress import ProgressLogger
 from kahi_impactu_utils.Mongo import order_document
+from kahi_impactu_utils.String import has_dash, normalize_dashes
 from kahi_impactu_utils.Utils import parse_orcid_id_from_url
 from pymongo import MongoClient, ReplaceOne, TEXT
 from pymongo.collation import Collation
@@ -34,6 +35,37 @@ SCALAR_FIELDS = {
     "full_name", "first_names", "last_names", "initials", "sex",
     "marital_status", "birthplace", "birthdate",
 }
+
+
+def normalize_person_name_dashes(document):
+    """
+    Replace every hyphen or dash variant in the snapshot name fields by spaces.
+
+    `full_name` is normalised in place; dashed items of `first_names` and
+    `last_names` are split into separate tokens; `initials` follow the new
+    first names and the original dashed full name is kept in `aliases`.
+    """
+    full_name = document.get("full_name")
+    first = document.get("first_names") or []
+    last = document.get("last_names") or []
+    if not (has_dash(full_name) or any(has_dash(x) for x in first + last)):
+        return document
+    if has_dash(full_name):
+        alias = str(full_name).lower()
+        aliases = document.setdefault("aliases", [])
+        if alias not in aliases:
+            aliases.append(alias)
+        document["full_name"] = normalize_dashes(full_name)
+    if any(has_dash(x) for x in first):
+        document["first_names"] = [
+            token for item in first for token in (normalize_dashes(item) or "").split()]
+        document["initials"] = "".join(p[0].upper() for p in document["first_names"] if p)
+    if any(has_dash(x) for x in last):
+        document["last_names"] = [
+            token for item in last for token in (normalize_dashes(item) or "").split()]
+    return document
+
+
 COD_RH_RE = re.compile(r"\d{10}")
 GROUP_RE = re.compile(r"COL\d{7}")
 DOI_RE = re.compile(
@@ -320,6 +352,7 @@ class Kahi_minciencias_opendata_person(KahiBase):
 
     def _merge(self, existing, source, counts=None):
         source = deepcopy(source)
+        normalize_person_name_dashes(source)
         for external in source.get("external_ids", []):
             if external.get("source") == "orcid" and isinstance(external.get("id"), str):
                 parsed = parse_orcid_id_from_url(external["id"])

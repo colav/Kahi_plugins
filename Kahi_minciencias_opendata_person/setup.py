@@ -85,7 +85,7 @@ def main():
             'pymongo',
             'joblib',
             'beautifulsoup4',
-            'kahi_impactu_utils'
+            'kahi_impactu_utils>=0.1.6'
         ],
     )
 
