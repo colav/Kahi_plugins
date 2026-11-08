@@ -83,7 +83,7 @@ def main():
             'kahi>=0.1.3',
             'thefuzz',
             'pymongo',
-            'kahi_impactu_utils'
+            'kahi_impactu_utils>=0.1.6'
         ],
     )
 

@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.8 - 2026-11-07
+- Build names with scienti_author_names: dots removed, every hyphen or dash variant turned into a space, dashed raw name kept as alias; add tests
+- Require kahi_impactu_utils>=0.1.6
 
 ## 0.1.7 - 2026-11-06
 

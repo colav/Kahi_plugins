@@ -3,8 +3,38 @@ from kahi.progress import ProgressLogger
 from pymongo import MongoClient, ASCENDING, TEXT
 from time import time
 from kahi_impactu_utils.Utils import check_date_format, get_id_from_url, parse_sex, doi_processor, parse_orcid_id_from_url
-from kahi_impactu_utils.String import title_case
+from kahi_impactu_utils.String import has_dash, normalize_dashes, title_case
 import re
+
+
+def _clean_scienti_name(value):
+    """Collapse whitespace, drop dots and turn every dash variant into a space."""
+    if not value:
+        return ""
+    return normalize_dashes(re.sub(r'\s+', ' ', str(value).replace(".", " ")).strip()) or ""
+
+
+def scienti_author_names(author):
+    """
+    Build first_names, last_names, initials and the dashed alias of a ScienTI author.
+
+    Hyphens (ASCII or Unicode) are converted to spaces before title casing so
+    "Saenz-ludlow" becomes the last name "Saenz Ludlow". When the raw name had a
+    dash, its lowercase form is returned as `alias` to keep it searchable.
+    """
+    raw_first = author.get("TXT_NME_RH") or author.get("TXT_NAMES_RH") or ""
+    raw_last = [author.get("TXT_PRIM_APELL") or "", author.get("TXT_SEG_APELL") or ""]
+    first_names = title_case(_clean_scienti_name(raw_first)).strip().split()
+    last_names = [title_case(_clean_scienti_name(lname))
+                  for lname in raw_last if _clean_scienti_name(lname)]
+    raw_full = " ".join(str(part).strip() for part in [raw_first] + raw_last if part and str(part).strip())
+    return {
+        "first_names": first_names,
+        "last_names": last_names,
+        "initials": "".join([p[0].upper() for p in first_names]),
+        "alias": raw_full.lower() if has_dash(raw_full) else "",
+    }
+
 
 
 def normalize_birthdate(value):
@@ -114,24 +144,14 @@ class Kahi_scienti_person(KahiBase):
                             if rec not in person["external_ids"]:
                                 person["external_ids"].append(rec)
                 if "staff" not in [source["source"] for source in person["updated"]]:
-                    first_names = re.sub(
-                        r'\s+', ' ', author["TXT_NAMES_RH"].replace(".", " ")).strip()
-                    person["first_names"] = title_case(first_names).strip().split()
-                    person["last_names"] = []
-                    if "TXT_PRIM_APELL" in author.keys():
-                        lname = re.sub(
-                            r'\s+', ' ', author["TXT_PRIM_APELL"].replace(".", " ")).strip()
-                        if lname:
-                            person["last_names"].append(title_case(lname))
-                    if "TXT_SEG_APELL" in author.keys():
-                        if author["TXT_SEG_APELL"] is not None:
-                            lname = re.sub(
-                                r'\s+', ' ', author["TXT_SEG_APELL"].replace(".", " ")).strip()
-                            if lname:
-                                person["last_names"].append(title_case(lname))
+                    names = scienti_author_names(author)
+                    person["first_names"] = names["first_names"]
+                    person["last_names"] = names["last_names"]
                     full_name = " ".join(person["first_names"]) + " " + " ".join(person["last_names"])
                     person["full_name"] = title_case(full_name)
-                    person["initials"] = "".join([p[0].upper() for p in person["first_names"]])
+                    person["initials"] = names["initials"]
+                    if names["alias"] and names["alias"] not in person.setdefault("aliases", []):
+                        person["aliases"].append(names["alias"])
 
                 marital = None
                 if "TPO_ESTADO_CIVIL" in author.keys():
@@ -363,21 +383,14 @@ class Kahi_scienti_person(KahiBase):
                                     "provenance": "scienti",
                                     "source": "scopus",
                                     "id": scopus_id})
-                    # implement the right split names here
-                    entry["first_names"] = title_case(
-                        re.sub(r'\s+', ' ', author["TXT_NAMES_RH"].strip())).strip().split()
-                    entry["last_names"] = []
-                    if "TXT_PRIM_APELL" in author.keys():
-                        entry["last_names"].append(
-                            title_case(re.sub(r'\s+', ' ', author["TXT_PRIM_APELL"].strip())))
-                    if "TXT_SEG_APELL" in author.keys():
-                        if author["TXT_SEG_APELL"] is not None:
-                            entry["last_names"].append(
-                                title_case(re.sub(r'\s+', ' ', author["TXT_SEG_APELL"].strip())))
+                    names = scienti_author_names(author)
+                    entry["first_names"] = names["first_names"]
+                    entry["last_names"] = names["last_names"]
                     entry["full_name"] = " ".join(
                         entry["first_names"]) + " " + " ".join(entry["last_names"])
-                    entry["initials"] = "".join(
-                        [p[0].upper() for p in entry["first_names"]])
+                    entry["initials"] = names["initials"]
+                    if names["alias"] and names["alias"] not in entry["aliases"]:
+                        entry["aliases"].append(names["alias"])
                     if "TXT_CITACION_BIBLIO" in author.keys():
                         if author["TXT_CITACION_BIBLIO"] is not None:
                             entry["aliases"].append(
@@ -737,24 +750,14 @@ class Kahi_scienti_person(KahiBase):
 
                     if entry["external_ids"] == []:
                         continue
-                    if "TXT_NME_RH" in author.keys() and author["TXT_NME_RH"]:
-                        entry["first_names"] = title_case(
-                            author["TXT_NME_RH"]).strip().split()
-                    elif "TXT_NAMES_RH" in author.keys() and author["TXT_NAMES_RH"]:
-                        entry["first_names"] = title_case(
-                            re.sub(r'\s+', ' ', author["TXT_NAMES_RH"].strip())).strip().split()
-                    entry["last_names"] = []
-                    if "TXT_PRIM_APELL" in author.keys():
-                        entry["last_names"].append(
-                            title_case(re.sub(r'\s+', ' ', author["TXT_PRIM_APELL"].strip())))
-                    if "TXT_SEG_APELL" in author.keys():
-                        if author["TXT_SEG_APELL"] is not None:
-                            entry["last_names"].append(
-                                title_case(re.sub(r'\s+', ' ', author["TXT_SEG_APELL"].strip())))
+                    names = scienti_author_names(author)
+                    entry["first_names"] = names["first_names"]
+                    entry["last_names"] = names["last_names"]
                     entry["full_name"] = " ".join(
                         entry["first_names"]) + " " + " ".join(entry["last_names"])
-                    entry["initials"] = "".join(
-                        [p[0].upper() for p in entry["first_names"]])
+                    entry["initials"] = names["initials"]
+                    if names["alias"] and names["alias"] not in entry["aliases"]:
+                        entry["aliases"].append(names["alias"])
 
                     if "DTA_NACIMIENTO" in author.keys():
                         entry["birthdate"] = normalize_birthdate(
