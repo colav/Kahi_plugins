@@ -1,4 +1,7 @@
 # Changelog
+## 0.0.2-alpha - 2026-11-07
+- Normalize every hyphen and dash variant in given and family names with normalize_dashes; keep the dashed name as an alias
+- Require kahi_impactu_utils>=0.1.6
 
 ## 0.0.1-alpha - 2026-11-06
 

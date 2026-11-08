@@ -1,6 +1,7 @@
 from kahi.KahiBase import KahiBase
 from kahi.progress import ProgressLogger
 from kahi_impactu_utils.Utils import split_name_part, parse_orcid_id_from_url
+from kahi_impactu_utils.String import has_dash, normalize_dashes
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 import copy
@@ -197,14 +198,18 @@ class Kahi_orcid_person(KahiBase):
             alias = other_names.get("other-name:content", "")
 
         # Process the names: split into lists, build full_name, and calculate initials
-        given_names = given_names.replace(".", "").replace("-", " ").replace("  ", " ").strip() if given_names else ""
-        family_name = family_name.replace(".", "").replace("-", " ").replace("  ", " ").strip() if family_name else ""
+        raw_full_name = " ".join(
+            part.strip() for part in (given_names or "", family_name or "") if part and part.strip())
+        given_names = normalize_dashes(given_names.replace(".", "")) if given_names else ""
+        family_name = normalize_dashes(family_name.replace(".", "")) if family_name else ""
         first_names_list = split_name_part(given_names) if given_names else []
         last_names_list = split_name_part(family_name) if family_name else []
         full_name = f"{given_names} {family_name}".strip()
         initials = ''.join(name[0].upper()
                            for name in first_names_list) if first_names_list else ""
         aliases = [alias] if alias else []
+        if has_dash(raw_full_name) and raw_full_name.lower() not in aliases:
+            aliases.append(raw_full_name.lower())
 
         query = {"external_ids.id": orcid}
         update_fields = {
