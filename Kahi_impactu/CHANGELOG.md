@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.17] - 2026-11-07
+
+### Changed
+
+- Updated the person plugin pins (openalex 0.1.7, orcid 0.0.2-alpha, scienti 0.1.8,
+  staff 0.1.7, scholar 0.1.2, minciencias_opendata 0.1.7-beta) to the releases that
+  normalize ASCII and Unicode dashes in names; they require kahi_impactu_utils>=0.1.6.
+
 ## [0.0.16] - 2026-11-06
 
 ### Changed
