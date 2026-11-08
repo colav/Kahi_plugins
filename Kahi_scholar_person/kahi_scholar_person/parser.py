@@ -2,6 +2,7 @@ import copy
 import re
 from time import time
 
+from kahi_impactu_utils.String import normalize_dashes
 from kahi_impactu_utils.Utils import doi_processor, split_names
 from unidecode import unidecode
 
@@ -27,7 +28,7 @@ def is_sentinel_name(value):
 
 
 def display_tokens(value):
-    tokens = clean_text(value).replace("-", " ").split()
+    tokens = (normalize_dashes(clean_text(value)) or "").split()
     output = []
     for token in tokens:
         if token.isupper() and len(token) <= 3:
