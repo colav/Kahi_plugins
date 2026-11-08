@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.7 - 2026-11-07
+- Normalize every hyphen and dash variant in names and last names to spaces; keep the dashed name as an alias
+- Require kahi_impactu_utils>=0.1.6
 
 ## 0.1.6 - 2026-11-06
 

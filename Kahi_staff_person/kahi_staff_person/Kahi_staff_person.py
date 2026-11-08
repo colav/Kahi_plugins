@@ -5,7 +5,7 @@ from pymongo import MongoClient, TEXT
 from pandas import read_excel, to_datetime, DataFrame
 from time import time
 from kahi_impactu_utils.Mapping import canonical_ror_url, ciarp_mapping
-from kahi_impactu_utils.String import title_case
+from kahi_impactu_utils.String import has_dash, normalize_dashes, title_case
 from kahi_impactu_utils.Utils import parse_sex, doi_processor, split_name_part, parse_orcid_id_from_url
 from datetime import datetime as dt
 from datetime import datetime, timezone
@@ -212,7 +212,7 @@ def staff_full_name(records):
         record.get("primer_apellido"),
         record.get("segundo_apellido"),
     ]
-    return " ".join(str(part).strip() for part in parts if has_text(part))
+    return normalize_dashes(" ".join(str(part).strip() for part in parts if has_text(part))) or ""
 
 
 def merge_staff_person(existing, incoming):
@@ -488,19 +488,24 @@ class Kahi_staff_person(KahiBase):
             entry = self.empty_person()
             entry["updated"].append(
                 {"time": int(time()), "source": "staff", "provenance": "staff"})
-            entry["first_names"] = split_name_part(
-                self.staff_data[self.staff_data["identificación"] == idx].iloc[0]["nombres"])
-            first_lastname = self.staff_data[self.staff_data["identificación"]
-                                             == idx].iloc[0]["primer_apellido"]
-            entry["last_names"].append(first_lastname.strip())
-            second_lastname = self.staff_data[self.staff_data["identificación"]
-                                              == idx].iloc[0]["segundo_apellido"]
+            staff_row = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]
+            raw_names = staff_row["nombres"]
+            first_lastname = staff_row["primer_apellido"]
+            second_lastname = staff_row["segundo_apellido"]
+            # split_name_part turns every dash variant into a space.
+            entry["first_names"] = split_name_part(raw_names)
+            entry["last_names"].append(normalize_dashes(first_lastname.strip()))
             if second_lastname.strip() != "":
-                entry["last_names"].append(second_lastname.strip())
+                entry["last_names"].append(normalize_dashes(second_lastname.strip()))
+            entry["last_names"] = [name for name in entry["last_names"] if name]
             entry["full_name"] = " ".join(
                 entry["first_names"] + entry["last_names"])
             entry["initials"] = "".join([name[0]
                                         for name in entry["first_names"]])
+            raw_full_name = " ".join(
+                part.strip() for part in (raw_names, first_lastname, second_lastname) if part.strip())
+            if has_dash(raw_full_name) and raw_full_name.lower() not in entry["aliases"]:
+                entry["aliases"].append(raw_full_name.lower())
 
             for i, reg in self.staff_data[self.staff_data["identificación"] == idx].iterrows(
             ):
