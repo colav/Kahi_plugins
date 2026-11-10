@@ -1,4 +1,7 @@
 # Changelog
+## 0.1.8 - 2026-11-10
+- Normalize every hyphen and dash variant in authors[].full_name (TXT_TOTAL_NAMES) to spaces
+- Require kahi_impactu_utils>=0.1.6
 
 ## 0.1.7 - 2026-11-06
 

@@ -2,7 +2,7 @@ from kahi_impactu_utils.Utils import lang_poll, doi_processor, check_date_format
 from time import time
 import re
 from copy import deepcopy
-from kahi_impactu_utils.String import text_to_inverted_index
+from kahi_impactu_utils.String import text_to_inverted_index, normalize_dashes
 
 
 def parse_scienti(reg, empty_work, doi=None, verbose=0):
@@ -195,10 +195,10 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
     # external_ids are added to the author entry for searching purposes
     author = reg["author"][0]
     author_entry = {
-        "full_name": re.sub(
+        "full_name": normalize_dashes(re.sub(
             r'\s+',
             ' ',
-            author["TXT_TOTAL_NAMES"].strip()),
+            author["TXT_TOTAL_NAMES"].strip())) or "",
         "affiliations": affiliations,
         "external_ids": [
             {
