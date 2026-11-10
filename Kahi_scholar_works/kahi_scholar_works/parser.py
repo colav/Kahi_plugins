@@ -1,7 +1,7 @@
 from thefuzz import fuzz
 from kahi_impactu_utils.Utils import lang_poll, doi_processor, normalize_publication_year
 from time import time
-from kahi_impactu_utils.String import text_to_inverted_index
+from kahi_impactu_utils.String import text_to_inverted_index, normalize_dashes
 
 
 def parse_scholar(
@@ -135,7 +135,7 @@ def parse_scholar(
                 last_names = names_list[0].strip()
             if len(names_list) > 1:
                 first_names = names_list[1].strip()
-            full_name = first_names + " " + last_names
+            full_name = normalize_dashes(first_names + " " + last_names) or ""
             author_entry["full_name"] = full_name
             author_entry["affiliations"] = []
             author_entry["external_ids"] = []

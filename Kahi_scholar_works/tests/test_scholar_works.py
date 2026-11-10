@@ -382,3 +382,10 @@ def test_blank_title_is_skipped_before_database_or_es_queries():
 
     collection.find_one.assert_not_called()
     es_handler.search_work.assert_not_called()
+
+
+def test_parser_normalizes_dashes_in_author_names():
+    record = scholar_record(author="Alonso‐Herrero, A and Saenz-Ludlow, Adalira and Perez, Juan")
+    with patch.object(parser_module, "lang_poll", return_value="en"):
+        entry = parser_module.parse_scholar(record, empty_work())
+    assert [a["full_name"] for a in entry["authors"]] == ["A Alonso Herrero", "Adalira Saenz Ludlow", "Juan Perez"]
