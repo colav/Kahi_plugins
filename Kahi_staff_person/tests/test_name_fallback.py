@@ -82,3 +82,19 @@ def test_file_with_only_nombre_completo_loads(monkeypatch):
     monkeypatch.setattr(module, 'read_excel', lambda *args, **kwargs: DataFrame([record]))
     data = plugin._load_staff_data({'staff_file_path': 'example.xlsx'}, 'institution')
     assert data.iloc[0]['nombres'] == '' and data.iloc[0]['nombre_completo'] == 'Andrés Felipe Perez'
+
+
+def test_rerun_does_not_duplicate_staff_updated_entry():
+    plugin = instance([staff_record()])
+    plugin.process_staff()
+    plugin.process_staff()
+    person = plugin.collection.find_one()
+    assert [u['source'] for u in person['updated']] == ['staff']
+    assert [aff['id'] for aff in person['affiliations']] == ['institution']
+
+
+def test_merge_keeps_entries_of_other_sources():
+    merged = module.merge_staff_person(
+        {'updated': [{'time': 1, 'source': 'scienti', 'provenance': 'scienti'}]},
+        {'updated': [{'time': 2, 'source': 'staff', 'provenance': 'staff'}]})
+    assert [u['source'] for u in merged['updated']] == ['scienti', 'staff']

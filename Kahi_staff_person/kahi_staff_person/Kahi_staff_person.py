@@ -255,7 +255,15 @@ def staff_full_name(records):
 def merge_staff_person(existing, incoming):
     """Merge staff evidence into an existing person without losing sources."""
     merged = deepcopy(existing)
-    for field in ("updated", "external_ids", "aliases", "degrees", "ranking",
+    # One `updated` entry per source/provenance: a rerun must not add another
+    # staff entry that only differs in its timestamp.
+    updated = merged.setdefault("updated", [])
+    seen = {(item.get("source"), item.get("provenance")) for item in updated}
+    for value in incoming.get("updated", []):
+        if (value.get("source"), value.get("provenance")) not in seen:
+            updated.append(value)
+            seen.add((value.get("source"), value.get("provenance")))
+    for field in ("external_ids", "aliases", "degrees", "ranking",
                   "related_works"):
         values = merged.setdefault(field, [])
         for value in incoming.get(field, []):
