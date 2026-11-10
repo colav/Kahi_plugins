@@ -1,6 +1,6 @@
 from time import time
 from kahi_impactu_utils.Utils import lang_poll, get_name_connector, doi_processor, normalize_publication_year
-from kahi_impactu_utils.String import parse_mathml, parse_html
+from kahi_impactu_utils.String import parse_mathml, parse_html, normalize_dashes
 from kahi_impactu_utils.String import text_to_inverted_index
 from kahi_dspace_works.utils import get_dim_fields, get_oai_pmh_url, is_thesis
 import unicodedata
@@ -255,7 +255,7 @@ def parse_dspace(
             if len(field["#text"].split(",")) != 2:
                 continue
             author = split_names_dspace(
-                field["#text"].replace(".", "").replace("-", " "))
+                normalize_dashes(field["#text"].replace(".", "")) or "")
             if author:
                 author["id"] = ""
                 author["affiliations"] = []

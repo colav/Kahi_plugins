@@ -1,4 +1,7 @@
 # Changelog
+## 0.0.2-alpha - 2026-11-10
+- Normalize every hyphen and dash variant (not only ASCII) in author names before splitting; add test
+- Require kahi_impactu_utils>=0.1.6
 
 ## 0.0.1-alpha - 2026-11-06
 
