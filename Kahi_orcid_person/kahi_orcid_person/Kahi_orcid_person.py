@@ -1,11 +1,29 @@
 from kahi.KahiBase import KahiBase
 from kahi.progress import ProgressLogger
-from kahi_impactu_utils.Utils import split_name_part, parse_orcid_id_from_url
+from kahi_impactu_utils.Utils import split_name_part, parse_orcid_id_from_url, normalize_name
 from kahi_impactu_utils.String import has_dash, normalize_dashes
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 import copy
+from threading import Lock
 from time import time
+
+
+def orcid_name_compatible(person_full_name, registry_full_name):
+    """
+    Decide whether a person's name is compatible with the name of an ORCID record.
+
+    Names are compared as sets of normalized tokens (no accents, lowercase,
+    initials ignored). They are compatible when they share at least two tokens,
+    or every token of the shorter name when one of them has a single token.
+    "Ana Perez" and "Juan Perez" share one of two tokens and are not compatible.
+    """
+    person_tokens = {t for t in normalize_name(person_full_name or "").split() if len(t) > 1}
+    registry_tokens = {t for t in normalize_name(registry_full_name or "").split() if len(t) > 1}
+    if not person_tokens or not registry_tokens:
+        return False
+    shared = len(person_tokens & registry_tokens)
+    return shared >= min(2, len(person_tokens), len(registry_tokens))
 
 
 class Kahi_orcid_person(KahiBase):
@@ -81,7 +99,8 @@ class Kahi_orcid_person(KahiBase):
         """
         update_operation = {
             "$addToSet": {
-                "updated": {"source": "orcid", "time": int(time())}
+                "updated": {"source": "orcid", "time": int(time())},
+                "external_ids": {"provenance": "orcid", "source": "orcid", "id": orcid},
             }
         }
         set_fields = {
@@ -105,6 +124,50 @@ class Kahi_orcid_person(KahiBase):
             print(
                 f"ORCID: {orcid} - Updated: Matched documents: {result.matched_count}, Modified documents: {result.modified_count}")
         return "actualizados"
+
+    def resolve_shared_orcid(self, candidates, orcid, registry_full_name, registry_aliases, person_collection):
+        """
+        Keep an ORCID only on the people whose name is compatible with the ORCID record.
+
+        ScienTI and staff sometimes assign the same ORCID to different people. When
+        several documents carry `orcid`, the record's name decides: the identifier,
+        the aliases copied from the record and the orcid `updated` mark are removed
+        from the incompatible documents. Nothing changes when every candidate (or
+        none) is compatible. Every decision is written to `orcid_person_shared_orcids`.
+
+        Returns the candidates that keep the ORCID.
+        """
+        owners = [c for c in candidates if orcid_name_compatible(c.get("full_name"), registry_full_name)]
+        others = [c for c in candidates if c not in owners]
+        audit = {
+            "orcid": orcid, "registry_name": registry_full_name, "time": int(time()),
+            "candidates": [{"_id": c["_id"], "full_name": c.get("full_name", "")} for c in candidates],
+            "kept": [c["_id"] for c in owners],
+        }
+        if not owners or not others:
+            audit["decision"] = "ambiguous" if owners else "no_match"
+            audit["removed"] = []
+            person_collection.database["orcid_person_shared_orcids"].replace_one(
+                {"orcid": orcid}, audit, upsert=True)
+            return candidates
+        alias_values = [a for a in ([registry_full_name] + list(registry_aliases or [])) if a]
+        person_collection.update_many(
+            {"_id": {"$in": [c["_id"] for c in others]}},
+            {"$pull": {
+                "external_ids": {"id": orcid},
+                "aliases": {"$in": alias_values},
+                "updated": {"source": "orcid"},
+            }},
+        )
+        audit["decision"] = "reassigned"
+        audit["removed"] = [c["_id"] for c in others]
+        person_collection.database["orcid_person_shared_orcids"].replace_one(
+            {"orcid": orcid}, audit, upsert=True)
+        with self._stats_lock:
+            self.shared_orcids_removed += len(others)
+        if self.verbose > 2:
+            print(f"ORCID: {orcid} retirado de {len(others)} persona(s) incompatible(s) con {registry_full_name!r}")
+        return owners
 
     def process_one_insert(self, person_reg, query, update_fields, person_collection, empty_person, orcid):
         """
@@ -221,7 +284,11 @@ class Kahi_orcid_person(KahiBase):
         }
 
         # Check if the record exists in the 'person' collection
-        person_reg = person_collection.find_one(query)
+        candidates = list(person_collection.find(query))
+        if len(candidates) > 1:
+            candidates = self.resolve_shared_orcid(
+                candidates, orcid, full_name, update_fields["aliases"], person_collection)
+        person_reg = candidates[0] if candidates else None
         if person_reg:
             return self.process_one_update(person_reg, query, update_fields, person_collection, orcid)
         elif full_name:
@@ -251,6 +318,8 @@ class Kahi_orcid_person(KahiBase):
 
         # Placeholder for related works; might be used in future versions
         related_works = []
+        self.shared_orcids_removed = 0
+        self._stats_lock = Lock()
 
         progress = ProgressLogger(
             "orcid_person",
@@ -276,6 +345,9 @@ class Kahi_orcid_person(KahiBase):
         # Close the main database connection after processing
         client.close()
         progress.done()
+        if self.shared_orcids_removed:
+            print(f"[orcid_person] ORCID compartidos retirados de {self.shared_orcids_removed} persona(s); "
+                  f"detalle en orcid_person_shared_orcids")
 
     def run(self):
         """
