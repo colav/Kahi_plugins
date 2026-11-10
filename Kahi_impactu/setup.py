@@ -109,7 +109,7 @@ def main():
             'Kahi_scienti_works==0.1.7',
             'Kahi_scimago_sources==0.1.1-beta',
             'Kahi_staff_affiliations==0.1.3-beta',
-            'Kahi_staff_person==0.1.7',
+            'Kahi_staff_person==0.1.8',
             'Kahi_unicity_person==0.1.0',
             'Kahi_unicity_person_graph==0.1.2',
             'Kahi_wikidata_affiliations==0.1.2-beta',

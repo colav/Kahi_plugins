@@ -13,6 +13,12 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.18] - 2026-11-10
+
+### Changed
+
+- Updated Kahi_staff_person to 0.1.8 (nombre_completo fallback, nameless records skipped).
+
 ## [0.0.17] - 2026-11-07
 
 ### Changed
