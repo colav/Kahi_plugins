@@ -29,9 +29,10 @@ STAFF_UNIT_COLUMNS = {
     "código_unidad_académica", "unidad_académica",
     "código_subunidad_académica", "subunidad_académica",
 }
-# Columns that may be absent from a staff file: unit columns and the single
-# full-name column used when nombres/apellidos are not provided.
-STAFF_OPTIONAL_COLUMNS = STAFF_UNIT_COLUMNS | {"nombre_completo"}
+# Columns that may be absent from a staff file: unit columns and the name
+# columns, because a file may bring nombres/apellidos or only nombre_completo.
+STAFF_NAME_COLUMNS = {"nombres", "primer_apellido", "segundo_apellido", "nombre_completo"}
+STAFF_OPTIONAL_COLUMNS = STAFF_UNIT_COLUMNS | STAFF_NAME_COLUMNS
 
 
 def has_text(value):

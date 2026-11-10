@@ -5,6 +5,7 @@
 - Skip records without any name instead of inserting nameless people (omitidos_sin_nombre);
   a nameless record still enriches a person already known by another source
 - Never add an empty alias
+- Name columns are optional in staff files too, as they already were when reading the collection
 
 ## 0.1.7 - 2026-11-07
 - Normalize every hyphen and dash variant in names and last names to spaces; keep the dashed name as an alias

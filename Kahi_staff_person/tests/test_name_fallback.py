@@ -72,3 +72,13 @@ def test_optional_full_name_column_is_filled_when_absent(monkeypatch):
     monkeypatch.setattr(module, 'read_excel', lambda *args, **kwargs: DataFrame([staff_record()]))
     data = plugin._load_staff_data({'staff_file_path': 'example.xlsx'}, 'institution')
     assert data.iloc[0]['nombre_completo'] == ''
+
+
+def test_file_with_only_nombre_completo_loads(monkeypatch):
+    plugin = instance([staff_record()])
+    plugin.staff_required_columns = list(staff_record()) + ['nombre_completo'] + sorted(module.STAFF_UNIT_COLUMNS)
+    record = {k: v for k, v in staff_record().items() if k not in ('nombres', 'primer_apellido', 'segundo_apellido')}
+    record['nombre_completo'] = 'Andrés Felipe Perez'
+    monkeypatch.setattr(module, 'read_excel', lambda *args, **kwargs: DataFrame([record]))
+    data = plugin._load_staff_data({'staff_file_path': 'example.xlsx'}, 'institution')
+    assert data.iloc[0]['nombres'] == '' and data.iloc[0]['nombre_completo'] == 'Andrés Felipe Perez'
