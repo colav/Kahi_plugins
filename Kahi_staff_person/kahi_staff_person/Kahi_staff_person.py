@@ -29,6 +29,9 @@ STAFF_UNIT_COLUMNS = {
     "código_unidad_académica", "unidad_académica",
     "código_subunidad_académica", "subunidad_académica",
 }
+# Columns that may be absent from a staff file: unit columns and the single
+# full-name column used when nombres/apellidos are not provided.
+STAFF_OPTIONAL_COLUMNS = STAFF_UNIT_COLUMNS | {"nombre_completo"}
 
 
 def has_text(value):
@@ -202,17 +205,50 @@ def normalized_full_name(value):
     return " ".join(re.sub(r"[^\w]+", " ", text).split())
 
 
+def staff_name_fields(record):
+    """
+    Build the name fields of a person from one staff record.
+
+    Uses nombres, primer_apellido and segundo_apellido. When the three are
+    empty, falls back to nombre_completo as full_name without splitting it,
+    because the order of names and surnames in that column is unknown; the
+    name parts stay empty. Returns None when no name is available at all.
+    Every hyphen or dash variant becomes a space and the dashed raw name is
+    kept as alias.
+    """
+    raw_names = str(record.get("nombres") or "").strip()
+    first_lastname = str(record.get("primer_apellido") or "").strip()
+    second_lastname = str(record.get("segundo_apellido") or "").strip()
+    if any(has_text(x) for x in (raw_names, first_lastname, second_lastname)):
+        first_names = split_name_part(raw_names) if has_text(raw_names) else []
+        last_names = [normalize_dashes(x) for x in (first_lastname, second_lastname) if has_text(x)]
+        last_names = [x for x in last_names if x]
+        raw_full_name = " ".join(x for x in (raw_names, first_lastname, second_lastname) if has_text(x))
+        return {
+            "first_names": first_names,
+            "last_names": last_names,
+            "initials": "".join(name[0] for name in first_names),
+            "full_name": " ".join(first_names + last_names),
+            "alias": raw_full_name.lower() if has_dash(raw_full_name) else "",
+        }
+    full_name = str(record.get("nombre_completo") or "").strip()
+    if not has_text(full_name):
+        return None
+    return {
+        "first_names": [],
+        "last_names": [],
+        "initials": "",
+        "full_name": normalize_dashes(full_name),
+        "alias": full_name.lower(),
+    }
+
+
 def staff_full_name(records):
     """Build the full name exactly as the regular staff ingestion does."""
     if not records:
         return ""
-    record = records[0]
-    parts = [
-        record.get("nombres"),
-        record.get("primer_apellido"),
-        record.get("segundo_apellido"),
-    ]
-    return normalize_dashes(" ".join(str(part).strip() for part in parts if has_text(part))) or ""
+    names = staff_name_fields(records[0])
+    return names["full_name"] if names else ""
 
 
 def merge_staff_person(existing, incoming):
@@ -315,6 +351,7 @@ class Kahi_staff_person(KahiBase):
             "primer_apellido",
             "segundo_apellido",
             "nombres",
+            "nombre_completo",
             "nivel_académico",
             "tipo_contrato",
             "jornada_laboral",
@@ -450,7 +487,7 @@ class Kahi_staff_person(KahiBase):
         if "staff_file_path" in config:
             return self._load_file_data(
                 config["staff_file_path"],
-                self.staff_required_columns, optional_columns=STAFF_UNIT_COLUMNS)
+                self.staff_required_columns, optional_columns=STAFF_OPTIONAL_COLUMNS)
         data = self._load_collection_data(
             config, "staff", institution_id, self.staff_required_columns)
         if data.empty:
@@ -489,23 +526,18 @@ class Kahi_staff_person(KahiBase):
             entry["updated"].append(
                 {"time": int(time()), "source": "staff", "provenance": "staff"})
             staff_row = self.staff_data[self.staff_data["identificación"] == idx].iloc[0]
-            raw_names = staff_row["nombres"]
-            first_lastname = staff_row["primer_apellido"]
-            second_lastname = staff_row["segundo_apellido"]
-            # split_name_part turns every dash variant into a space.
-            entry["first_names"] = split_name_part(raw_names)
-            entry["last_names"].append(normalize_dashes(first_lastname.strip()))
-            if second_lastname.strip() != "":
-                entry["last_names"].append(normalize_dashes(second_lastname.strip()))
-            entry["last_names"] = [name for name in entry["last_names"] if name]
-            entry["full_name"] = " ".join(
-                entry["first_names"] + entry["last_names"])
-            entry["initials"] = "".join([name[0]
-                                        for name in entry["first_names"]])
-            raw_full_name = " ".join(
-                part.strip() for part in (raw_names, first_lastname, second_lastname) if part.strip())
-            if has_dash(raw_full_name) and raw_full_name.lower() not in entry["aliases"]:
-                entry["aliases"].append(raw_full_name.lower())
+            names = staff_name_fields(staff_row.to_dict())
+            if names is None and not check_db:
+                # Nobody knows this person by name: a nameless record is useless.
+                progress.step("omitidos_sin_nombre")
+                continue
+            if names is not None:
+                entry["first_names"] = names["first_names"]
+                entry["last_names"] = names["last_names"]
+                entry["full_name"] = names["full_name"]
+                entry["initials"] = names["initials"]
+                if names["alias"] and names["alias"] not in entry["aliases"]:
+                    entry["aliases"].append(names["alias"])
 
             for i, reg in self.staff_data[self.staff_data["identificación"] == idx].iterrows(
             ):
@@ -547,7 +579,7 @@ class Kahi_staff_person(KahiBase):
                     print(
                         f"ERROR: tipo_documento must be one of {', '.join(DOCUMENT_TYPES.keys())}, not '{doc_type}'")
 
-                if reg["nombres"].lower() not in entry["aliases"]:
+                if has_text(reg["nombres"]) and reg["nombres"].lower() not in entry["aliases"]:
                     entry["aliases"].append(reg["nombres"].lower())
                 dep = None
                 if staff_department_id(self.staff_source_institution_id, reg):
