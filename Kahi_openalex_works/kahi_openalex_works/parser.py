@@ -1,5 +1,5 @@
 from kahi_impactu_utils.Utils import lang_poll, normalize_publication_year
-from kahi_impactu_utils.String import parse_mathml, parse_html
+from kahi_impactu_utils.String import parse_mathml, parse_html, normalize_dashes
 import re
 from time import time
 from datetime import datetime as dt
@@ -151,7 +151,7 @@ def parse_openalex(reg, empty_work, verbose=0):
         author = author["author"]
         author_entry = {
             "external_ids": [],
-            "full_name": author["display_name"],
+            "full_name": normalize_dashes(author["display_name"]) or "",
             "types": [],
             "affiliations": affs
         }
