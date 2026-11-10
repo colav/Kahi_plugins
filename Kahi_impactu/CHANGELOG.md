@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.19] - 2026-11-10
+
+### Changed
+
+- Updated the works plugin pins (openalex 0.1.10, scienti 0.1.8, scholar 0.1.7,
+  minciencias_opendata 0.1.6) to the releases that normalize dashes in author names.
+
 ## [0.0.18] - 2026-11-10
 
 ### Changed
