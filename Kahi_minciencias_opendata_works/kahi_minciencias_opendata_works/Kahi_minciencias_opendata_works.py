@@ -1,6 +1,7 @@
 """Import the audited ScienTI works snapshot into Kahi."""
 
 from copy import deepcopy
+from kahi_impactu_utils.String import normalize_dashes
 from contextlib import ExitStack
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
@@ -511,7 +512,8 @@ class Kahi_minciencias_opendata_works(KahiBase):
         output = {
             "id": person["_id"] if person else "",
             "full_name": (
-                person.get("full_name") if person else source.get("full_name", "")
+                person.get("full_name") if person
+                else (normalize_dashes(source.get("full_name", "")) or "")
             ),
             "affiliations": [],
         }

@@ -1,3 +1,8 @@
+## 0.1.6 - 2026-11-10
+
+* Normalize every hyphen and dash variant in unresolved authors[].full_name from the snapshot to spaces
+* Require kahi_impactu_utils>=0.1.6
+
 ## 0.1.5
 
 * Prevent known books and book chapters from merging in non-DOI identifier, exact-title and Elasticsearch routes, even with shared ISBN/title/authors/year.
