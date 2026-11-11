@@ -428,11 +428,13 @@ def seed_internal_units(db):
         "id": "02yr3f298_U05",
         "name": "Facultad de Enfermería",
         "types": [{"source": "staff", "type": "faculty"}],
+        "years": [2019, 2020, 2021],
     }
     department = {
         "id": "02yr3f298_U05_U01",
         "name": "Enfermería",
         "types": [{"source": "staff", "type": "department"}],
+        "years": [2020, 2021],
     }
     group = {
         "id": "COL0001",
@@ -443,6 +445,7 @@ def seed_internal_units(db):
         "id": "other_U01",
         "name": "Otra facultad",
         "types": [{"source": "staff", "type": "faculty"}],
+        "years": [2019, 2020, 2021],
     }
     db.affiliations.insert_many([
         {"_id": parent["id"], "types": parent["types"]},
@@ -468,7 +471,7 @@ def test_get_units_affiliations_returns_faculty_and_department_only():
     db = mongomock.MongoClient().db
     parent, faculty, department, _group, _unrelated, person = seed_internal_units(db)
 
-    units = get_units_affiliations(db, person, [parent])
+    units = get_units_affiliations(db, person, [parent], 2021)
 
     assert [unit["id"] for unit in units] == [faculty["id"], department["id"]]
 
@@ -477,7 +480,7 @@ def test_get_units_affiliations_requires_parent_in_product():
     db = mongomock.MongoClient().db
     _parent, _faculty, _department, _group, _unrelated, person = seed_internal_units(db)
 
-    assert get_units_affiliations(db, person, []) == []
+    assert get_units_affiliations(db, person, [], 2021) == []
 
 
 def test_get_units_affiliations_requires_parent_in_person():
@@ -486,7 +489,7 @@ def test_get_units_affiliations_requires_parent_in_person():
     person["affiliations"] = person["affiliations"][1:]
     db.person.replace_one({"_id": person["_id"]}, person)
 
-    assert get_units_affiliations(db, person, [parent]) == []
+    assert get_units_affiliations(db, person, [parent], 2021) == []
 
 
 def test_get_units_affiliations_resolves_parent_external_id():
@@ -498,9 +501,22 @@ def test_get_units_affiliations_resolves_parent_external_id():
 
     units = get_units_affiliations(db, person, [{
         "external_ids": [{"id": "https://ror.org/02yr3f298"}]
-    }])
+    }], 2021)
 
     assert [unit["id"] for unit in units] == [faculty["id"], department["id"]]
+
+
+def test_get_units_affiliations_filters_by_publication_year():
+    db = mongomock.MongoClient().db
+    parent, faculty, department, _group, _unrelated, person = seed_internal_units(db)
+
+    # 2019 is covered by the faculty only; the department starts in 2020
+    assert [u["id"] for u in get_units_affiliations(db, person, [parent], 2019)] == [faculty["id"]]
+    # 2022 is accepted through the one-year tolerance
+    assert [u["id"] for u in get_units_affiliations(db, person, [parent], 2022)] == [
+        faculty["id"], department["id"]]
+    assert get_units_affiliations(db, person, [parent], 2017) == []
+    assert get_units_affiliations(db, person, [parent], None) == []
 
 
 def test_dspace_insert_propagates_units_without_duplicates():
@@ -510,6 +526,7 @@ def test_dspace_insert_propagates_units_without_duplicates():
     entry.update({
         "titles": [{"title": "Trabajo de enfermería", "lang": "es"}],
         "external_ids": [{"source": "dspace", "id": "oai:test:1"}],
+        "year_published": 2021,
         "authors": [{
             "id": "",
             "full_name": "Adriana Panader Torres",
@@ -534,6 +551,7 @@ def test_dspace_update_propagates_units_to_matched_author():
     existing = empty_work()
     existing.update({
         "_id": "work-1",
+        "year_published": 2021,
         "authors": [{
             "id": "person-1",
             "full_name": "adriana panader torres",
@@ -563,6 +581,7 @@ def test_dspace_update_without_repository_affiliation_does_not_crash():
     existing = empty_work()
     existing.update({
         "_id": "work-1",
+        "year_published": 2021,
         "authors": [{
             "id": "person-1",
             "full_name": "adriana panader torres",
