@@ -80,7 +80,7 @@ def main():
         # Dependent packages (distributions)
         # put you packages here
         install_requires=[
-            'kahi==0.1.3',
+            'kahi==0.1.4',
             'Kahi_doaj_sources==0.1.2-beta',
             'Kahi_elasticsearch_works==0.1.1-beta',
             'Kahi_impactu_postcalculations==0.1.5',
@@ -96,7 +96,7 @@ def main():
             'Kahi_openalex_person==0.1.7',
             'Kahi_openalex_sources==0.1.3-beta',
             'Kahi_openalex_subjects==0.1.2-beta',
-            'Kahi_openalex_works==0.1.10',
+            'Kahi_openalex_works==0.1.11',
             'Kahi_post_cleanup_entities==0.0.2-alpha',
             'Kahi_post_person_work_cleaning==0.1.1',
             'Kahi_ciarp_works==0.1.1-beta',
