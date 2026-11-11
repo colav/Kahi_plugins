@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.21] - 2026-11-11
+
+### Changed
+
+- Pinned Kahi_openalex_works 0.1.12, Kahi_scienti_works 0.1.9 and
+  Kahi_minciencias_opendata_works 0.1.7: author units validated by publication
+  year (issue 07), shared through kahi_impactu_utils 0.1.7.
+
 ## [0.0.20] - 2026-11-10
 
 ### Changed
