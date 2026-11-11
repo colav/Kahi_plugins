@@ -334,6 +334,26 @@ def merge_missing_core_metadata(colav_reg, entry, db):
     return changed
 
 
+def merge_openalex_citation_links(colav_reg, entry, only_missing=False):
+    """Set references, references_count and cited_by_api_url from OpenAlex.
+
+    Returns the fields to $set. With only_missing, keep values already
+    present (the work was filled by a previous OpenAlex record).
+    """
+    changed = {}
+    references = entry.get("references") or []
+    if references and not (only_missing and colav_reg.get("references")):
+        colav_reg["references"] = references
+        colav_reg["references_count"] = entry.get("references_count")
+        changed["references"] = references
+        changed["references_count"] = entry.get("references_count")
+    url = entry.get("cited_by_api_url") or ""
+    if url and not (only_missing and colav_reg.get("cited_by_api_url")):
+        colav_reg["cited_by_api_url"] = url
+        changed["cited_by_api_url"] = url
+    return changed
+
+
 def merge_openalex_abstracts_and_topics(colav_reg, entry):
     """Merge OpenAlex metadata omitted by historical update paths."""
     changed = False
@@ -401,8 +421,11 @@ def process_one_update(
     if already_updated:
         enrichment_changed = merge_openalex_abstracts_and_topics(
             colav_reg, entry)
-        if core_updates or enrichment_changed:
+        citation_links = merge_openalex_citation_links(
+            colav_reg, entry, only_missing=True)
+        if core_updates or enrichment_changed or citation_links:
             fields = dict(core_updates)
+            fields.update(citation_links)
             fields.update({
                 "abstracts": colav_reg["abstracts"],
                 "primary_topic": colav_reg.get("primary_topic") or {},
@@ -439,6 +462,8 @@ def process_one_update(
     # citations count
     if entry["citations_count"]:
         colav_reg["citations_count"].extend(entry["citations_count"])
+    # references (works cited by this one) and cited-by query URL
+    citation_links = merge_openalex_citation_links(colav_reg, entry)
     # subjects
     subject_list = []
     for subjects in entry["subjects"]:
@@ -504,6 +529,7 @@ def process_one_update(
         "citations_by_year": colav_reg["citations_by_year"],
         "authors": colav_reg["authors"],
     }
+    fields.update(citation_links)
     fields.update(core_updates)
     additions = {field: {"$each": fields.pop(field)}
                  for field in ("updated", "titles", "external_ids")}

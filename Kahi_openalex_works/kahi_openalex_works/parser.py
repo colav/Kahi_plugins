@@ -18,6 +18,30 @@ def canonical_orcid_url(value):
     return f"https://orcid.org/{value.strip('/')}"
 
 
+OPENALEX_CITED_BY_API = "https://api.openalex.org/works?filter=cites:"
+
+
+def openalex_work_key(value):
+    """Return the bare OpenAlex work key (W...) from an id or URL."""
+    if not value:
+        return ""
+    return str(value).strip().rstrip("/").rsplit("/", 1)[-1]
+
+
+def cited_by_api_url(work_id):
+    """Rebuild the OpenAlex cited_by_api_url, absent from the snapshot."""
+    key = openalex_work_key(work_id)
+    return OPENALEX_CITED_BY_API + key if key else ""
+
+
+def openalex_references(reg):
+    """Map referenced_works (ids of the works this one cites) to references."""
+    return [
+        {"provenance": "openalex", "source": "openalex", "id": ref}
+        for ref in (reg.get("referenced_works") or []) if ref
+    ]
+
+
 def parse_openalex(reg, empty_work, verbose=0):
     """
     Parse a record from openalex to a work entry, using the empty_work template
@@ -86,6 +110,12 @@ def parse_openalex(reg, empty_work, verbose=0):
 
     entry["citations_count"].append(
         {"source": "openalex", "count": reg["cited_by_count"]})
+    entry["references"] = openalex_references(reg)
+    references_count = reg.get("referenced_works_count")
+    entry["references_count"] = (
+        references_count if isinstance(references_count, int)
+        else len(entry["references"]))
+    entry["cited_by_api_url"] = cited_by_api_url(reg.get("id"))
 
     if "volume" in reg["biblio"]:
         if reg["biblio"]["volume"]:

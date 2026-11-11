@@ -1,4 +1,10 @@
 # Changelog
+## 0.1.11 - 2026-11-10
+- Store OpenAlex referenced_works in `references` (one entry per cited work
+  id, provenance openalex) with `references_count`, on insert and on update
+- Store `cited_by_api_url` rebuilt from the work id (absent from the snapshot)
+- Require kahi>=0.1.4
+
 ## 0.1.10 - 2026-11-10
 - Normalize every hyphen and dash variant in authors[].full_name (display_name) to spaces
 - Require kahi_impactu_utils>=0.1.6
