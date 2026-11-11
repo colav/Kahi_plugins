@@ -1,4 +1,10 @@
 # Changelog
+## 0.1.9 - 2026-11-11
+- Attach faculty and department units only when the work lists the parent
+  institution for the author and the unit years cover the publication year
+  (or the previous one); shared kahi_impactu_utils.Affiliations.get_units_affiliations
+- Require kahi_impactu_utils>=0.1.7
+
 ## 0.1.8 - 2026-11-10
 - Normalize every hyphen and dash variant in authors[].full_name (TXT_TOTAL_NAMES) to spaces
 - Require kahi_impactu_utils>=0.1.6
