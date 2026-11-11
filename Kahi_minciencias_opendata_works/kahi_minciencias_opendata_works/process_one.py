@@ -1,4 +1,5 @@
 from kahi_impactu_utils.Mongo import insert_only_update
+from kahi_impactu_utils.Affiliations import get_units_affiliations
 from kahi_minciencias_opendata_works.parser import parse_minciencias_opendata
 from kahi_impactu_utils.Utils import compare_author
 from thefuzz import process, fuzz
@@ -83,53 +84,6 @@ def find_work_by_es_id(collection, value):
         return collection.find_one({"_id": ObjectId(value)})
     except Exception:
         return None
-
-
-def get_units_affiliations(db, author_db, affiliations):
-    """
-    Method to get the units of an author in a register. ex: faculty, department and group.
-
-    Parameters:
-    ----------
-    db : pymongo.database.Database
-        Database connection to colav database.
-    author_db : dict
-        record from person
-    affiliations : list
-        list of affiliations from the parse_minciencias_opendata method
-
-    Returns:
-    -------
-    list
-        list of units of an author (entries from using affiliations)
-    """
-    institution_id = None
-    # verifiying univeristy
-    for j, aff in enumerate(affiliations):
-        aff_db = db["affiliations"].find_one(
-            {"_id": aff["id"]}, {"_id": 1, "types": 1})
-        if aff_db:
-            types = [i["type"] for i in aff_db["types"]]
-            if "group" in types or "department" in types or "faculty" in types:
-                aff_db = None
-                continue
-        if aff_db:
-            count = db["person"].count_documents(
-                {"_id": author_db["_id"], "affiliations.id": aff_db["_id"]})
-            if count > 0:
-                institution_id = aff_db["_id"]
-                break
-    units = []
-    for aff in author_db["affiliations"]:
-        if aff["id"] == institution_id:
-            continue
-        count = db["affiliations"].count_documents(
-            {"_id": aff["id"], "relations.id": institution_id})
-        if count > 0:
-            types = [i["type"] for i in aff["types"]]
-            if "department" in types or "faculty" in types:
-                units.append(aff)
-    return units
 
 
 def process_one_update(
@@ -339,7 +293,8 @@ def process_one_update(
                                 if relation["id"] not in affs:
                                     author["affiliations"].append(relation)
                     aff_units = get_units_affiliations(
-                        db, author_db, author["affiliations"])
+                        db, author_db, author["affiliations"],
+                        colav_reg.get("year_published") or entry.get("year_published"))
                     for aff_unit in aff_units:
                         if aff_unit not in author["affiliations"]:
                             author["affiliations"].append(aff_unit)
@@ -475,7 +430,8 @@ def process_one_insert(openadata_reg, db, collection, empty_work, es_handler,
                                 if relation["id"] not in affs:
                                     author["affiliations"].append(relation)
                     aff_units = get_units_affiliations(
-                        db, author_db, author["affiliations"])
+                        db, author_db, author["affiliations"],
+                        entry.get("year_published"))
                     for aff_unit in aff_units:
                         if aff_unit not in author["affiliations"]:
                             author["affiliations"].append(aff_unit)
