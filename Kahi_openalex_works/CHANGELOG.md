@@ -1,4 +1,10 @@
 # Changelog
+## 0.1.12 - 2026-11-11
+- Attach faculty and department units only when the work lists the parent
+  institution for the author and the unit years cover the publication year
+  (or the previous one); shared kahi_impactu_utils.Affiliations.get_units_affiliations
+- Require kahi_impactu_utils>=0.1.7
+
 ## 0.1.11 - 2026-11-10
 - Store OpenAlex referenced_works in `references` (one entry per cited work
   id, provenance openalex) with `references_count`, on insert and on update
