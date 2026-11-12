@@ -96,7 +96,7 @@ def main():
             'Kahi_openalex_person==0.1.7',
             'Kahi_openalex_sources==0.1.3-beta',
             'Kahi_openalex_subjects==0.1.2-beta',
-            'Kahi_openalex_works==0.1.12',
+            'Kahi_openalex_works==0.1.13',
             'Kahi_post_cleanup_entities==0.0.2-alpha',
             'Kahi_post_person_work_cleaning==0.1.1',
             'Kahi_ciarp_works==0.1.1-beta',

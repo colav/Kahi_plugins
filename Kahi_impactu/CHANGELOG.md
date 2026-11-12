@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.22] - 2026-11-11
+
+### Changed
+
+- Pinned Kahi_openalex_works 0.1.13 (open-access URL labelled by site kind in
+  external_urls). Kahi_dspace_works 0.0.4-alpha registers repositories as
+  sources and adds source_ref to handle entries (not pinned here).
+
 ## [0.0.21] - 2026-11-11
 
 ### Changed
