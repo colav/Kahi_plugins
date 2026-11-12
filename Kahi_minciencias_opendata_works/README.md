@@ -70,6 +70,13 @@ in `scienti_identified_work_publications`, passed audit and completed run agree
 with the configured parent six-entity release. The parent release is never
 rewritten. Sparse optional fields receive `KahiBase.empty_work()` defaults.
 
+Without `collection_name` the plugin reads the `current` pointer of
+`scienti_identified_work_publications` (`release_name`, `full_graph`,
+`collection`) and consumes its filtered collection after the same validation;
+the pointer must belong to the resolved release. `identified: false` forces
+the full works graph, and an explicit `collection_name` overrides the pointer.
+Source-only audit fields such as `type_audit` are discarded on import.
+
 Use `minciencias_opendata_works/doi` in the DOI stage and
 `minciencias_opendata_works/nodoi` after the other no-DOI importers. Both use:
 
@@ -77,7 +84,6 @@ Use `minciencias_opendata_works/doi` in the DOI stage and
 database_url: localhost:27017
 database_name: dam
 source_mode: snapshot
-collection_name: minciencias_works_v05_20261017_filtered
 release_ref: minciencias_open_data_current
 batch_size: 500
 verbose: 1

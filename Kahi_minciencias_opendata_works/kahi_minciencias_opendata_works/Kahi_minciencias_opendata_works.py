@@ -40,7 +40,9 @@ WORK_FIELDS = {
 SOURCE_ONLY_FIELDS = {
     "source_metadata", "authorship_status", "authorship_candidates",
     "authorship_evidence", "authorship_authority", "identity_collision_of",
+    "type_audit",
 }
+IDENTIFIED_POINTER_ID = "current"
 LIST_FIELDS = {
     "titles", "updated", "abstracts", "keywords", "types", "external_ids",
     "external_urls", "references", "citations_count", "citations", "ranking",
@@ -269,8 +271,28 @@ class Kahi_minciencias_opendata_works(KahiBase):
         self.source_collection = self.source_db[collection_name]
         self.identified_snapshot = False
         self.identified_evidence = {}
+        if not configured_collection and source_config.get("identified", True):
+            configured_collection = self._current_identified_collection(collection_name)
         if configured_collection and configured_collection != collection_name:
             self._configure_identified_snapshot(configured_collection, release, audit)
+
+    def _current_identified_collection(self, full_collection):
+        """Resolve the identified (filtered) works collection from the published pointer."""
+        pointer = self.source_db["scienti_identified_work_publications"].find_one(
+            {"_id": IDENTIFIED_POINTER_ID}
+        ) or {}
+        if not pointer:
+            LOGGER.warning("No identified works pointer %r; using the full works snapshot %s",
+                           IDENTIFIED_POINTER_ID, full_collection)
+            return ""
+        collection = str(pointer.get("collection") or "")
+        if (pointer.get("release_name") != self.release_name
+                or str(pointer.get("full_graph") or full_collection) != full_collection
+                or not collection):
+            raise RuntimeError(
+                "identified works pointer does not belong to release {}".format(self.release_name)
+            )
+        return collection
 
     def _configure_identified_snapshot(self, collection_name, release, release_audit):
         """Validate the selector's own publication without changing the release."""

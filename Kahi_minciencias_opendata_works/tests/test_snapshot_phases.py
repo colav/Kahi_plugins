@@ -240,3 +240,45 @@ def test_real_multiprocess_nodoi_insert_is_unique():
     finally:
         client.drop_database(name)
         client.close()
+
+
+def pointer(source, **changes):
+    document = {
+        '_id': 'current', 'release_name': 'release_six', 'full_graph': 'works_final',
+        'collection': 'filtered', 'run_name': 'selection', 'audit': 'selection',
+    }
+    document.update(changes)
+    source.scienti_identified_work_publications.insert_one(document)
+
+
+def test_current_pointer_selects_the_filtered_collection_without_collection_name(monkeypatch):
+    target, source = identified(monkeypatch, [work_snapshot(), nodoi()])
+    pointer(source)
+    plugin = Plugin(config(task='doi'))
+    assert plugin.identified_snapshot and plugin.source_collection_name == 'filtered'
+    assert plugin.run()['selected'] == 1
+    assert target.works.count_documents({}) == 1
+
+
+def test_current_pointer_of_another_release_is_rejected(monkeypatch):
+    _, source = prepare(monkeypatch)
+    pointer(source, release_name='release_other')
+    with pytest.raises(RuntimeError, match='identified works pointer'):
+        Plugin(config(task='doi'))
+
+
+def test_identified_false_uses_the_full_graph(monkeypatch):
+    _, source = identified(monkeypatch)
+    pointer(source)
+    plugin = Plugin(config(task='doi', identified=False))
+    assert not plugin.identified_snapshot and plugin.source_collection_name == 'works_final'
+
+
+def test_type_audit_is_discarded_on_import(monkeypatch):
+    row = work_snapshot()
+    row['type_audit'] = {'findings': [{'reason': 'bold_text_is_not_a_catalog_type',
+                                       'raw_type': 'Endocrine Society'}]}
+    target, _ = prepare(monkeypatch, works=[row])
+    assert Plugin(config(task='doi')).run()['selected'] == 1
+    stored = target.works.find_one()
+    assert stored and 'type_audit' not in stored

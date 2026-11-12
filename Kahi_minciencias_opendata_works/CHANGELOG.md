@@ -1,3 +1,11 @@
+## 0.1.8 - 2026-11-12
+
+* Accept the Yuku `type_audit` field as a source-only field: it is discarded
+  on import and never copied to `works`
+* Resolve the identified (filtered) works collection from the `current`
+  pointer of `scienti_identified_work_publications` when `collection_name` is
+  not configured; `identified: false` forces the full works graph
+
 ## 0.1.7 - 2026-11-11
 
 * Attach faculty and department units only when the work lists the parent
