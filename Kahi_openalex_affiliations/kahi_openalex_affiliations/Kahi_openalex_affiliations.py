@@ -19,10 +19,18 @@ def openalex_address(oa_aff):
     }
 
 
+def openalex_ids(oa_aff):
+    """Yield (source, value) from OpenAlex ``ids`` skipping empty values (None, '')."""
+    for source, value in (oa_aff.get("ids") or {}).items():
+        if value is None or value == "":
+            continue
+        yield source, value
+
+
 def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
 
     db_reg = None
-    for source, idx in oa_aff["ids"].items():
+    for source, idx in openalex_ids(oa_aff):
         db_reg = collection.find_one({"external_ids.id": idx})
         if db_reg:
             break
@@ -32,14 +40,14 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
                 return "existentes"  # Should it be update-able?
         db_reg["updated"].append({"source": "openalex", "time": int(time())})
         id_sources = [ext["id"] for ext in db_reg["external_ids"]]
-        for source, idx in oa_aff["ids"].items():
+        for source, idx in openalex_ids(oa_aff):
             if isinstance(idx, str):
                 if "http" in idx and "openalex" not in idx:
                     continue
             if idx not in id_sources:
                 db_reg["external_ids"].append({"source": source, "id": idx})
         url_sources = [ext["url"] for ext in db_reg["external_urls"]]
-        for source, url in oa_aff["ids"].items():
+        for source, url in openalex_ids(oa_aff):
             if url not in url_sources:
                 db_reg["external_urls"].append({"source": source, "url": url})
 
@@ -94,13 +102,13 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
             entry["names"].append(
                 {"source": "openalex", "lang": "", "name": oa_aff.get("display_name")})
         # external_ids
-        for source, idx in oa_aff["ids"].items():
+        for source, idx in openalex_ids(oa_aff):
             if isinstance(idx, str):
                 if "http" in idx and "openalex" not in idx:
                     continue
             entry["external_ids"].append({"source": source, "id": idx})
         # external_urls
-        for source, url in oa_aff["ids"].items():
+        for source, url in openalex_ids(oa_aff):
             entry["external_urls"].append({"source": source, "url": url})
         if oa_aff["homepage_url"]:
             entry["external_urls"].append(
