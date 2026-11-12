@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.6 - 2026-11-12
+
+### Changed
+
+- Remove the `_id_migration_complete` flag (and its index) from `person` once
+  every persistent id migration is complete; `_id_old` is kept.
+
 ## 0.1.5 - 2026-11-06
 
 ### Added

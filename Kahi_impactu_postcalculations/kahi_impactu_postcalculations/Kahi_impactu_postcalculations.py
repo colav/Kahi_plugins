@@ -26,7 +26,7 @@ from kahi_impactu_postcalculations.topics import (
 )
 from kahi_impactu_postcalculations.person_persistent_ids import (
     process_person_id,
-    recover_person_id_migration,
+    recover_person_id_migration, finish_person_id_migration,
 )
 from kahi_impactu_postcalculations.geographic_normalization import (
     SpanishGeographicNormalizer,
@@ -542,6 +542,8 @@ class Kahi_impactu_postcalculations(KahiBase):
             Parallel(n_jobs=self.n_jobs, backend="threading", verbose=10)(
                 delayed(process_person_id)(client, db["person"], product_cols, person, source) for person in cursor
             )
+
+        finish_person_id_migration(db["person"])
 
     def process_networks(self, db, client, impactu_client):
         """Build co-authorship networks for affiliations and people."""

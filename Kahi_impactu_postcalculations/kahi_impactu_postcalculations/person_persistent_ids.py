@@ -1,4 +1,4 @@
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError, OperationFailure
 
 
 def persistent_person_id(person, source):
@@ -126,3 +126,27 @@ def process_person_id(client, person_col, product_cols, person, source):
         {"$set": {"_id_migration_complete": True}},
     )
     return persistent_id
+
+
+def finish_person_id_migration(person_col):
+    """Drop the completion flag once no migration is pending.
+
+    The flag only tracks interrupted migrations and is not part of the person
+    schema; ``_id_old`` stays for traceability. Returns the pending count.
+    """
+    pending = person_col.count_documents(
+        {"_id_old": {"$exists": True}, "_id_migration_complete": {"$ne": True}}
+    )
+    if pending:
+        print("WARNING: {} persistent id migrations still pending; keeping the flag".format(pending))
+        return pending
+    print("INFO: Removing _id_migration_complete from person")
+    person_col.update_many(
+        {"_id_migration_complete": {"$exists": True}},
+        {"$unset": {"_id_migration_complete": ""}},
+    )
+    try:
+        person_col.drop_index("_id_migration_complete_1")
+    except OperationFailure:
+        pass
+    return 0
