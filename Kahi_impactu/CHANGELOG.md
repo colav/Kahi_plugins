@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.28] - 2026-11-12
+
+### Changed
+
+- Pinned Kahi_dspace_works 0.0.6-alpha (foreign records skipped, idempotent
+  re-runs), Kahi_minciencias_opendata_works 0.1.9 (title language, import
+  time in updated) and Kahi_ciarp_works 0.1.2-beta (author loop performance).
+
 ## [0.0.27] - 2026-11-12
 
 ### Fixed
