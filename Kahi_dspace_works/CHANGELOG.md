@@ -1,4 +1,13 @@
 # Changelog
+## 0.0.4-alpha - 2026-11-11
+- Register each repository in `sources` (type repository, dspace and ror ids,
+  repository and OAI URLs, institution as publisher/relation); reuse the
+  OpenAlex source given by `repository_sources` / `repository_sources_file`
+  (collection key -> OpenAlex source id) instead of creating a duplicate
+- Handle entry of external_urls: `source: "handle"` (was `dspace`) plus
+  `source_ref` {id, provenance, name, types, url, affiliation}
+- Require kahi_impactu_utils>=0.1.8
+
 ## 0.0.3-alpha - 2026-11-11
 - Attach faculty and department units only when the work lists the parent
   institution for the author and the unit years cover the publication year

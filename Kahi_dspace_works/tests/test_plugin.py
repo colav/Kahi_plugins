@@ -104,6 +104,9 @@ def test_repository_discovery_uses_identity_and_affiliation_map():
             "collection_name": "dspace_demo_records",
             "institution_id": "https://ror.org/012345678",
             "repository_url": "https://example.edu",
+            "repository_name": "",
+            "oai_url": "https://example.edu/server/oai/request",
+            "ror": "",
         }
     ]
 
@@ -603,3 +606,121 @@ def test_dspace_update_without_repository_affiliation_does_not_crash():
     author = db.works.find_one({"_id": "work-1"})["authors"][0]
     assert [item["id"] for item in author["affiliations"]] == [
         parent["id"], faculty["id"], department["id"]]
+
+
+# --- repository sources and source_ref -------------------------------------
+
+from kahi_dspace_works.parser import parse_dspace, repository_source_ref  # noqa: E402
+from kahi_dspace_works.utils import ensure_repository_source  # noqa: E402
+
+
+def udea_repository(source_id=None):
+    return {
+        "key": "dspace_udea",
+        "name": "Repositorio Institucional de la Universidad de Antioquia",
+        "url": "https://bibliotecadigital.udea.edu.co",
+        "oai_url": "https://bibliotecadigital.udea.edu.co/server/oai/request",
+        "ror": "https://ror.org/03bp5hc83",
+        "affiliation": {"id": "03bp5hc83", "name": "Universidad de Antioquia"},
+        "source_id": source_id,
+    }
+
+
+UDEA_AFF = {"id": "03bp5hc83", "name": "Universidad de Antioquia",
+            "types": [{"source": "ror", "type": "education"}]}
+
+
+def test_ensure_repository_source_creates_document():
+    db = mongomock.MongoClient().db
+    source_id = ensure_repository_source(db, udea_repository(), UDEA_AFF, KahiBase.empty_source(None))
+    doc = db.sources.find_one({"_id": source_id})
+    assert doc["names"] == [{"name": udea_repository()["name"], "lang": "es", "source": "dspace"}]
+    assert doc["types"] == [{"source": "dspace", "type": "repository"}]
+    assert {"source": "dspace", "id": "dspace_udea"} in doc["external_ids"]
+    assert {"source": "ror", "id": "https://ror.org/03bp5hc83"} in doc["external_ids"]
+    assert [u["source"] for u in doc["external_urls"]] == ["repository", "oaipmh"]
+    assert doc["publisher"]["id"] == "03bp5hc83" and doc["relations"][0]["id"] == "03bp5hc83"
+    assert doc["products_count"] == 0
+    # idempotent
+    assert ensure_repository_source(db, udea_repository(), UDEA_AFF, KahiBase.empty_source(None)) == source_id
+    assert db.sources.count_documents({}) == 1
+
+
+def test_ensure_repository_source_reuses_openalex_document():
+    db = mongomock.MongoClient().db
+    oa = KahiBase.empty_source(None)
+    oa.update({
+        "names": [{"name": "Institutional Repository University of Antioquia", "lang": "en",
+                   "source": "openalex"}],
+        "types": [{"type": "repository"}],
+        "external_ids": [{"source": "openalex", "id": "https://openalex.org/S4377196334"}],
+        "updated": [{"source": "openalex", "time": 1}],
+    })
+    oa_id = db.sources.insert_one(oa).inserted_id
+
+    source_id = ensure_repository_source(
+        db, udea_repository(), UDEA_AFF, KahiBase.empty_source(None),
+        openalex_id="https://openalex.org/S4377196334")
+
+    assert source_id == oa_id
+    doc = db.sources.find_one({"_id": oa_id})
+    assert [n["source"] for n in doc["names"]] == ["openalex", "dspace"]
+    assert {"source": "dspace", "id": "dspace_udea"} in doc["external_ids"]
+    assert {"source": "openalex", "id": "https://openalex.org/S4377196334"} in doc["external_ids"]
+    assert {"source": "dspace", "type": "repository"} in doc["types"]
+    assert [u["source"] for u in doc["updated"]] == ["openalex", "dspace"]
+    assert doc["relations"][0]["id"] == "03bp5hc83"
+    assert db.sources.count_documents({}) == 1
+    # second run finds it by the dspace id
+    assert ensure_repository_source(db, udea_repository(), UDEA_AFF, KahiBase.empty_source(None)) == oa_id
+
+
+def test_ensure_repository_source_without_affiliation_or_openalex_match():
+    db = mongomock.MongoClient().db
+    repo = udea_repository()
+    repo["affiliation"] = {}
+    repo["ror"] = ""
+    source_id = ensure_repository_source(
+        db, repo, None, KahiBase.empty_source(None), openalex_id="https://openalex.org/S0")
+    doc = db.sources.find_one({"_id": source_id})
+    assert doc["publisher"] == "" and doc["relations"] == []
+    assert doc["external_ids"] == [{"source": "dspace", "id": "dspace_udea"}]
+
+
+def test_repository_source_ref_shape():
+    ref = repository_source_ref(udea_repository(source_id="sid"))
+    assert ref == {
+        "id": "sid", "provenance": "dspace",
+        "name": "Repositorio Institucional de la Universidad de Antioquia",
+        "types": [{"source": "dspace", "type": "repository"}],
+        "url": "https://bibliotecadigital.udea.edu.co",
+        "affiliation": {"id": "03bp5hc83", "name": "Universidad de Antioquia"},
+    }
+    assert repository_source_ref(None) is None
+
+
+def dim_record():
+    return {
+        "_id": "oai:bibliotecadigital.udea.edu.co:10495/6956",
+        "OAI-PMH": {"GetRecord": {"record": {"metadata": {"dim:dim": {"dim:field": [
+            {"@element": "title", "#text": "Creatividad y cerebro"},
+            {"@element": "identifier", "@qualifier": "uri", "#text": "http://hdl.handle.net/10495/6956"},
+        ]}}}}},
+    }
+
+
+def test_parse_dspace_handle_entry_has_source_ref():
+    entry = parse_dspace(dim_record(), empty_work(), "https://bibliotecadigital.udea.edu.co", 0,
+                         repository=udea_repository(source_id="sid"))
+    handle = [u for u in entry["external_urls"] if u["source"] == "handle"]
+    assert len(handle) == 1
+    assert handle[0]["provenance"] == "dspace"
+    assert handle[0]["source_ref"]["id"] == "sid"
+    assert handle[0]["source_ref"]["name"].startswith("Repositorio Institucional")
+    assert not any(u["source"] == "dspace" for u in entry["external_urls"])
+
+
+def test_parse_dspace_without_repository_keeps_plain_handle_entry():
+    entry = parse_dspace(dim_record(), empty_work(), "https://bibliotecadigital.udea.edu.co", 0)
+    handle = [u for u in entry["external_urls"] if u["source"] == "handle"]
+    assert handle and "source_ref" not in handle[0]

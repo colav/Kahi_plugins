@@ -1,6 +1,7 @@
 import re
 
 from kahi_impactu_utils.Utils import doi_processor
+from time import time
 from thefuzz import process, fuzz
 from unidecode import unidecode
 
@@ -366,3 +367,62 @@ def title_similarity(titles, titles_kahi, threshold=60):
             if score >= threshold:
                 return True
     return False
+
+
+def repository_source_document(repository, affiliation, empty_source):
+    """Build the sources document for a DSpace repository (type repository)."""
+    source = {key: (value.copy() if isinstance(value, (dict, list)) else value)
+              for key, value in empty_source.items()}
+    source["updated"] = [{"source": "dspace", "time": int(time())}]
+    source["names"] = [{"name": repository["name"], "lang": "es", "source": "dspace"}]
+    source["types"] = [{"source": "dspace", "type": "repository"}]
+    source["external_ids"] = [{"source": "dspace", "id": repository["key"]}]
+    source["external_urls"] = []
+    if repository.get("url"):
+        source["external_urls"].append({"source": "repository", "url": repository["url"]})
+    if repository.get("oai_url"):
+        source["external_urls"].append({"source": "oaipmh", "url": repository["oai_url"]})
+    if repository.get("ror"):
+        source["external_ids"].append({"source": "ror", "id": repository["ror"]})
+    if affiliation:
+        source["publisher"] = {"id": affiliation["id"], "name": affiliation["name"],
+                               "country_code": "CO"}
+        source["relations"] = [{"id": affiliation["id"], "name": affiliation["name"],
+                                "types": affiliation.get("types", [])}]
+    return source
+
+
+def ensure_repository_source(db, repository, affiliation, empty_source, openalex_id=None):
+    """Return the _id of the sources document for a repository, creating or
+    enriching it.
+
+    Lookup order: the dspace external id; then the OpenAlex source given by
+    the repository_sources mapping (the document OpenAlex works already point
+    to is reused and completed with the dspace name, ids and URLs); else a new
+    document is inserted.
+    """
+    sources = db["sources"]
+    found = sources.find_one(
+        {"external_ids": {"$elemMatch": {"source": "dspace", "id": repository["key"]}}},
+        {"_id": 1})
+    if found:
+        return found["_id"]
+    document = repository_source_document(repository, affiliation, empty_source)
+    if openalex_id:
+        found = sources.find_one(
+            {"external_ids": {"$elemMatch": {"source": "openalex", "id": openalex_id}}})
+        if found:
+            updates = {}
+            for field in ("names", "types", "external_ids", "external_urls", "updated"):
+                current = list(found.get(field) or [])
+                for item in document[field]:
+                    if item not in current:
+                        current.append(item)
+                updates[field] = current
+            if not found.get("relations") and document["relations"]:
+                updates["relations"] = document["relations"]
+            if not (found.get("publisher") or {}).get("name") and document["publisher"]:
+                updates["publisher"] = document["publisher"]
+            sources.update_one({"_id": found["_id"]}, {"$set": updates})
+            return found["_id"]
+    return sources.insert_one(document).inserted_id

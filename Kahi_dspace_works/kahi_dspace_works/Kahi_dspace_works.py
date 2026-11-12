@@ -1,3 +1,4 @@
+import json
 from joblib import Parallel, delayed
 from kahi.KahiBase import KahiBase
 from kahi.progress import ProgressLogger
@@ -9,6 +10,7 @@ from kahi_impactu_utils.Work import ensure_work_doi_indexes
 
 from kahi_dspace_works.process_one import process_one
 from kahi_dspace_works.utils import (
+    ensure_repository_source,
     get_doi,
     is_similarity_reg,
     is_thesis_work,
@@ -185,7 +187,7 @@ class Kahi_dspace_works(KahiBase):
         for collection_name in collection_names:
             identity_name = collection_name[: -len("records")] + "identity"
             identity = source_db[identity_name].find_one(
-                {}, {"base_url": 1, "ror": 1}) or {}
+                {}, {"base_url": 1, "ror": 1, "repository_name": 1}) or {}
             institution_id = (
                 affiliations[collection_name]
                 if collection_name in affiliations
@@ -195,9 +197,35 @@ class Kahi_dspace_works(KahiBase):
                 "collection_name": collection_name,
                 "institution_id": institution_id,
                 "repository_url": normalize_repository_url(identity.get("base_url")),
+                "repository_name": identity.get("repository_name") or "",
+                "oai_url": identity.get("base_url") or "",
+                "ror": identity.get("ror") or "",
             }
 
-    def process_repository(self, affiliation, base_url, dspace_collection):
+    def repository_metadata(self, repository, affiliation, base_url):
+        """Register the repository in sources and return the metadata that
+        describes it in works.external_urls[].source_ref."""
+        plugin_config = self.config["dspace_works"]
+        key = repository["collection_name"]
+        if key.endswith("_records"):
+            key = key[: -len("_records")]
+        name = repository.get("repository_name") or key
+        metadata = {
+            "key": key,
+            "name": name,
+            "url": base_url or "",
+            "oai_url": repository.get("oai_url") or "",
+            "ror": repository.get("ror") or "",
+            "affiliation": ({"id": affiliation["id"], "name": affiliation["name"]}
+                            if affiliation else {}),
+        }
+        openalex_id = (plugin_config.get("repository_sources") or {}).get(key)
+        metadata["source_id"] = ensure_repository_source(
+            self.db, metadata, affiliation, self.empty_source(), openalex_id=openalex_id)
+        return metadata
+
+    def process_repository(self, affiliation, base_url, dspace_collection,
+                           repository=None):
         query = doi_query() if self.task == "doi" else title_query()
         progress = ProgressLogger(
             "dspace_works:{}:{}".format(
@@ -241,6 +269,7 @@ class Kahi_dspace_works(KahiBase):
                     thresholds=self.thresholds,
                     verbose=self.verbose,
                     es_semaphore=self.es_semaphore,
+                    repository=repository,
                 )
                 for work in records
             )
@@ -256,6 +285,12 @@ class Kahi_dspace_works(KahiBase):
             f"task = {self.task}"
         )
         plugin_config = self.config["dspace_works"]
+        mapping_file = plugin_config.get("repository_sources_file")
+        if mapping_file:
+            with open(mapping_file, encoding="utf-8") as handle:
+                mapping = json.load(handle)
+            plugin_config["repository_sources"] = {
+                **mapping, **(plugin_config.get("repository_sources") or {})}
         source_client = MongoClient(plugin_config["database_url"])
         try:
             source_db = source_client[plugin_config["database_name"]]
@@ -282,8 +317,10 @@ class Kahi_dspace_works(KahiBase):
                         "WARNING: Affiliation not found for institution "
                         f"{institution_id} - processing without affiliation"
                     )
+                metadata = self.repository_metadata(repository, affiliation, base_url)
                 self.process_repository(
-                    affiliation, base_url, source_db[collection_name]
+                    affiliation, base_url, source_db[collection_name],
+                    repository=metadata,
                 )
         finally:
             source_client.close()

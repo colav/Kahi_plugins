@@ -360,7 +360,7 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
 @skip_work_doi_conflicts
 def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
                 es_handler, similarity, thresholds, verbose=0,
-                es_semaphore=None):
+                es_semaphore=None, repository=None):
     """
     Dspace record is parsed and processed to be inserted/updated in the works collection.
 
@@ -384,6 +384,8 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
         if True, it will search for similar works in the works collection.
     verbose : int
         verbosity level.
+    repository : dict | None
+        repository metadata for source_ref (name, url, affiliation, source_id).
     """
     dspace_id = dspace_reg.get("_id")
     if not dspace_id:
@@ -395,7 +397,7 @@ def process_one(dspace_reg, affiliation, base_url, db, collection, empty_work,
         return "existentes"
     # processing bad dois as well
     entry = parse_dspace(dspace_reg, empty_work,
-                         base_url, verbose)
+                         base_url, verbose, repository=repository)
     entry["titles"] = [
         title for title in entry.get("titles", [])
         if isinstance(title.get("title"), str) and title["title"].strip()
