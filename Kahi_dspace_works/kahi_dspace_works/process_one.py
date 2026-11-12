@@ -240,6 +240,23 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
     )
 
 
+def _without_name_parts(entry):
+    """
+    Copy of the entry whose authors lack first_names, last_names and initials.
+
+    The parsed entry keeps them because process_one_update needs them to
+    compare authors when another worker wins the DOI; only the stored work
+    drops them.
+    """
+    document = dict(entry)
+    document["authors"] = [
+        {key: value for key, value in author.items()
+         if key not in ("first_names", "last_names", "initials")}
+        for author in entry.get("authors", [])
+    ]
+    return document
+
+
 @skip_work_doi_conflicts
 def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
                        es_semaphore=None, lock_dspace_id=True):
@@ -302,9 +319,6 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
                         if unit.get("id") not in existing_ids:
                             author["affiliations"].append(unit)
                             existing_ids.add(unit.get("id"))
-        author.pop("first_names", None)
-        author.pop("last_names", None)
-        author.pop("initials", None)
 
     dspace_id = next((
         item.get("id") for item in entry.get("external_ids", [])
@@ -326,8 +340,8 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
         if existing:
             work_id = None
         else:
-            work_id, existing = insert_work_by_doi(collection, entry,
-                                                  allow_distinct_titles=True)
+            work_id, existing = insert_work_by_doi(
+                collection, _without_name_parts(entry), allow_distinct_titles=True)
         if existing:
             process_one_update(entry, existing, affiliation, db,
                                collection, verbose)
@@ -336,7 +350,8 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
     elif dspace_id:
         def upsert_by_dspace_id():
             response = collection.update_one(
-                dspace_query(dspace_id), insert_only_update(entry), upsert=True
+                dspace_query(dspace_id),
+                insert_only_update(_without_name_parts(entry)), upsert=True
             )
             work_id = response.upserted_id
             if work_id is None:
@@ -351,7 +366,7 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
         else:
             work_id = upsert_by_dspace_id()
     else:
-        response = collection.insert_one(entry)
+        response = collection.insert_one(_without_name_parts(entry))
         work_id = response.inserted_id
     ensure_es_work(entry, work_id, es_handler, es_semaphore)
     return outcome

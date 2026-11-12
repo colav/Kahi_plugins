@@ -1,4 +1,9 @@
 # Changelog
+## 0.0.5-alpha - 2026-11-12
+- Keep author first_names/last_names/initials in the parsed entry until the
+  work is stored: when another worker wins the DOI, the entry is merged with
+  process_one_update, which failed with KeyError 'first_names'
+
 ## 0.0.4-alpha - 2026-11-11
 - Register each repository in `sources` (type repository, dspace and ror ids,
   repository and OAI URLs, institution as publisher/relation); reuse the

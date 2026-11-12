@@ -724,3 +724,59 @@ def test_parse_dspace_without_repository_keeps_plain_handle_entry():
     entry = parse_dspace(dim_record(), empty_work(), "https://bibliotecadigital.udea.edu.co", 0)
     handle = [u for u in entry["external_urls"] if u["source"] == "handle"]
     assert handle and "source_ref" not in handle[0]
+
+
+def test_losing_the_doi_race_still_merges_authors(monkeypatch):
+    # Another worker stored the same DOI between the lookup and the insert:
+    # insert_work_by_doi hands back the winner and the entry is merged into it,
+    # which needs the author name parts the stored work does not keep.
+    from kahi_dspace_works.parser import parse_dspace
+
+    process_module = import_module("kahi_dspace_works.process_one")
+    db = mongomock.MongoClient().db
+    doi = "https://doi.org/10.1000/race"
+    winner = empty_work()
+    winner.update({
+        "titles": [{"title": "Trabajo DSpace controlado", "lang": "es", "source": "openalex"}],
+        "updated": [{"source": "openalex", "time": 1}],
+        "external_ids": [{"source": "doi", "id": doi}],
+        "authors": [{"id": "", "full_name": "Ana María Pérez Gómez", "affiliations": []}],
+    })
+    db.works.insert_one(winner)
+    db.person.insert_one({
+        "_id": "p1", "full_name": "Ana María Pérez Gómez", "first_names": ["Ana", "María"],
+        "last_names": ["Pérez", "Gómez"], "initials": "AM", "updated": [], "affiliations": [],
+    })
+    record = dspace_doi_record("oai:example.edu:123/9", doi)
+    record["OAI-PMH"]["GetRecord"]["record"]["metadata"]["dim:dim"]["dim:field"].append(
+        {"@element": "contributor", "@qualifier": "author", "#text": "Pérez Gómez, Ana María"}
+    )
+    entry = parse_dspace(record, empty_work(), "https://example.edu", 0)
+    assert entry["authors"][0]["first_names"] == ["Ana", "María"]
+    monkeypatch.setattr(process_module, "find_work_by_doi", lambda *a, **k: None)
+    monkeypatch.setattr(
+        process_module, "insert_work_by_doi",
+        lambda *a, **k: (None, db.works.find_one({"_id": winner["_id"]})))
+
+    outcome = process_one_insert(entry, None, db, db.works, None, 0, lock_dspace_id=False)
+
+    assert outcome == "actualizados"
+    saved = db.works.find_one({"_id": winner["_id"]})
+    assert [a["full_name"] for a in saved["authors"]] == ["Ana María Pérez Gómez"]
+    assert saved["authors"][0]["type"] == "author"
+    assert all("first_names" not in a for a in saved["authors"])
+
+
+def test_stored_work_drops_author_name_parts():
+    from kahi_dspace_works.parser import parse_dspace
+
+    db = mongomock.MongoClient().db
+    record = dspace_record("oai:example.edu:123/10")
+    record["OAI-PMH"]["GetRecord"]["record"]["metadata"]["dim:dim"]["dim:field"].append(
+        {"@element": "contributor", "@qualifier": "author", "#text": "Pérez Gómez, Ana María"}
+    )
+    entry = parse_dspace(record, empty_work(), "https://example.edu", 0)
+    assert process_one_insert(entry, None, db, db.works, None, 0) == "nuevos"
+    saved = db.works.find_one({})
+    assert saved["authors"][0]["full_name"] == "Ana María Pérez Gómez"
+    assert not {"first_names", "last_names", "initials"} & set(saved["authors"][0])
