@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.27] - 2026-11-12
+
+### Fixed
+
+- Pinned Kahi_dspace_works 0.0.5-alpha (KeyError 'first_names' when a DOI
+  race ends in a merge).
+
 ## [0.0.26] - 2026-11-12
 
 ### Changed
