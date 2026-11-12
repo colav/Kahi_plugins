@@ -13,6 +13,15 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.23] - 2026-11-12
+
+### Changed
+
+- Pinned Kahi_minciencias_opendata_works 0.1.8 (type_audit discarded, identified
+  collection resolved from the current pointer, strict title matching on
+  non-DOI routes; requires kahi_impactu_utils 0.1.9 with the relaxed DOI title
+  identity).
+
 ## [0.0.22] - 2026-11-11
 
 ### Changed
