@@ -92,7 +92,7 @@ def main():
             'Kahi_minciencias_opendata_projects==0.1.2-beta',
             'Kahi_minciencias_opendata_patents==0.1.2-beta',
             'Kahi_minciencias_opendata_events==0.1.2-beta',
-            'Kahi_openalex_affiliations==0.1.4',
+            'Kahi_openalex_affiliations==0.1.5',
             'Kahi_openalex_person==0.1.7',
             'Kahi_openalex_sources==0.1.3-beta',
             'Kahi_openalex_subjects==0.1.2-beta',
