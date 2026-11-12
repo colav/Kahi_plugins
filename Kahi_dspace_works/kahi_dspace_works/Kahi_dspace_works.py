@@ -1,4 +1,5 @@
 import json
+from urllib.parse import urlsplit
 from joblib import Parallel, delayed
 from kahi.KahiBase import KahiBase
 from kahi.progress import ProgressLogger
@@ -58,13 +59,30 @@ def title_query():
     )
 
 
-def counted_records(cursor, accept, progress):
-    """Yield accepted records and count the rest as skipped."""
+def counted_records(cursor, accept, progress, foreign_hosts=()):
+    """Yield accepted records; count the rest as skipped and the records
+    harvested from another configured repository as foreign."""
     for work in cursor:
-        if accept(work):
+        if foreign_hosts and request_host(work) in foreign_hosts:
+            progress.step("foraneos")
+        elif accept(work):
             yield work
         else:
             progress.step("omitidos")
+
+
+def url_host(url):
+    """Host of a URL in lower case ('' when absent)."""
+    try:
+        return (urlsplit(str(url or "")).hostname or "").lower()
+    except ValueError:
+        return ""
+
+
+def request_host(work):
+    """Host of the OAI server that answered the record (OAI-PMH.request)."""
+    request = (work.get("OAI-PMH") or {}).get("request") or {}
+    return url_host(request.get("#text") if isinstance(request, dict) else request)
 
 
 def _dim_query(condition):
@@ -225,7 +243,7 @@ class Kahi_dspace_works(KahiBase):
         return metadata
 
     def process_repository(self, affiliation, base_url, dspace_collection,
-                           repository=None):
+                           repository=None, foreign_hosts=()):
         query = doi_query() if self.task == "doi" else title_query()
         progress = ProgressLogger(
             "dspace_works:{}:{}".format(
@@ -240,13 +258,14 @@ class Kahi_dspace_works(KahiBase):
                 cursor,
                 lambda work: get_doi(work) and not is_thesis_work(work),
                 progress,
+                foreign_hosts,
             )
             similarity = False
         else:
             cursor = dspace_collection.find(
                 query).batch_size(
                 self.batch_size)
-            records = counted_records(cursor, is_similarity_reg, progress)
+            records = counted_records(cursor, is_similarity_reg, progress, foreign_hosts)
             similarity = True
 
         try:
@@ -298,9 +317,20 @@ class Kahi_dspace_works(KahiBase):
             if not repositories:
                 raise ValueError("No DSpace *_records collections were found")
 
+            hosts = {
+                repository["collection_name"]: url_host(repository.get("oai_url"))
+                for repository in repositories
+            }
             for repository in repositories:
                 collection_name = repository["collection_name"]
                 institution_id = repository.get("institution_id")
+                # Records answered by the OAI server of another configured
+                # repository are copies (e.g. dspace_uac_records holds the
+                # whole uniatlantico repository); that repository loads them.
+                foreign_hosts = {
+                    host for name, host in hosts.items()
+                    if host and name != collection_name and host != hosts[collection_name]
+                }
                 base_url = normalize_repository_url(
                     repository.get("repository_url"))
                 print(
@@ -320,7 +350,7 @@ class Kahi_dspace_works(KahiBase):
                 metadata = self.repository_metadata(repository, affiliation, base_url)
                 self.process_repository(
                     affiliation, base_url, source_db[collection_name],
-                    repository=metadata,
+                    repository=metadata, foreign_hosts=foreign_hosts,
                 )
         finally:
             source_client.close()

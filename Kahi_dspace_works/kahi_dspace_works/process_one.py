@@ -129,8 +129,18 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
     doi = _prepare_dspace_doi(entry)
     if doi:
         claim_work_doi(collection, colav_reg, doi)
-    # merging the two entries
-    colav_reg["updated"].extend(entry["updated"])
+    # merging the two entries; a record already in the work (same dspace id,
+    # e.g. a retried run) refreshes authors but adds no second `updated`.
+    known_ids = {
+        item.get("id") for item in colav_reg.get("external_ids", [])
+        if item.get("source") == "dspace"
+    }
+    entry_ids = {
+        item.get("id") for item in entry.get("external_ids", [])
+        if item.get("source") == "dspace"
+    }
+    if not entry_ids or not entry_ids <= known_ids:
+        colav_reg["updated"].extend(entry["updated"])
 
     existing_titles = {
         _normalized_title(title.get("title"))

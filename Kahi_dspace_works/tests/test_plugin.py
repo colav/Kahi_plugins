@@ -780,3 +780,45 @@ def test_stored_work_drops_author_name_parts():
     saved = db.works.find_one({})
     assert saved["authors"][0]["full_name"] == "Ana María Pérez Gómez"
     assert not {"first_names", "last_names", "initials"} & set(saved["authors"][0])
+
+
+def test_records_answered_by_another_repository_are_counted_as_foreign():
+    from kahi_dspace_works.Kahi_dspace_works import counted_records, request_host
+
+    own = dspace_doi_record("oai:repositorio.uac.edu.co:1/1", "https://doi.org/10.1/own")
+    own["OAI-PMH"]["request"]["#text"] = "http://repositorio.uac.edu.co/oai/request"
+    local = dspace_doi_record("oai:localhost:2/2", "https://doi.org/10.1/local")
+    local["OAI-PMH"]["request"]["#text"] = "https://localhost/oai/request"
+    foreign = dspace_doi_record("oai:repositorio.uniatlantico.edu.co:3/3", "https://doi.org/10.1/foreign")
+    foreign["OAI-PMH"]["request"]["#text"] = "https://repositorio.uniatlantico.edu.co/server/oai/request"
+    assert request_host(foreign) == "repositorio.uniatlantico.edu.co"
+    progress = MagicMock()
+
+    kept = list(counted_records(
+        iter([own, local, foreign]), lambda work: True, progress,
+        foreign_hosts={"repositorio.uniatlantico.edu.co"}))
+
+    assert [work["_id"] for work in kept] == [own["_id"], local["_id"]]
+    progress.step.assert_called_once_with("foraneos")
+
+
+def test_reprocessing_the_same_dspace_record_adds_no_second_updated_entry():
+    from kahi_dspace_works.parser import parse_dspace
+
+    db = mongomock.MongoClient().db
+    record = dspace_doi_record("oai:example.edu:123/11", "https://doi.org/10.1000/again")
+    first = parse_dspace(record, empty_work(), "https://example.edu", 0)
+    assert process_one_insert(first, None, db, db.works, None, 0) == "nuevos"
+    stored = db.works.find_one({})
+
+    again = parse_dspace(record, empty_work(), "https://example.edu", 0)
+    process_one_update(again, stored, None, db, db.works, 0)
+    saved = db.works.find_one({})
+
+    assert [item["source"] for item in saved["updated"]] == ["dspace"]
+    assert len([u for u in saved["external_urls"] if u["source"] == "handle"]) <= 1
+    other = parse_dspace(dspace_doi_record("oai:example.edu:123/12", "https://doi.org/10.1000/again"),
+                         empty_work(), "https://example.edu", 0)
+    other["updated"][0]["time"] = saved["updated"][0]["time"] + 1  # $addToSet would merge equal entries
+    process_one_update(other, saved, None, db, db.works, 0)
+    assert [item["source"] for item in db.works.find_one({})["updated"]] == ["dspace", "dspace"]

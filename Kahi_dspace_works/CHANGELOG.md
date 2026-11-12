@@ -1,4 +1,11 @@
 # Changelog
+## 0.0.6-alpha - 2026-11-12
+- Skip records answered by the OAI server of another configured repository
+  (`OAI-PMH.request`): dspace_uac_records held a copy of uniatlantico and
+  attributed it to UAC; counted as `foraneos`
+- Re-processing a record already in the work (same dspace id) refreshes it
+  without a second `updated` entry
+
 ## 0.0.5-alpha - 2026-11-12
 - Keep author first_names/last_names/initials in the parsed entry until the
   work is stored: when another worker wins the DOI, the entry is merged with
