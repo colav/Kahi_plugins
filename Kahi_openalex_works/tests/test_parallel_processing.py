@@ -465,12 +465,35 @@ def test_update_persists_open_access_and_uses_its_actual_url(monkeypatch):
 
     update = collection.update_one.call_args.args[1]["$set"]
     assert update["open_access"] == entry["open_access"]
-    assert update["external_urls"] == [{
-        "provenance": "openalex",
-        "source": "open_access",
-        "url": "https://open.example/article",
-    }]
+    assert update["external_urls"] == entry["external_urls"]
     assert "open_acess" not in update
+
+
+def test_update_does_not_duplicate_known_urls(monkeypatch):
+    entry = {
+        "titles": [], "external_ids": [], "types": [], "open_access": {},
+        "external_urls": [
+            {"provenance": "openalex", "source": "handle", "url": "http://hdl.handle.net/10495/1"},
+            {"provenance": "openalex", "source": "doi", "url": "https://doi.org/10.1/x"},
+        ],
+        "citations_count": [], "subjects": [], "authors": [],
+    }
+    work = {
+        "_id": ObjectId(), "updated": [], "titles": [], "external_ids": [], "types": [],
+        "open_access": {}, "citations_count": [], "citations_by_year": [], "subjects": [],
+        "authors": [], "bibliographic_info": {},
+        "external_urls": [
+            {"provenance": "dspace", "source": "handle", "url": "http://hdl.handle.net/10495/1"}],
+    }
+    collection = MagicMock()
+    monkeypatch.setattr(process_module, "parse_openalex", lambda *_args, **_kwargs: entry)
+
+    process_module.process_one_update({}, work, MagicMock(), collection, {})
+
+    update = collection.update_one.call_args.args[1]["$set"]
+    assert [u["url"] for u in update["external_urls"]] == [
+        "http://hdl.handle.net/10495/1", "https://doi.org/10.1/x"]
+    assert update["external_urls"][0]["provenance"] == "dspace"
 
 
 def test_update_persists_openalex_abstracts_and_topics(monkeypatch):

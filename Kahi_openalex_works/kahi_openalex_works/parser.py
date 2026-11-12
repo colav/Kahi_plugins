@@ -4,6 +4,7 @@ import re
 from time import time
 from datetime import datetime as dt
 from kahi_impactu_utils.String import inverted_index_to_text, text_to_inverted_index
+from kahi_impactu_utils.Urls import url_source_kind
 
 
 def canonical_orcid_url(value):
@@ -140,8 +141,9 @@ def parse_openalex(reg, empty_work, verbose=0):
             entry["open_access"]["has_repository_fulltext"] = reg["open_access"]["any_repository_has_fulltext"]
         if "oa_url" in reg["open_access"].keys():
             if reg["open_access"]["oa_url"]:
+                oa_url = reg["open_access"]["oa_url"]
                 entry["external_urls"].append(
-                    {"provenance": "openalex", "source": "open_access", "url": reg["open_access"]["oa_url"]})
+                    {"provenance": "openalex", "source": url_source_kind(oa_url), "url": oa_url})
     if "apc_paid" in reg.keys():
         if reg["apc_paid"]:
             entry["apc"]["paid"] = {

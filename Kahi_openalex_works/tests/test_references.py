@@ -1,3 +1,4 @@
+import pytest
 from kahi.KahiBase import KahiBase
 from kahi_openalex_works.parser import (
     cited_by_api_url, openalex_references, openalex_work_key, parse_openalex)
@@ -79,3 +80,16 @@ def test_merge_only_missing_keeps_existing():
     colav_reg["cited_by_api_url"] = ""
     changed = merge_openalex_citation_links(colav_reg, entry, only_missing=True)
     assert set(changed) == {"cited_by_api_url"}
+
+
+@pytest.mark.parametrize("oa_url, label", [
+    ("http://hdl.handle.net/10495/6956", "handle"),
+    ("https://doi.org/10.14201/8946", "doi"),
+    ("https://www.scielo.org.co/pdf/x.pdf", "scielo"),
+    ("https://revistas.udea.edu.co/index.php/vitae/article/view/1", "open_access"),
+])
+def test_open_access_url_is_labelled_by_site_kind(oa_url, label):
+    reg = minimal_reg(open_access={"is_oa": True, "oa_status": "green", "oa_url": oa_url})
+    entry = parse_openalex(reg, empty_work())
+    assert entry["external_urls"] == [
+        {"provenance": "openalex", "source": label, "url": oa_url}]

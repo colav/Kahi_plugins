@@ -1,4 +1,11 @@
 # Changelog
+## 0.1.13 - 2026-11-11
+- Label the open-access URL entry in external_urls by site kind (handle, doi,
+  scielo, doaj, dialnet, redalyc, arxiv, pmc; else open_access) via
+  kahi_impactu_utils.Urls.url_source_kind; on update add OpenAlex URLs not
+  already present instead of checking the open_access label
+- Require kahi_impactu_utils>=0.1.8
+
 ## 0.1.12 - 2026-11-11
 - Attach faculty and department units only when the work lists the parent
   institution for the author and the unit years cover the publication year

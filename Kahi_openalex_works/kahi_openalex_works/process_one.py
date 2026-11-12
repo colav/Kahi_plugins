@@ -393,18 +393,12 @@ def process_one_update(
     colav_reg["types"].extend(entry["types"])
     # open access info
     colav_reg["open_access"] = entry["open_access"]
-    # external urls
-    urls_sources = [url["source"]
-                    for url in colav_reg["external_urls"]]
-    if "open_access" not in urls_sources:
-        oa_url = None
-        for ext in entry["external_urls"]:
-            if ext["source"] == "open_access":
-                oa_url = ext["url"]
-                break
-        if oa_url:
-            colav_reg["external_urls"].append(
-                {"provenance": "openalex", "source": "open_access", "url": oa_url})
+    # external urls: add the OpenAlex entries whose URL is not there yet
+    known_urls = {url.get("url") for url in colav_reg["external_urls"]}
+    for ext in entry["external_urls"]:
+        if ext.get("url") and ext["url"] not in known_urls:
+            colav_reg["external_urls"].append(ext)
+            known_urls.add(ext["url"])
     # citations by year
     if "counts_by_year" in entry.keys():
         colav_reg["citations_by_year"] = entry["counts_by_year"]
