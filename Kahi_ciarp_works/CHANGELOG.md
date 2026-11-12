@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2-beta - 2026-11-12
+
+- Stop comparing the remaining authors once the CIARP person is already an
+  author of the work: works with hundreds of authors made one person lookup
+  (and name fixing with the ethnicity model) per author, up to 230 queries
+  per record (Univalle /doi: 13 reg/s)
+
 ## 0.1.1-beta - 2026-11-06
 
 - Add work affiliations only when the author's dated parent affiliation

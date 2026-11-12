@@ -417,3 +417,32 @@ def test_fucs_ciarp_catalogue_routes_entity_categories():
 def test_canonical_ror_url_repairs_legacy_spacing():
     assert canonical_ror_url("https: //ror.org/02yr3f298") == (
         "https://ror.org/02yr3f298")
+
+
+def test_process_author_stops_once_the_person_is_already_an_author():
+    import mongomock
+
+    db = mongomock.MongoClient().kahi
+    db.person.insert_many([
+        {"_id": "p1", "full_name": "Ana Pérez", "first_names": ["Ana"], "last_names": ["Pérez"],
+         "initials": "A", "affiliations": [], "external_ids": [{"source": "cedula", "id": "123"}]},
+        {"_id": "p2", "full_name": "Ana Pérez", "first_names": ["Ana"], "last_names": ["Pérez"],
+         "initials": "A", "affiliations": [], "external_ids": []},
+    ])
+    entry = {"authors": [{"full_name": "Ana Pérez", "external_ids": [{"source": "cedula", "id": "123"}],
+                          "affiliations": []}], "doi": "https://doi.org/10.1/x", "external_ids": []}
+    colav_reg = {"authors": [{"id": "p1", "full_name": "Ana Pérez", "affiliations": []},
+                             {"id": "p2", "full_name": "Ana Pérez", "affiliations": []}],
+                 "doi": "https://doi.org/10.1/x", "external_ids": []}
+    lookups = []
+    original = db.person.find_one
+
+    def counting_find_one(*args, **kwargs):
+        lookups.append(args[0])
+        return original(*args, **kwargs)
+    db.person.find_one = counting_find_one
+
+    process_module.process_author(entry, colav_reg, db)
+
+    assert [a["id"] for a in colav_reg["authors"]] == ["p1", "p2"]
+    assert not any(q == {"_id": "p2"} for q in lookups)

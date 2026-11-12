@@ -334,7 +334,11 @@ def process_author(entry, colav_reg, db, verbose=0,
                         "full_name": author_db["full_name"],
                         "affiliations": author["affiliations"]
                     }
-                    continue
+                    # The person is already an author of the work: stop here
+                    # instead of comparing the remaining authors by name
+                    # (one person lookup each), which could also attach the
+                    # same person to a homonym.
+                    break
                 author_reg = None
                 if author['id'] == "":
                     if verbose >= 4:
