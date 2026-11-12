@@ -112,7 +112,7 @@ def main():
             'Kahi_staff_person==0.1.8',
             'Kahi_unicity_person==0.1.0',
             'Kahi_unicity_person_graph==0.1.2',
-            'Kahi_wikidata_affiliations==0.1.2-beta',
+            'Kahi_wikidata_affiliations==0.1.3-beta',
             'Kahi_siiu_projects==0.0.2-alpha'
         ],
     )

@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.25] - 2026-11-12
+
+### Changed
+
+- Pinned Kahi_wikidata_affiliations 0.1.3-beta (follows the redirects stored in
+  `wikidata.redirects` by the impactu_airflow wikidata_capture DAG when the
+  ROR QID was merged into another Wikidata item).
+
 ## [0.0.24] - 2026-11-12
 
 ### Changed
