@@ -68,3 +68,26 @@ def test_process_one_repairs_existing_logo_without_duplicates():
     assert len([name for name in result["names"] if name["source"] == "wikidata"]) == 1
     assert len([item for item in result["updated"] if item["source"] == "wikidata"]) == 1
     assert {"source": "site", "url": "https://www.udea.edu.co"} in result["external_urls"]
+
+
+def test_process_one_follows_recorded_redirect():
+    client = mongomock.MongoClient()
+    affiliations = client.kahi.affiliations
+    wikidata = client.wikidata.data
+    redirects = client.wikidata.redirects
+    affiliations.insert_one(
+        {"_id": "old", "names": [], "external_ids": [{"source": "wikidata", "id": "Q3346754"}]}
+    )
+    wikidata.insert_one(
+        {"id": "Q2399345", "labels": {"es": {"language": "es", "value": "Nombre vigente"}}}
+    )
+    redirects.insert_one({"id": "Q3346754", "redirect": "Q2399345"})
+
+    assert process_one(affiliations, wikidata, affiliations.find_one({"_id": "old"}), 0) == (
+        "sin_registro_wikidata"
+    )
+    assert process_one(
+        affiliations, wikidata, affiliations.find_one({"_id": "old"}), 0, redirects
+    ) == "actualizados"
+    names = affiliations.find_one({"_id": "old"})["names"]
+    assert [n["name"] for n in names] == ["Nombre vigente"]

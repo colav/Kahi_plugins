@@ -25,7 +25,35 @@ def claim_file(claims, property_id):
     return None
 
 
-def process_one(kahi_col, wikid_col, inst, verbose):
+RECORD_PROJECTION = {"labels": 1,
+                     "claims.P154.mainsnak.datavalue.value": 1,
+                     "claims.P18.mainsnak.datavalue.value": 1}
+
+
+def find_record(wikid_col, wikidata_id, redirects_col=None):
+    """
+    Find a wikidata entity by QID, following the redirect recorded by the
+    wikidata_capture DAG when Wikidata merged that item into another one.
+
+    Parameters:
+    ----------
+    wikid_col: pymongo.collection.Collection
+        collection of wikidata records
+    wikidata_id: str
+        QID reported by ROR
+    redirects_col: pymongo.collection.Collection or None
+        collection of {"id": QID, "redirect": target QID}
+    """
+    rec = wikid_col.find_one({"id": wikidata_id}, RECORD_PROJECTION)
+    if rec or redirects_col is None:
+        return rec
+    redirect = redirects_col.find_one({"id": wikidata_id}, {"redirect": 1})
+    if not redirect or not redirect.get("redirect"):
+        return None
+    return wikid_col.find_one({"id": redirect["redirect"]}, RECORD_PROJECTION)
+
+
+def process_one(kahi_col, wikid_col, inst, verbose, redirects_col=None):
     """
     This function processes one institution, and seve the the titles and images from wikidata.
     Images are taken from P154 (logo) or P18 (image) if P154 is not present then P18 is used.
@@ -39,16 +67,15 @@ def process_one(kahi_col, wikid_col, inst, verbose):
     inst: dict
         institution record
     verbose: int
+    redirects_col: pymongo.collection.Collection or None
+        collection of wikidata redirects (merged items), followed when the QID is not found
     """
     wikidata_id = None
     for j in inst["external_ids"]:
         if j["source"] == "wikidata":
             wikidata_id = j["id"]
             break
-    rec = wikid_col.find_one({"id": wikidata_id},
-                             {"labels": 1,
-                              "claims.P154.mainsnak.datavalue.value": 1,
-                              "claims.P18.mainsnak.datavalue.value": 1})
+    rec = find_record(wikid_col, wikidata_id, redirects_col)
 
     if not rec:
         if verbose > 4:
@@ -115,6 +142,7 @@ class Kahi_wikidata_affiliations(KahiBase):
         wikidata_affiliations:
             database_name: wikidata
             collection_name: data
+            redirects_collection_name: redirects  # optional, default redirects
             num_jobs: 5
             verbose: 5
 
@@ -133,6 +161,8 @@ class Kahi_wikidata_affiliations(KahiBase):
                                        ["database_name"]]
         self.wikidata_col = self.wikidata_db[config["wikidata_affiliations"]
                                              ["collection_name"]]
+        self.wikidata_redirects = self.wikidata_db[
+            config["wikidata_affiliations"].get("redirects_collection_name", "redirects")]
 
         self.n_jobs = config["wikidata_affiliations"]["num_jobs"]
 
@@ -152,7 +182,8 @@ class Kahi_wikidata_affiliations(KahiBase):
             f"num_jobs={self.n_jobs}")
 
         def tracked(kahi_col, wikid_col, inst, verbose):
-            progress.step(process_one(kahi_col, wikid_col, inst, verbose))
+            progress.step(process_one(kahi_col, wikid_col, inst, verbose,
+                                      self.wikidata_redirects))
 
         Parallel(
             n_jobs=self.n_jobs,
