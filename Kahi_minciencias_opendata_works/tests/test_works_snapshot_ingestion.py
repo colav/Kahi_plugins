@@ -338,3 +338,33 @@ def test_snapshot_matching_source_id_can_acquire_a_missing_doi(monkeypatch):
     assert summary["updated"] == 1
     assert target.works.count_documents({}) == 1
     assert target.works.find_one()["doi"] == work_snapshot()["doi"]
+
+
+def test_titles_without_language_are_detected_and_updated_time_is_import_time(monkeypatch):
+    snapshot = work_snapshot()
+    snapshot["titles"] = [{"title": "Prevalencia de parasitismo intestinal en la comunidad indígena",
+                           "source": "minciencias"}]
+    target, _ = prepare(monkeypatch, works=[snapshot])
+    monkeypatch.setattr(plugin_module, "time", lambda: 1_800_000_000)
+
+    Plugin(config()).run()
+    work = target.works.find_one({"_id": WORK_1})
+
+    assert work["titles"][0]["lang"] == "es"
+    assert work["updated"] == [{"source": "minciencias", "time": 1_800_000_000}]
+
+
+def test_merge_keeps_one_updated_entry_per_source(monkeypatch):
+    target, _ = prepare(monkeypatch)
+    existing = work_snapshot()
+    for key in ("source_metadata", "authorship_status", "authorship_candidates", "authorship_evidence"):
+        existing.pop(key, None)
+    existing["updated"] = [{"source": "openalex", "time": 5}, {"source": "minciencias", "time": 1}]
+    target.works.insert_one(existing)
+    monkeypatch.setattr(plugin_module, "time", lambda: 1_800_000_000)
+
+    Plugin(config()).run()
+    work = target.works.find_one({"_id": WORK_1})
+
+    assert work["updated"] == [{"source": "openalex", "time": 5},
+                               {"source": "minciencias", "time": 1_800_000_000}]

@@ -1,3 +1,10 @@
+## 0.1.9 - 2026-11-12
+
+* Detect the language of snapshot titles that come without `lang` (Yuku does
+  not set it; 302 k titles had `lang: null`)
+* `updated.time` is the Kahi import time, not the Yuku parsing time, and a
+  merge keeps one `updated` entry per source (refreshing its time)
+
 ## 0.1.8 - 2026-11-12
 
 * Accept the Yuku `type_audit` field as a source-only field: it is discarded

@@ -18,7 +18,7 @@ from kahi_impactu_utils.Work import (
     AmbiguousWorkDOI, canonical_work_doi, ensure_work_doi_indexes,
     insert_work_by_doi, prepare_work_doi, work_titles_match, normalize_work_title, _coordinate_doi,
 )
-from kahi_impactu_utils.Utils import normalize_publication_year
+from kahi_impactu_utils.Utils import lang_poll, normalize_publication_year
 from bson import BSON, ObjectId
 from pymongo import MongoClient, ReplaceOne, TEXT
 from kahi_minciencias_opendata_works.work_types import book_types_compatible, book_type_policy
@@ -563,6 +563,14 @@ class Kahi_minciencias_opendata_works(KahiBase):
                   for field, default in self.empty_work().items()}
         output["doi"] = snapshot_doi(source) or ""
         output["_id"] = kahi_work_id(source["_id"])
+        # Yuku does not detect the title language; Kahi does, like the other importers.
+        for title in output["titles"]:
+            if not title.get("lang") and title.get("title"):
+                title["lang"] = lang_poll(title["title"])
+        # `updated.time` is when Kahi imported the record, not when Yuku parsed it.
+        now = int(time())
+        for item in output["updated"]:
+            item["time"] = now
         output["authors"] = [
             self._resolve_author(author, people, groups, institutions, counters)
             for author in source.get("authors", [])
@@ -593,10 +601,18 @@ class Kahi_minciencias_opendata_works(KahiBase):
             return incoming
         output = deepcopy(existing)
         output["year_published"] = normalize_publication_year(output.get("year_published"))
-        for field in LIST_FIELDS:
+        for field in LIST_FIELDS - {"updated"}:
             output.setdefault(field, [])
             for item in incoming.get(field, []):
                 append_unique(output[field], item)
+        updated = output.setdefault("updated", [])
+        by_source = {item.get("source"): item for item in updated}
+        for item in incoming.get("updated", []):
+            if item.get("source") in by_source:
+                by_source[item["source"]]["time"] = item.get("time")
+            else:
+                updated.append(deepcopy(item))
+                by_source[item.get("source")] = updated[-1]
         for field in DICT_FIELDS:
             merge_missing(output.setdefault(field, {}), incoming.get(field, {}))
         for field in SCALAR_FIELDS:
