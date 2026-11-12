@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.24] - 2026-11-12
+
+### Changed
+
+- Pinned Kahi_impactu_postcalculations 0.1.6 (persistent id migration flag
+  removed from person when complete). kahi_impactu_utils 0.1.10 repairs DOIs
+  with repeated prefixes, embedded URLs or trailing garbage.
+
 ## [0.0.23] - 2026-11-12
 
 ### Changed

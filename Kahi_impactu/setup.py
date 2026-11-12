@@ -83,7 +83,7 @@ def main():
             'kahi==0.1.4',
             'Kahi_doaj_sources==0.1.2-beta',
             'Kahi_elasticsearch_works==0.1.1-beta',
-            'Kahi_impactu_postcalculations==0.1.5',
+            'Kahi_impactu_postcalculations==0.1.6',
             'Kahi_impactu_post_cites_count==0.0.5-alpha',
             'Kahi_minciencias_opendata_affiliations==0.1.6',
             'Kahi_minciencias_opendata_person==0.1.7-beta',
