@@ -679,7 +679,7 @@ class Kahi_minciencias_opendata_works(KahiBase):
         """Validate current MongoDB metadata, never the ES score alone."""
         if not book_types_compatible(incoming, owner):
             return False
-        if not work_titles_match(incoming.get("titles"), owner.get("titles")):
+        if not work_titles_match(incoming.get("titles"), owner.get("titles"), strict=True):
             return False
         left_year = normalize_publication_year(incoming.get("year_published"))
         right_year = normalize_publication_year(owner.get("year_published"))
@@ -745,7 +745,7 @@ class Kahi_minciencias_opendata_works(KahiBase):
             for owner in self.collection.find(query, collation={"locale": "en", "strength": 2}):
                 if not book_types_compatible(incoming, owner):
                     continue
-                if not work_titles_match(incoming.get("titles"), owner.get("titles")):
+                if not work_titles_match(incoming.get("titles"), owner.get("titles"), strict=True):
                     continue
                 before = normalize_publication_year(owner.get("year_published"))
                 after = normalize_publication_year(incoming.get("year_published"))

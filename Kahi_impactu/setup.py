@@ -87,7 +87,7 @@ def main():
             'Kahi_impactu_post_cites_count==0.0.5-alpha',
             'Kahi_minciencias_opendata_affiliations==0.1.6',
             'Kahi_minciencias_opendata_person==0.1.7-beta',
-            'Kahi_minciencias_opendata_works==0.1.7',
+            'Kahi_minciencias_opendata_works==0.1.8',
             'Kahi_minciencias_opendata_works_misc == 0.1.0-beta',
             'Kahi_minciencias_opendata_projects==0.1.2-beta',
             'Kahi_minciencias_opendata_patents==0.1.2-beta',

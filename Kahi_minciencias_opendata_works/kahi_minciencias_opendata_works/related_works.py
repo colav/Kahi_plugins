@@ -313,7 +313,7 @@ def _find_exact(collection, candidate):
             }
         )
         if found and (not candidate["dois"] or work_titles_match(
-                [{"title": candidate["title"]}], found.get("titles"))):
+                [{"title": candidate["title"]}], found.get("titles"), strict=True)):
             return found, "scienti"
     found = collection.find_one(
         {
@@ -326,7 +326,7 @@ def _find_exact(collection, candidate):
         }
     )
     if found and candidate["dois"] and not work_titles_match(
-            [{"title": candidate["title"]}], found.get("titles")):
+            [{"title": candidate["title"]}], found.get("titles"), strict=True):
         return None, None
     return (found, "fingerprint") if found else (None, None)
 

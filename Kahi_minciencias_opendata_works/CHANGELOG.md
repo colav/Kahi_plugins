@@ -5,6 +5,10 @@
 * Resolve the identified (filtered) works collection from the `current`
   pointer of `scienti_identified_work_publications` when `collection_name` is
   not configured; `identified: false` forces the full works graph
+* Non-DOI routes (identifiers, fingerprints, Elasticsearch similarity) use the
+  strict title comparison of kahi_impactu_utils 0.1.9; DOI routes accept
+  nested, similar or translated titles
+* Require kahi_impactu_utils>=0.1.9
 
 ## 0.1.7 - 2026-11-11
 
