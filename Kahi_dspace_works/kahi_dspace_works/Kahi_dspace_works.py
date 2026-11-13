@@ -205,7 +205,7 @@ class Kahi_dspace_works(KahiBase):
         for collection_name in collection_names:
             identity_name = collection_name[: -len("records")] + "identity"
             identity = source_db[identity_name].find_one(
-                {}, {"base_url": 1, "ror": 1, "repository_name": 1}) or {}
+                {}, {"base_url": 1, "ror": 1, "repository_name": 1, "openalex_source": 1}) or {}
             institution_id = (
                 affiliations[collection_name]
                 if collection_name in affiliations
@@ -218,6 +218,7 @@ class Kahi_dspace_works(KahiBase):
                 "repository_name": identity.get("repository_name") or "",
                 "oai_url": identity.get("base_url") or "",
                 "ror": identity.get("ror") or "",
+                "openalex_source": identity.get("openalex_source") or "",
             }
 
     def repository_metadata(self, repository, affiliation, base_url):
@@ -237,7 +238,10 @@ class Kahi_dspace_works(KahiBase):
             "affiliation": ({"id": affiliation["id"], "name": affiliation["name"]}
                             if affiliation else {}),
         }
-        openalex_id = (plugin_config.get("repository_sources") or {}).get(key)
+        # The OpenAlex source of the repository lives in its identity document
+        # (persisted by the capture DAG); `repository_sources` only overrides it.
+        openalex_id = ((plugin_config.get("repository_sources") or {}).get(key)
+                       or repository.get("openalex_source") or None)
         metadata["source_id"] = ensure_repository_source(
             self.db, metadata, affiliation, self.empty_source(), openalex_id=openalex_id)
         return metadata

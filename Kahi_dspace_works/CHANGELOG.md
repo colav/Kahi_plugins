@@ -1,4 +1,9 @@
 # Changelog
+## 0.0.8-alpha - 2026-11-12
+- Read the repository's OpenAlex source from `openalex_source` in its
+  `*_identity` document (persisted by the capture DAG); `repository_sources`
+  / `repository_sources_file` become an optional override
+
 ## 0.0.7-alpha - 2026-11-12
 - The repository affiliation is assigned to an author only with evidence: the
   person is found in `person` with that affiliation (insert: name + ROR;

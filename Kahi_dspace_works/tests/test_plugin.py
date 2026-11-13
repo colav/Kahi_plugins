@@ -107,8 +107,40 @@ def test_repository_discovery_uses_identity_and_affiliation_map():
             "repository_name": "",
             "oai_url": "https://example.edu/server/oai/request",
             "ror": "",
+            "openalex_source": "",
         }
     ]
+
+
+def test_repository_discovery_reads_openalex_source_from_identity():
+    plugin = Kahi_dspace_works.__new__(Kahi_dspace_works)
+    plugin.config = {"dspace_works": {}}
+    source_db = FakeDatabase()
+    source_db.collections["dspace_demo_identity"].document["openalex_source"] = (
+        "https://openalex.org/S7407055425"
+    )
+
+    repositories = list(plugin._repositories(source_db))
+
+    assert repositories[0]["openalex_source"] == "https://openalex.org/S7407055425"
+
+
+def test_repository_metadata_prefers_the_yaml_source_over_the_identity_one():
+    plugin = Kahi_dspace_works.__new__(Kahi_dspace_works)
+    plugin.db = mongomock.MongoClient().db
+    plugin.empty_source = lambda: {"names": [], "types": [], "external_ids": [], "external_urls": [],
+                                   "updated": [], "relations": [], "publisher": {}}
+    repository = {"collection_name": "dspace_demo_records", "repository_name": "Demo",
+                  "oai_url": "https://example.edu/server/oai/request", "ror": "",
+                  "openalex_source": "https://openalex.org/S1"}
+    seen = []
+    with patch("kahi_dspace_works.Kahi_dspace_works.ensure_repository_source",
+               side_effect=lambda *a, **k: seen.append(k.get("openalex_id")) or "sid"):
+        plugin.config = {"dspace_works": {}}
+        plugin.repository_metadata(repository, None, "https://example.edu")
+        plugin.config = {"dspace_works": {"repository_sources": {"dspace_demo": "https://openalex.org/S2"}}}
+        plugin.repository_metadata(repository, None, "https://example.edu")
+    assert seen == ["https://openalex.org/S1", "https://openalex.org/S2"]
 
 
 def test_repository_discovery_uses_ror_from_identity():

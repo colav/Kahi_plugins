@@ -62,6 +62,12 @@ Parameters for kahi_run in the workflow should be similar to.
       dspace_univalle_records: https://ror.org/00jb9vg53
 ```
 
+The OpenAlex source of each repository (reused instead of creating a duplicate
+in `sources`) is read from `openalex_source` in the matching `*_identity`
+document, persisted by the capture DAG from its endpoint configuration.
+`repository_sources` (or `repository_sources_file`, a JSON file
+`{collection key: OpenAlex source id}`) only overrides it.
+
 `repositories` remains supported for backwards compatibility. Use `collections`
 or `exclude_collections` to restrict automatic discovery.
 When present, `repository_affiliations` overrides the `ror` stored in the
