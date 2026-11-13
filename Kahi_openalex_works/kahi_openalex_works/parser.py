@@ -165,7 +165,10 @@ def parse_openalex(reg, empty_work, verbose=0):
             entry["abstracts"].append({"abstract": text_to_inverted_index(
                 abstract), "lang": abstract_lang, "source": "openalex", 'provenance': 'openalex'})
 
-    # authors section
+    # authors section. OpenAlex repeats an author when it lists one
+    # authorship per affiliation (e.g. large collaborations): keep one entry
+    # per author id and join its affiliations.
+    authors_by_id = {}
     for author in reg["authorships"]:
         if not author["author"]:
             continue
@@ -193,6 +196,17 @@ def parse_openalex(reg, empty_work, verbose=0):
         if author["orcid"]:
             author_entry["external_ids"].append(
                 {"source": "orcid", "id": canonical_orcid_url(author["orcid"])})
+        previous = authors_by_id.get(author["id"]) if author["id"] else None
+        if previous is not None:
+            for aff in affs:
+                if aff not in previous["affiliations"]:
+                    previous["affiliations"].append(aff)
+            for ext in author_entry["external_ids"]:
+                if ext not in previous["external_ids"]:
+                    previous["external_ids"].append(ext)
+            continue
+        if author["id"]:
+            authors_by_id[author["id"]] = author_entry
         entry["authors"].append(author_entry)
     # concepts section
     subjects = []

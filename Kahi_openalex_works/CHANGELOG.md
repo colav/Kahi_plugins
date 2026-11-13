@@ -1,4 +1,9 @@
 # Changelog
+## 0.1.14 - 2026-11-13
+- Keep one author per OpenAlex author id when a work lists the same author in
+  several authorships (one per affiliation, common in large collaborations),
+  joining its affiliations; 1.4 % of the DOI works had repeated person ids
+
 ## 0.1.13 - 2026-11-11
 - Label the open-access URL entry in external_urls by site kind (handle, doi,
   scielo, doaj, dialnet, redalyc, arxiv, pmc; else open_access) via

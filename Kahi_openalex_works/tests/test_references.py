@@ -93,3 +93,27 @@ def test_open_access_url_is_labelled_by_site_kind(oa_url, label):
     entry = parse_openalex(reg, empty_work())
     assert entry["external_urls"] == [
         {"provenance": "openalex", "source": label, "url": oa_url}]
+
+
+def test_repeated_authorships_of_the_same_author_are_joined():
+    def authorship(author_id, name, institution, orcid=None):
+        return {"author": {"id": author_id, "display_name": name, "orcid": orcid},
+                "institutions": [{"id": f"https://openalex.org/I{institution}",
+                                  "display_name": institution}],
+                "author_position": "middle", "raw_affiliation_strings": []}
+    reg = minimal_reg(authorships=[
+        authorship("https://openalex.org/A1", "S Bansal", "Universiteit Antwerpen"),
+        authorship("https://openalex.org/A2", "J P Gomez", "Universidad de Los Andes"),
+        authorship("https://openalex.org/A1", "S Bansal", "Panjab University", "0000-0001-0000-0001"),
+        authorship(None, "Anónimo", "DESY"),
+        authorship(None, "Anónimo", "DESY"),
+    ])
+
+    entry = parse_openalex(reg, empty_work())
+
+    assert [a["full_name"] for a in entry["authors"]] == ["S Bansal", "J P Gomez", "Anónimo", "Anónimo"]
+    bansal = entry["authors"][0]
+    assert [aff["name"] for aff in bansal["affiliations"]] == ["Universiteit Antwerpen", "Panjab University"]
+    assert bansal["external_ids"] == [
+        {"source": "openalex", "id": "https://openalex.org/A1"},
+        {"source": "orcid", "id": "https://orcid.org/0000-0001-0000-0001"}]
