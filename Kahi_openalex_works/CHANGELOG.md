@@ -1,4 +1,10 @@
 # Changelog
+
+## 0.1.15 - 2026-11-13
+
+- Size the Mohan Elasticsearch connection pool to `es_max_concurrency`
+  (EmptyPoolError with more than 10 concurrent searches)
+
 ## 0.1.14 - 2026-11-13
 - Keep one author per OpenAlex author id when a work lists the same author in
   several authorships (one per affiliation, common in large collaborations),
