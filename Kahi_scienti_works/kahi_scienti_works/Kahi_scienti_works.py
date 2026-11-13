@@ -5,6 +5,7 @@ from joblib import Parallel, delayed
 from kahi_scienti_works.process_one import process_one
 from kahi_impactu_utils.Work import ensure_work_doi_indexes
 from mohan.Similarity import Similarity
+from kahi_impactu_utils.Elastic import size_similarity_pool
 from kahi_impactu_utils.Utils import doi_processor
 import re
 from threading import BoundedSemaphore
@@ -95,6 +96,9 @@ class Kahi_scienti_works(KahiBase):
                 raise ValueError(
                     "scienti_works.es_max_concurrency must be greater than zero")
             self.es_semaphore = BoundedSemaphore(es_max_concurrency)
+            # Mohan's client pools 10 connections; match it to the semaphore so
+            # concurrent searches never fail with EmptyPoolError.
+            size_similarity_pool(self.es_handler, es_url, es_auth, es_max_concurrency)
 
         # checking if the databases and collections are available
         self.check_databases_and_collections()

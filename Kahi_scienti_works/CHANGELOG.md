@@ -1,4 +1,10 @@
 # Changelog
+
+## 0.1.10 - 2026-11-13
+
+- Size the Mohan Elasticsearch connection pool to `es_max_concurrency`
+  (EmptyPoolError with more than 10 concurrent searches)
+
 ## 0.1.9 - 2026-11-11
 - Attach faculty and department units only when the work lists the parent
   institution for the author and the unit years cover the publication year
