@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.31] - 2026-11-13
+
+### Fixed
+
+- Pinned Kahi_openalex_works 0.1.14 (one author per OpenAlex author id; the
+  raw cut repeats authors with several affiliations).
+
 ## [0.0.30] - 2026-11-12
 
 ### Changed
