@@ -4,6 +4,7 @@ from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 
 from mohan.Similarity import Similarity
+from kahi_impactu_utils.Elastic import size_similarity_pool
 from kahi_scholar_works.process_one import process_one
 from threading import BoundedSemaphore
 from kahi_impactu_utils.Work import ensure_work_doi_indexes
@@ -146,6 +147,9 @@ class Kahi_scholar_works(KahiBase):
                 raise ValueError(
                     "scholar_works.es_max_concurrency must be greater than zero")
             self.es_semaphore = BoundedSemaphore(es_max_concurrency)
+            # Mohan's client pools 10 connections; match it to the semaphore so
+            # concurrent searches never fail with EmptyPoolError.
+            size_similarity_pool(self.es_handler, es_url, es_auth, es_max_concurrency)
 
     def process_scholar(self):
         """
