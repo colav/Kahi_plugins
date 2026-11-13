@@ -13,6 +13,16 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.33] - 2026-11-13
+
+### Fixed
+
+- Pinned Kahi_openalex_works 0.1.15, Kahi_scienti_works 0.1.10,
+  Kahi_ciarp_works 0.1.3-beta and Kahi_scholar_works 0.1.8: the Mohan
+  Elasticsearch pool is sized to `es_max_concurrency` (kahi_impactu_utils
+  0.1.11 `Elastic.size_similarity_pool`), so values above 10 no longer fail
+  with EmptyPoolError.
+
 ## [0.0.32] - 2026-11-13
 
 ### Changed
