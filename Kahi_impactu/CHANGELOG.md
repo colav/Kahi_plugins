@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.32] - 2026-11-13
+
+### Changed
+
+- Pinned Kahi_minciencias_opendata_works 0.1.10 (`workers` thread pool per
+  snapshot batch for the no-DOI phase).
+
 ## [0.0.31] - 2026-11-13
 
 ### Fixed
