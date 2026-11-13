@@ -258,3 +258,77 @@ def test_slow_lookup_cannot_insert_after_its_identity_lease_expires(monkeypatch)
     with pytest.raises(RuntimeError,match='identity lease expired'):
         Plugin(config(**options)).run()
     assert target.works.count_documents({})==0
+
+
+def test_workers_process_batch_rows_concurrently_with_the_same_totals(monkeypatch):
+    import threading
+    rows=[nodoi(ObjectId(),f'Titulo distinto numero {i} para la fila paralela') for i in range(12)]
+    for i,row in enumerate(rows):row['external_ids']=[{'source':'isbn','id':f'97895820117{i:02d}'}]
+    target,source=identified(monkeypatch,rows)
+    engine=Engine();monkeypatch.setattr(module,'SnapshotSimilarity',lambda params:engine)
+    seen=set();lock=threading.Lock()
+    original=Plugin._process_row
+    def spy(self,*args,**kwargs):
+        with lock:seen.add(threading.get_ident())
+        return original(self,*args,**kwargs)
+    monkeypatch.setattr(Plugin,'_process_row',spy)
+    plugin=Plugin(config(collection_name='filtered',task='nodoi',workers=4,es_index='idx',es_url='http://test:9200'))
+    assert plugin.workers==4
+    summary=plugin.run()
+    assert summary['inserted']==12 and summary['updated']==0 and summary['selected']==12
+    assert target.works.count_documents({})==12
+    assert len(seen)>1
+
+
+def test_workers_default_is_sequential_and_counters_merge_partial_keys(monkeypatch):
+    rows=[nodoi(ObjectId(),f'Otro titulo {i}') for i in range(3)]
+    target,source=identified(monkeypatch,rows)
+    engine=Engine();monkeypatch.setattr(module,'SnapshotSimilarity',lambda params:engine)
+    plugin=Plugin(config(collection_name='filtered',task='nodoi',es_index='idx',es_url='http://test:9200'))
+    assert plugin.workers==1
+    counters={'inserted':0,'updated':0}
+    plugin._merge_counters(counters,{'inserted':2,'similarity_queries':5})
+    assert counters=={'inserted':2,'updated':0,'similarity_queries':5}
+
+
+def test_real_threads_same_title_rows_in_one_batch_insert_once():
+    import os
+    from uuid import uuid4
+    from pymongo import MongoClient
+    from kahi.KahiBase import KahiBase
+    from kahi_impactu_utils.Work import ensure_work_doi_indexes
+    from kahi_minciencias_opendata_works.Kahi_minciencias_opendata_works import SOURCE_ONLY_FIELDS
+    url=os.environ.get('KAHI_TEST_MONGODB_URL')
+    if not url:pytest.skip('Set KAHI_TEST_MONGODB_URL for isolated MongoDB tests')
+    name='test_mt_title_'+uuid4().hex;client=MongoClient(url,serverSelectionTimeoutMS=5000)
+    try:
+        ensure_work_doi_indexes(client[name].works)
+        client[name].works.create_index('titles.title',collation={'locale':'en','strength':2})
+        class FakeIndex:
+            def candidates(self,document):
+                from time import sleep;sleep(0.05);return [],1
+            def sync(self,document):return None
+        plugin=Plugin.__new__(Plugin);plugin.collection=client[name].works;plugin.similarity=FakeIndex()
+        plugin.workers=4;plugin._counters_lock=__import__('threading').Lock()
+        rows=[]
+        for _ in range(8):
+            identifier=str(ObjectId());row=KahiBase().empty_work();row.update(nodoi(ObjectId(identifier),TITLE))
+            row['external_ids']=[{'source':'minciencias','id':'TEST-'+identifier}]
+            for field in SOURCE_ONLY_FIELDS:row.pop(field,None)
+            rows.append(row)
+        plugin._project=lambda source,people,groups,institutions,counters:deepcopy(source)
+        plugin._reference_maps=lambda batch:({},{},{})
+        counters={'inserted':0,'updated':0}
+        plugin._process_batch(rows,counters)
+        assert counters['inserted']==1 and counters['updated']==7
+        assert client[name].works.count_documents({})==1
+    finally:client.drop_database(name);client.close()
+
+
+def test_sync_cache_is_thread_safe(monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    handler=MagicMock();monkeypatch.setattr(module,'Similarity',MagicMock(return_value=handler))
+    adapter=module.SnapshotSimilarity({'es_index':'idx','es_url':'http://test:9200'})
+    docs=[nodoi(ObjectId(),f'Titulo {i}') for i in range(300)]
+    with ThreadPoolExecutor(max_workers=8) as pool:list(pool.map(adapter.sync,docs))
+    assert handler.insert_work.call_count==300 and len(adapter._indexed)==300

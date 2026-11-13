@@ -2,7 +2,10 @@
 
 from copy import deepcopy
 from kahi_impactu_utils.String import normalize_dashes
+from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from contextlib import ExitStack
+from threading import Lock
 from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 from hashlib import sha256
@@ -184,6 +187,10 @@ class Kahi_minciencias_opendata_works(KahiBase):
             raise RuntimeError("source database {} was not found".format(database_name))
         self.source_db = self.source_client[database_name]
         self.batch_size = max(1, int(source_config.get("batch_size", 500)))
+        # Rows of a batch are processed concurrently by `workers` threads; the
+        # identity leases in _kahi_work_identity keep concurrent rows safe.
+        self.workers = max(1, int(source_config.get("workers", 1)))
+        self._counters_lock = Lock()
         self.verbose = int(source_config.get("verbose", 0))
         runs_name = source_config.get(
             "runs_collection", "minciencias_opendata_works_runs"
@@ -818,6 +825,33 @@ class Kahi_minciencias_opendata_works(KahiBase):
                 if similarity:
                     similarity.sync(merged)
 
+    def _process_row(self, source, existing, people, groups, institutions, counters):
+        """Import one source row. `counters` is private to the row when the batch
+        runs with several workers; the caller merges it afterwards."""
+        projected = self._project(source, people, groups, institutions, counters)
+        current = existing.get(projected["_id"])
+        if prepare_work_doi(projected, "minciencias"):
+            if current and not work_titles_match(projected.get("titles"), current.get("titles")):
+                # A source-id collision must not bypass the DOI/title gate.
+                projected.pop("_id")
+            try:
+                inserted_id, owner = insert_work_by_doi(self.collection, projected)
+            except AmbiguousWorkDOI as error:
+                LOGGER.warning("DOI conflict; snapshot record %s skipped: %s", source["_id"], error)
+                counters["doi_conflicts"] = counters.get("doi_conflicts", 0) + 1
+                return
+            if owner:
+                merged = self._merge(owner, projected)
+                self.collection.replace_one({"_id": owner["_id"]}, merged)
+            counters["updated" if owner else "inserted"] += 1
+            return
+        self._upsert_without_doi(projected, counters)
+
+    def _merge_counters(self, counters, partial):
+        with self._counters_lock:
+            for key, value in partial.items():
+                counters[key] = counters.get(key, 0) + value
+
     def _process_batch(self, batch, counters):
         people, groups, institutions = self._reference_maps(batch)
         identifiers = [kahi_work_id(document["_id"]) for document in batch]
@@ -825,25 +859,20 @@ class Kahi_minciencias_opendata_works(KahiBase):
             document["_id"]: document
             for document in self.collection.find({"_id": {"$in": identifiers}})
         }
-        for source in batch:
-            projected = self._project(source, people, groups, institutions, counters)
-            current = existing.get(projected["_id"])
-            if prepare_work_doi(projected, "minciencias"):
-                if current and not work_titles_match(projected.get("titles"), current.get("titles")):
-                    # A source-id collision must not bypass the DOI/title gate.
-                    projected.pop("_id")
-                try:
-                    inserted_id, owner = insert_work_by_doi(self.collection, projected)
-                except AmbiguousWorkDOI as error:
-                    LOGGER.warning("DOI conflict; snapshot record %s skipped: %s", source["_id"], error)
-                    counters["doi_conflicts"] = counters.get("doi_conflicts", 0) + 1
-                    continue
-                if owner:
-                    merged = self._merge(owner, projected)
-                    self.collection.replace_one({"_id": owner["_id"]}, merged)
-                counters["updated" if owner else "inserted"] += 1
-                continue
-            self._upsert_without_doi(projected, counters)
+        if self.workers == 1 or len(batch) == 1:
+            for source in batch:
+                self._process_row(source, existing, people, groups, institutions, counters)
+            return
+
+        def process(source):
+            partial = Counter()  # accepts += on any key, like the shared counters after setdefault
+            self._process_row(source, existing, people, groups, institutions, partial)
+            return partial
+
+        with ThreadPoolExecutor(max_workers=self.workers) as pool:
+            # Exceptions propagate: a failed row aborts the run, as it does sequentially.
+            for partial in pool.map(process, batch):
+                self._merge_counters(counters, partial)
 
     def process_snapshot(self, previous):
         counters = deepcopy(previous.get("counters") or {

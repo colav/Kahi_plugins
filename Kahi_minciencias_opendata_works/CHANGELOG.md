@@ -1,3 +1,10 @@
+## 0.1.10 - 2026-11-13
+
+* `workers` (default 1): the rows of each snapshot batch are imported by a
+  thread pool; per-row counters are merged under a lock and the Elasticsearch
+  sync cache is locked. Identity leases already serialize rows that share a
+  DOI, identifier or title (real-Mongo test: 8 same-title rows insert once)
+
 ## 0.1.9 - 2026-11-12
 
 * Detect the language of snapshot titles that come without `lang` (Yuku does

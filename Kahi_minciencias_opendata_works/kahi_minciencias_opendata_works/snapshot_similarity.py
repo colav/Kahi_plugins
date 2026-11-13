@@ -3,6 +3,7 @@
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha256
+from threading import Lock
 
 from bson import BSON
 from mohan.Similarity import Similarity
@@ -27,6 +28,7 @@ class SnapshotSimilarity:
                 if config.get("es_user") else None)
         self.handler = Similarity(config["es_index"], es_uri=config["es_url"], es_auth=auth)
         self._indexed = OrderedDict()
+        self._lock = Lock()  # the bounded cache is shared by the batch workers
 
     def candidates(self, document):
         work = _es_work(document)
@@ -54,13 +56,15 @@ class SnapshotSimilarity:
             return
         identifier = str(document["_id"])
         fingerprint = sha256(BSON.encode(work)).hexdigest()
-        if self._indexed.get(identifier) == fingerprint:
-            return
+        with self._lock:
+            if self._indexed.get(identifier) == fingerprint:
+                return
         # Mohan refreshes after this write. Another source row can therefore
         # find this work before its next insertion decision. Errors propagate
         # so an unavailable index never silently becomes "no candidates".
         self.handler.insert_work(_id=identifier, work=deepcopy(work))
-        self._indexed[identifier] = fingerprint
-        self._indexed.move_to_end(identifier)
-        if len(self._indexed) > 4096:
-            self._indexed.popitem(last=False)
+        with self._lock:
+            self._indexed[identifier] = fingerprint
+            self._indexed.move_to_end(identifier)
+            if len(self._indexed) > 4096:
+                self._indexed.popitem(last=False)

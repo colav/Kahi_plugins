@@ -158,3 +158,6 @@ the existing matching policy still applies. Incorrect types describing both as
 books cannot reveal that one is actually a chapter. This change prevents new
 incompatible merges; it does not repair earlier stored data or reload Python
 modules already imported by an active ETL process.
+
+
+`workers` (default 1) sets how many threads import the rows of each snapshot batch; identity leases keep concurrent rows consistent. Use it with `task=nodoi`, where each row queries Elasticsearch.
