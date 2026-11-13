@@ -84,7 +84,7 @@ def main():
             'pymongo',
             'joblib',
             'pandas',
-            'kahi_impactu_utils',
+            'kahi_impactu_utils>=0.1.11',
             'mohan',
             'langcodes',
             'iso639~=0.1.4'

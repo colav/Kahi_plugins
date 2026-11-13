@@ -9,6 +9,7 @@ from kahi_impactu_utils.Utils import doi_processor
 from kahi_impactu_utils.Work import ensure_work_doi_indexes
 from kahi_impactu_utils.Mapping import canonical_ror_url, ciarp_mapping
 from mohan.Similarity import Similarity
+from kahi_impactu_utils.Elastic import size_similarity_pool
 from pathlib import Path
 from threading import BoundedSemaphore
 
@@ -110,6 +111,9 @@ class Kahi_ciarp_works(KahiBase):
                 raise ValueError(
                     "ciarp_works.es_max_concurrency must be greater than zero")
             self.es_semaphore = BoundedSemaphore(es_max_concurrency)
+            # Mohan's client pools 10 connections; match it to the semaphore so
+            # concurrent searches never fail with EmptyPoolError.
+            size_similarity_pool(self.es_handler, es_url, es_auth, es_max_concurrency)
 
     def _source_collection(self, database):
         source_url = database.get("database_url", self.mongodb_url)

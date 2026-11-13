@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3-beta - 2026-11-13
+
+- Size the Mohan Elasticsearch connection pool to `es_max_concurrency`
+  (EmptyPoolError with more than 10 concurrent searches)
+
+
 ## 0.1.2-beta - 2026-11-12
 
 - Stop comparing the remaining authors once the CIARP person is already an
