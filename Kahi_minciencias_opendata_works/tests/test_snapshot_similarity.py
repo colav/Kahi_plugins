@@ -332,3 +332,10 @@ def test_sync_cache_is_thread_safe(monkeypatch):
     docs=[nodoi(ObjectId(),f'Titulo {i}') for i in range(300)]
     with ThreadPoolExecutor(max_workers=8) as pool:list(pool.map(adapter.sync,docs))
     assert handler.insert_work.call_count==300 and len(adapter._indexed)==300
+
+
+def test_adapter_sizes_the_es_pool_to_the_workers(monkeypatch):
+    handler=MagicMock();monkeypatch.setattr(module,'Similarity',MagicMock(return_value=handler))
+    sizer=MagicMock();monkeypatch.setattr(module,'size_similarity_pool',sizer)
+    module.SnapshotSimilarity({'es_index':'idx','es_url':'http://test:9200','es_user':'u','es_password':'p','workers':16})
+    sizer.assert_called_once_with(handler,'http://test:9200',('u','p'),16)

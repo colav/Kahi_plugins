@@ -7,6 +7,7 @@ from threading import Lock
 
 from bson import BSON
 from mohan.Similarity import Similarity
+from kahi_impactu_utils.Elastic import size_similarity_pool
 
 from kahi_minciencias_opendata_works.process_one import build_es_work
 
@@ -27,6 +28,8 @@ class SnapshotSimilarity:
         auth = ((config["es_user"], config["es_password"])
                 if config.get("es_user") else None)
         self.handler = Similarity(config["es_index"], es_uri=config["es_url"], es_auth=auth)
+        # One search per batch worker: the client pool must hold that many connections.
+        size_similarity_pool(self.handler, config["es_url"], auth, int(config.get("workers", 1)))
         self._indexed = OrderedDict()
         self._lock = Lock()  # the bounded cache is shared by the batch workers
 

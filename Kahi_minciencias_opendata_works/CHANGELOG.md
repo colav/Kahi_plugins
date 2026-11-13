@@ -1,3 +1,8 @@
+## 0.1.11 - 2026-11-13
+
+* Size the Mohan Elasticsearch connection pool to `workers`
+  (kahi_impactu_utils>=0.1.11)
+
 ## 0.1.10 - 2026-11-13
 
 * `workers` (default 1): the rows of each snapshot batch are imported by a
