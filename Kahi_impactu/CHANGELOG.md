@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.34] - 2026-11-13
+
+### Fixed
+
+- Pinned Kahi_minciencias_opendata_works 0.1.11 (Elasticsearch pool sized to
+  `workers`).
+
 ## [0.0.33] - 2026-11-13
 
 ### Fixed
