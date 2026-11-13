@@ -1,4 +1,10 @@
 # Changelog
+## 0.0.7-alpha - 2026-11-12
+- The repository affiliation is assigned to an author only with evidence: the
+  person is found in `person` with that affiliation (insert: name + ROR;
+  update: the matched person lists the institution), or the record has a
+  single author. Updates used to give it to any author matched by name
+
 ## 0.0.6-alpha - 2026-11-12
 - Skip records answered by the OAI server of another configured repository
   (`OAI-PMH.request`): dspace_uac_records held a copy of uniatlantico and

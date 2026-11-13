@@ -822,3 +822,75 @@ def test_reprocessing_the_same_dspace_record_adds_no_second_updated_entry():
     other["updated"][0]["time"] = saved["updated"][0]["time"] + 1  # $addToSet would merge equal entries
     process_one_update(other, saved, None, db, db.works, 0)
     assert [item["source"] for item in db.works.find_one({})["updated"]] == ["dspace", "dspace"]
+
+
+def _author(full_name, first_names, last_names, kind="author"):
+    return {"id": "", "full_name": full_name, "first_names": first_names, "last_names": last_names,
+            "initials": "".join(n[0] for n in first_names), "type": kind, "affiliations": []}
+
+
+def test_insert_gives_the_repository_affiliation_only_to_a_single_unknown_author():
+    db = mongomock.MongoClient().db
+    parent, *_ = seed_internal_units(db)
+    entry = empty_work()
+    entry.update({"titles": [{"title": "Tesis", "lang": "es"}], "year_published": 2021,
+                  "external_ids": [{"source": "dspace", "id": "oai:test:single"}],
+                  "authors": [_author("Pedro Gómez", ["Pedro"], ["Gómez"]),
+                              _author("Olga Mariño Drews", ["Olga"], ["Mariño", "Drews"], "advisor")]})
+    process_one_insert(entry, parent, db, db.works, None, 0)
+    authors = db.works.find_one({"external_ids.id": "oai:test:single"})["authors"]
+    assert authors[0]["id"] == "" and [a["id"] for a in authors[0]["affiliations"]] == [parent["id"]]
+    assert authors[1]["affiliations"] == []
+
+
+def test_insert_leaves_several_unknown_authors_without_affiliation():
+    db = mongomock.MongoClient().db
+    parent, *_ = seed_internal_units(db)
+    entry = empty_work()
+    entry.update({"titles": [{"title": "Artículo", "lang": "es"}], "year_published": 2021,
+                  "external_ids": [{"source": "dspace", "id": "oai:test:two"}],
+                  "authors": [_author("Pedro Gómez Guzmán", ["Pedro"], ["Gómez", "Guzmán"]),
+                              _author("María C Cañadas Santiago", ["María", "C"], ["Cañadas", "Santiago"])]})
+    process_one_insert(entry, parent, db, db.works, None, 0)
+    assert all(a["affiliations"] == [] and a["id"] == "" for a in db.works.find_one()["authors"])
+
+
+def test_update_requires_the_person_to_be_affiliated_to_the_repository_institution():
+    db = mongomock.MongoClient().db
+    parent, *_ = seed_internal_units(db)
+    db.person.insert_one({"_id": "person-2", "full_name": "María C Cañadas", "first_names": ["María", "C"],
+                          "last_names": ["Cañadas"], "initials": "MC", "updated": [],
+                          "affiliations": [{"id": "granada", "name": "Universidad de Granada"}]})
+    existing = empty_work()
+    existing.update({"_id": "work-2", "year_published": 2021, "author_count": 2, "authors": [
+        {"id": "person-1", "full_name": "adriana panader torres", "affiliations": []},
+        {"id": "person-2", "full_name": "María C Cañadas", "affiliations": []}]})
+    db.works.insert_one(deepcopy(existing))
+    incoming = empty_work()
+    incoming["authors"] = [_author("Adriana Panader Torres", ["Adriana"], ["Panader", "Torres"]),
+                           _author("María C Cañadas", ["María", "C"], ["Cañadas"])]
+
+    with patch("kahi_dspace_works.process_one.compare_author", return_value=True):
+        process_one_update(incoming, existing, parent, db, db.works, 0)
+
+    saved = {a["id"]: a for a in db.works.find_one({"_id": "work-2"})["authors"]}
+    assert parent["id"] in [i["id"] for i in saved["person-1"]["affiliations"]]
+    assert saved["person-2"]["affiliations"] == []
+
+
+def test_update_single_author_record_and_work_gets_the_repository_affiliation():
+    db = mongomock.MongoClient().db
+    parent, *_ = seed_internal_units(db)
+    db.person.insert_one({"_id": "person-3", "full_name": "Pedro Gómez", "first_names": ["Pedro"],
+                          "last_names": ["Gómez"], "initials": "P", "updated": [], "affiliations": []})
+    existing = empty_work()
+    existing.update({"_id": "work-3", "year_published": 2021, "author_count": 1,
+                     "authors": [{"id": "person-3", "full_name": "Pedro Gómez", "affiliations": []}]})
+    db.works.insert_one(deepcopy(existing))
+    incoming = empty_work()
+    incoming["authors"] = [_author("Pedro Gómez", ["Pedro"], ["Gómez"])]
+
+    with patch("kahi_dspace_works.process_one.compare_author", return_value=True):
+        process_one_update(incoming, existing, parent, db, db.works, 0)
+
+    assert [i["id"] for i in db.works.find_one({"_id": "work-3"})["authors"][0]["affiliations"]] == [parent["id"]]

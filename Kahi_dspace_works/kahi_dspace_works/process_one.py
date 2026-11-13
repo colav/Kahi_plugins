@@ -107,6 +107,26 @@ def find_work_by_es_id(collection, value):
         return None
 
 
+def single_author(authors):
+    """The only author of type "author" in the record, or None when there are several."""
+    candidates = [author for author in authors if author.get("type", "author") == "author"]
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def _person_has_affiliation(person, affiliation):
+    return affiliation is not None and str(affiliation.get("id")) in {
+        str(item.get("id")) for item in (person or {}).get("affiliations", [])
+    }
+
+
+def _add_affiliation(author, affiliation):
+    existing_ids = {item.get("id") for item in author["affiliations"]}
+    if affiliation is not None and affiliation.get("id") not in existing_ids:
+        author["affiliations"].append(affiliation)
+        existing_ids.add(affiliation.get("id"))
+    return existing_ids
+
+
 def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
     """
     Update the entry in the works collection.
@@ -205,12 +225,14 @@ def process_one_update(entry, colav_reg, affiliation, db, collection, verbose):
                     author_reg, author_db, len(colav_reg["authors"]))
             if name_match:
                 author["type"] = author_reg["type"]
-                existing_ids = {
-                    item.get("id") for item in author["affiliations"]}
-                if affiliation is not None:
-                    if affiliation.get("id") not in existing_ids:
-                        author["affiliations"].append(affiliation)
-                        existing_ids.add(affiliation.get("id"))
+                # The repository only proves that some author belongs to the
+                # institution: assign it when the person is known to be
+                # affiliated there, or when the record has a single author.
+                evidenced = _person_has_affiliation(author_db, affiliation) or (
+                    single_author(entry["authors"]) is author_reg
+                    and len(colav_reg["authors"]) == 1)
+                existing_ids = _add_affiliation(
+                    author, affiliation if evidenced else None)
                 units = get_units_affiliations(
                     db, author_db, author["affiliations"],
                     colav_reg.get("year_published") or entry.get("year_published"))
@@ -329,6 +351,10 @@ def process_one_insert(entry, affiliation, db, collection, es_handler, verbose,
                         if unit.get("id") not in existing_ids:
                             author["affiliations"].append(unit)
                             existing_ids.add(unit.get("id"))
+
+    only_author = single_author(entry["authors"])
+    if only_author is not None:
+        _add_affiliation(only_author, affiliation)
 
     dspace_id = next((
         item.get("id") for item in entry.get("external_ids", [])
