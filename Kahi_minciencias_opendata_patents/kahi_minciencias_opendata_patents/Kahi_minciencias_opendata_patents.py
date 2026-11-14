@@ -315,7 +315,12 @@ class Kahi_minciencias_opendata_patents(KahiBase):
         return output
 
     def _patent(self, source, people, groups):
-        output = {field: deepcopy(source[field]) for field in self.empty_patent()}
+        # Fields the snapshot does not carry (abstracts and topics, filled
+        # later by Lens and postcalculations) start from the empty template.
+        output = {
+            field: deepcopy(source[field]) if field in source else empty
+            for field, empty in self.empty_patent().items()
+        }
         output["_id"] = source["_id"]
         output["authors"] = [
             self._resolve_author(author, people, groups)

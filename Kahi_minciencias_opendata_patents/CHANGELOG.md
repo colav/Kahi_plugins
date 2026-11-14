@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3-beta - 2026-11-14
+
+- Build snapshot documents from the full Kahi 0.1.5 patent template: fields
+  the snapshot does not carry (`abstracts`, `primary_topic`, `topics`) start
+  empty instead of raising `KeyError`; re-imports keep the values written by
+  Lens and postcalculations.
+
 ## 0.1.2-beta - 2026-11-06
 
 - Restore an explicit isolated `legacy` reader for `gruplac_production_data`.
