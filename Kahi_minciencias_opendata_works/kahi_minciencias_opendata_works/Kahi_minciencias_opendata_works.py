@@ -575,9 +575,10 @@ class Kahi_minciencias_opendata_works(KahiBase):
             if not title.get("lang") and title.get("title"):
                 title["lang"] = lang_poll(title["title"])
         # `updated.time` is when Kahi imported the record, not when Yuku parsed it.
+        # Only "minciencias" is a source; Yuku's "minciencias_materialization"
+        # marker is internal provenance and never reaches works.
         now = int(time())
-        for item in output["updated"]:
-            item["time"] = now
+        output["updated"] = [{"source": "minciencias", "time": now}]
         output["authors"] = [
             self._resolve_author(author, people, groups, institutions, counters)
             for author in source.get("authors", [])
@@ -718,8 +719,11 @@ class Kahi_minciencias_opendata_works(KahiBase):
                 bibliography_matches += 1
         left_ids = {str(author["id"]) for author in incoming.get("authors", []) if author.get("id")}
         right_ids = {str(author["id"]) for author in owner.get("authors", []) if author.get("id")}
-        if left_ids and right_ids:
-            return bool(left_ids.intersection(right_ids))
+        if left_ids and right_ids and left_ids.intersection(right_ids):
+            return True
+        # Disjoint person ids are not evidence against: one researcher can have
+        # several person records (e.g. split OpenAlex profiles). Fall back to a
+        # strict name match, on top of the title/year/bibliography checks above.
         left_names = [author.get("full_name", "") for author in incoming.get("authors", [])
                       if len(normalized_name(author.get("full_name")).split()) >= 2]
         right_names = [author.get("full_name", "") for author in owner.get("authors", [])

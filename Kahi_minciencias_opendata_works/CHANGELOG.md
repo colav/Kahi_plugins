@@ -1,3 +1,15 @@
+## 0.1.12 - 2026-11-14
+
+* Book/chapter veto reads only the most specific type level per provenance:
+  a Scienti chapter (level 2 chapter under the level 1 "Libro" category) is a
+  chapter, not book+chapter (policy book-chapter-veto-v2)
+* Similarity: disjoint person ids fall back to the strict author-name match
+  instead of rejecting (one researcher with several person records)
+* `updated` of imported works is only `minciencias`; Yuku's
+  `minciencias_materialization` marker is dropped
+* On the November cut, 22 023 of 33 722 unmerged same-title/year pairs pass
+  the compatibility check (15 456 by the veto fix)
+
 ## 0.1.11 - 2026-11-13
 
 * Size the Mohan Elasticsearch connection pool to `workers`

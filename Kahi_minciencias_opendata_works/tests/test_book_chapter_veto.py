@@ -102,3 +102,22 @@ def test_new_book_and_chapter_have_only_base_model_fields(monkeypatch):
     rows=[row for row in target.works.find() if row['_id']!=WORK_1]
     assert len(rows)==1
     assert list(rows[0])==['_id',*KahiBase().empty_work()]
+
+
+SCIENTI_CHAPTER=[
+    {'provenance':'scienti','source':'scienti','type':'Otro capítulo de libro publicado','level':2,'code':'135'},
+    {'provenance':'scienti','source':'scienti','type':'Libro','level':1,'code':'13'},
+    {'provenance':'scienti','source':'scienti','type':'Producción bibliográfica','level':0,'code':'1'},
+]
+MINCIENCIAS_CHAPTER=[
+    {'provenance':'minciencias','source':'minciencias','type':'Capítulo de libro','level':1,'parent':'Producción bibliográfica'},
+    {'provenance':'minciencias','source':'minciencias','type':'Producción bibliográfica','level':0,'parent':None},
+]
+
+
+def test_parent_category_does_not_turn_a_scienti_chapter_into_a_book():
+    from kahi_minciencias_opendata_works.work_types import book_families, book_types_compatible
+    # "Intoxicación por metilxantinas" (COD_RH 0000061158 / 94): chapter in both sources.
+    assert book_families({'types':SCIENTI_CHAPTER})==frozenset({'chapter'})
+    assert book_types_compatible({'types':MINCIENCIAS_CHAPTER},{'types':SCIENTI_CHAPTER})
+    assert not book_types_compatible({'types':BOOK},{'types':SCIENTI_CHAPTER})

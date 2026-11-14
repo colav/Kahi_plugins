@@ -339,3 +339,21 @@ def test_adapter_sizes_the_es_pool_to_the_workers(monkeypatch):
     sizer=MagicMock();monkeypatch.setattr(module,'size_similarity_pool',sizer)
     module.SnapshotSimilarity({'es_index':'idx','es_url':'http://test:9200','es_user':'u','es_password':'p','workers':16})
     sizer.assert_called_once_with(handler,'http://test:9200',('u','p'),16)
+
+
+def _work(author_id,name,**extra):
+    work={'titles':[{'title':'Variaciones diarias de parámetros ruminales y sanguíneos en vacas lecheras'}],
+          'year_published':2012,'types':[],'bibliographic_info':{},
+          'authors':[{'id':author_id,'full_name':name}]}
+    work.update(extra);return work
+
+
+def test_disjoint_person_ids_fall_back_to_a_strict_name_match():
+    # Clarissa Strieder Barboza has two person records (split OpenAlex profiles).
+    incoming=_work('6aefdfba5e00d0d45e885ba8','Clarissa Strieder Barboza')
+    owner=_work('6af029695e00d0d45ea46c0b','Clarissa Strieder Barboza')
+    assert Plugin._similarity_compatible(incoming,owner)
+    stranger=_work('6af0000000000000000000ff','Fernando Wittwer')
+    assert not Plugin._similarity_compatible(incoming,stranger)
+    shared=_work('6aefdfba5e00d0d45e885ba8','C Strieder')
+    assert Plugin._similarity_compatible(incoming,shared)

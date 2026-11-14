@@ -43,10 +43,29 @@ def _catalog_aliases():
     return {label: families for label, families in aliases.items() if "other" not in families}
 
 
+def _most_specific_types(types):
+    """Drop parent categories: per provenance keep only the deepest `level`.
+
+    Scienti types a chapter as level 2 "Otro capítulo de libro publicado"
+    under the level 1 category "Libro"; reading both made it look like a
+    book and a chapter at once and vetoed the merge.
+    """
+    deepest = {}
+    for entry in types:
+        if isinstance(entry, dict) and isinstance(entry.get("level"), int):
+            key = entry.get("provenance") or entry.get("source")
+            deepest[key] = max(deepest.get(key, entry["level"]), entry["level"])
+    return [
+        entry for entry in types
+        if not (isinstance(entry, dict) and isinstance(entry.get("level"), int))
+        or entry["level"] == deepest[entry.get("provenance") or entry.get("source")]
+    ]
+
+
 def book_families(document):
     families = set()
     aliases = _catalog_aliases()
-    for entry in document.get("types") or []:
+    for entry in _most_specific_types(document.get("types") or []):
         label = entry.get("type", "") if isinstance(entry, dict) else entry
         if not isinstance(label, str):
             continue
@@ -73,4 +92,4 @@ def book_types_compatible(incoming, owner):
 def book_type_policy():
     aliases = {label: sorted(families) for label, families in _catalog_aliases().items()}
     digest = sha256(json.dumps(aliases, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
-    return {"book_type_policy": "book-chapter-veto-v1", "book_type_aliases_digest": digest}
+    return {"book_type_policy": "book-chapter-veto-v2", "book_type_aliases_digest": digest}

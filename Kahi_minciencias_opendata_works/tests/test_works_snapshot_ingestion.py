@@ -368,3 +368,16 @@ def test_merge_keeps_one_updated_entry_per_source(monkeypatch):
 
     assert work["updated"] == [{"source": "openalex", "time": 5},
                                {"source": "minciencias", "time": 1_800_000_000}]
+
+
+def test_materialization_marker_is_not_imported_as_a_source(monkeypatch):
+    snapshot = work_snapshot()
+    snapshot["updated"] = [{"source": "minciencias", "time": 1},
+                           {"source": "minciencias_materialization", "time": 2}]
+    target, _ = prepare(monkeypatch, works=[snapshot])
+    monkeypatch.setattr(plugin_module, "time", lambda: 1_800_000_000)
+
+    Plugin(config()).run()
+
+    assert target.works.find_one({"_id": WORK_1})["updated"] == [
+        {"source": "minciencias", "time": 1_800_000_000}]
