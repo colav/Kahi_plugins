@@ -16,6 +16,24 @@ class TopicEndpointUnavailable(RuntimeError):
     """The inference service or its network path is unavailable."""
 
 
+def prefer_abstract_langs(documents, langs):
+    """Yield documents with their abstracts reordered by preferred language.
+
+    ``_topic_payload`` uses the first abstract; patents carry one Lens
+    abstract per language, so the preferred one is moved first. The reorder
+    only lives in memory: topic updates write ``primary_topic``/``topics``.
+    """
+    order = {lang: position for position, lang in enumerate(langs or [])}
+    for document in documents:
+        abstracts = document.get("abstracts") or []
+        if order and len(abstracts) > 1:
+            document["abstracts"] = sorted(
+                abstracts,
+                key=lambda item: order.get(item.get("lang"), len(order)),
+            )
+        yield document
+
+
 def _topic_payload(work):
     """Build the inference payload for a work, or return None if it is invalid."""
     titles = work.get("titles") or []

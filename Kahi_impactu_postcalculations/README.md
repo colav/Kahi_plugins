@@ -52,6 +52,9 @@ workflow:
     topic_batch_size: 1
     topic_request_timeout: 300
     topic_request_retries: 3
+    topic_collections: [works, patents]
+    topic_abstract_langs:
+      patents: [en, es]
     person_topics_enabled: false
     person_topics_dry_run: true
     person_topics_jobs: 24
@@ -134,6 +137,11 @@ Notes:
   co-authorship networks without disabling the remaining post-calculations.
 - Set `topics_enabled` to `false` to skip topic inference when all pending
   works were already processed and the plugin is being resumed.
+- `topic_collections` lists the collections that get topics (default
+  `[works]`; `patents` uses the Lens abstracts written by Kahi_lens_patents).
+  `topic_abstract_langs` sets, per collection, which abstract language is sent
+  to the model first (patents carry one Lens abstract per language); the order
+  is applied in memory only. Person topics are still computed from works only.
 - `top_words_backend` and `top_words_jobs` control only the top-words phase.
   Use `threading` with a small worker count to avoid exhausting MongoDB
   connections while the general plugin backend remains unchanged.

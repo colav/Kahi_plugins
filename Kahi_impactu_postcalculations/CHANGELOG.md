@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.7 - 2026-11-14
+
+### Added
+
+- Topic inference for other collections: `topic_collections` (default
+  `[works]`, e.g. `[works, patents]`) and `topic_abstract_langs` (preferred
+  abstract languages per collection, applied in memory). Person topics keep
+  using works only.
+
+### Changed
+
+- Topic inference moved to `process_topics(db, openalex_db)`.
+
 ## 0.1.6 - 2026-11-12
 
 ### Changed

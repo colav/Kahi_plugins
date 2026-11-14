@@ -341,3 +341,58 @@ def test_works_scan_top_words_keeps_output_schema():
     }
     assert db_out["top_words_person_tmp"].count_documents({}) == 0
     assert db_out["top_words_affiliations_tmp"].count_documents({}) == 0
+
+
+def test_prefer_abstract_langs_reorders_in_memory_only():
+    patent = {"_id": 1, "abstracts": [
+        {"abstract": {"a": [0]}, "lang": "es"},
+        {"abstract": {"b": [0]}, "lang": "fr"},
+        {"abstract": {"c": [0]}, "lang": "en"},
+    ]}
+    [result] = topics.prefer_abstract_langs([patent], ["en", "es"])
+    assert [item["lang"] for item in result["abstracts"]] == ["en", "es", "fr"]
+    [same] = topics.prefer_abstract_langs([{"abstracts": [{"lang": "es"}]}], [])
+    assert same["abstracts"] == [{"lang": "es"}]
+
+
+def test_process_topics_covers_configured_collections(monkeypatch):
+    import mongomock
+
+    db = mongomock.MongoClient().kahi
+    db.works.insert_one({"_id": "w", "titles": [{"title": "Work"}],
+                         "abstracts": [{"abstract": {"x": [0]}, "lang": "en"}],
+                         "primary_topic": {}})
+    db.patents.insert_many([
+        {"_id": "p", "titles": [{"title": "Patente"}], "primary_topic": {},
+         "abstracts": [{"abstract": {"es": [0]}, "lang": "es"},
+                       {"abstract": {"en": [0]}, "lang": "en"}]},
+        {"_id": "done", "titles": [{"title": "Ya"}], "primary_topic": {"id": "T1"},
+         "abstracts": [{"abstract": {"x": [0]}, "lang": "es"}]},
+        {"_id": "empty", "titles": [{"title": "Sin abstract"}], "primary_topic": {},
+         "abstracts": []},
+    ])
+    db.openalex_topics.insert_one({"id": "https://openalex.org/T1", "display_name": "T"})
+    seen = {}
+
+    def fake_pool(col, cache, batches, *args):
+        seen[col.name] = [doc for batch in batches for doc in batch]
+        return {"works": len(seen[col.name]), "modified": 0, "failed": 0}
+
+    monkeypatch.setattr(
+        "kahi_impactu_postcalculations.Kahi_impactu_postcalculations."
+        "process_topic_batches_pool", fake_pool)
+    plugin = object.__new__(Kahi_impactu_postcalculations)
+    plugin.topic_inference_mode = "remote"
+    plugin.inference_endpoints = ["http://topics/invocations"]
+    plugin.topic_request_timeout = plugin.topic_request_retries = 1
+    plugin.topic_progress_interval = 10
+    plugin.topic_batch_size = 2
+    plugin.topic_collections = ["works", "patents"]
+    plugin.topic_abstract_langs = {"patents": ["en"]}
+
+    plugin.process_topics(db, {"topics": db.openalex_topics})
+
+    assert [doc["_id"] for doc in seen["works"]] == ["w"]
+    assert [doc["_id"] for doc in seen["patents"]] == ["p"]
+    assert seen["patents"][0]["abstracts"][0]["lang"] == "en"
+    assert db.patents.find_one({"_id": "p"})["abstracts"][0]["lang"] == "es"

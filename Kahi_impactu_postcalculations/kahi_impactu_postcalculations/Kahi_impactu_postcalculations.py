@@ -20,6 +20,7 @@ from kahi_impactu_postcalculations.typing import (
 from kahi_impactu_postcalculations.topics import (
     _topic_payload,
     load_openalex_topics,
+    prefer_abstract_langs,
     process_topic_batch,
     process_topic_batches_pool,
     request_topic_inference_batch,
@@ -128,6 +129,19 @@ class Kahi_impactu_postcalculations(KahiBase):
             raise ValueError("topic_request_retries must be greater than zero")
         self.topic_progress_interval = topic_config.get(
             "topic_progress_interval", 100
+        )
+        # Collections whose documents get topics (same model and payload as
+        # works) and, per collection, the preferred abstract languages.
+        self.topic_collections = list(
+            topic_config.get("topic_collections", ["works"])
+        )
+        unknown = set(self.topic_collections) - {"works", "patents", "projects", "events"}
+        if not self.topic_collections or unknown:
+            raise ValueError(
+                "topic_collections must list works, patents, projects or events"
+            )
+        self.topic_abstract_langs = dict(
+            topic_config.get("topic_abstract_langs") or {}
         )
         self.person_topics_enabled = topic_config.get(
             "person_topics_enabled", False
@@ -457,6 +471,50 @@ class Kahi_impactu_postcalculations(KahiBase):
                 print("INFO: Preflight topics OK: no pending eligible works")
         print("INFO: Preflight completed successfully")
 
+    def process_topics(self, db, openalex_db):
+        """Infer topics for every configured collection (works by default)."""
+        topic_cache = load_openalex_topics(openalex_db["topics"])
+        print(f"INFO: Cached {len(topic_cache)} OpenAlex topics")
+        print(
+            f"INFO: Topic inference mode: {self.topic_inference_mode}; "
+            "endpoint pool: "
+            f"{len(self.inference_endpoints)} isolated workers"
+        )
+        for collection_name in self.topic_collections:
+            langs = self.topic_abstract_langs.get(collection_name) or []
+            print(
+                f"INFO: Setting up topics for {collection_name}"
+                + (f" (abstract languages: {', '.join(langs)})" if langs else "")
+            )
+            cursor = db[collection_name].find(
+                {
+                    "primary_topic": {"$in": [{}, None]},
+                    "abstracts.0": {"$exists": True},
+                },
+                {
+                    "titles": 1,
+                    "abstracts": 1,
+                    "source": 1,
+                    "primary_topic": 1,
+                    "topics": 1,
+                },
+            )
+            topic_batches = batched(
+                prefer_abstract_langs(cursor, langs), self.topic_batch_size
+            )
+            progress = process_topic_batches_pool(
+                db[collection_name], topic_cache, topic_batches,
+                self.inference_endpoints,
+                self.topic_request_timeout,
+                self.topic_request_retries,
+                self.topic_progress_interval,
+            )
+            print(
+                f"INFO: Topic inference completed for {collection_name}: "
+                f"{progress['works']} documents; {progress['modified']} updated; "
+                f"{progress['failed']} failed"
+            )
+
     def process_types(self, db):
         warnings_enabled = self.verbose >= 4
         result = clear_impactu_types(db)
@@ -760,40 +818,7 @@ class Kahi_impactu_postcalculations(KahiBase):
             print("INFO: Abstract resolver enrichment disabled by workflow")
 
         if self.topics_enabled:
-            print("INFO: Setting up topics for works")
-            topic_cache = load_openalex_topics(openalex_db["topics"])
-            print(f"INFO: Cached {len(topic_cache)} OpenAlex topics")
-            works_cursor = db["works"].find(
-                {
-                    "primary_topic": {"$in": [{}, None]},
-                    "abstracts.0": {"$exists": True},
-                },
-                {
-                    "titles": 1,
-                    "abstracts": 1,
-                    "source": 1,
-                    "primary_topic": 1,
-                    "topics": 1,
-                },
-            )
-            topic_batches = batched(works_cursor, self.topic_batch_size)
-            print(
-                f"INFO: Topic inference mode: {self.topic_inference_mode}; "
-                "endpoint pool: "
-                f"{len(self.inference_endpoints)} isolated workers"
-            )
-            progress = process_topic_batches_pool(
-                db["works"], topic_cache, topic_batches,
-                self.inference_endpoints,
-                self.topic_request_timeout,
-                self.topic_request_retries,
-                self.topic_progress_interval,
-            )
-            print(
-                "INFO: Topic inference completed: "
-                f"{progress['works']} works; {progress['modified']} updated; "
-                f"{progress['failed']} failed"
-            )
+            self.process_topics(db, openalex_db)
         else:
             print("INFO: Topic inference disabled by workflow")
 
