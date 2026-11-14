@@ -13,6 +13,18 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.36] - 2026-11-14
+
+### Added
+
+- Kahi_lens_patents 0.0.1-alpha: Lens ID, URL and abstracts for the patents
+  matched in Lens (runs after minciencias_opendata_patents).
+
+### Changed
+
+- Pinned Kahi 0.1.5 (`abstracts`, `primary_topic`, `topics` in the patent
+  template) and Kahi_minciencias_opendata_patents 0.1.3-beta.
+
 ## [0.0.35] - 2026-11-14
 
 ### Fixed

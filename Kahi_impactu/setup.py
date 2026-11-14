@@ -80,7 +80,7 @@ def main():
         # Dependent packages (distributions)
         # put you packages here
         install_requires=[
-            'kahi==0.1.4',
+            'kahi==0.1.5',
             'Kahi_doaj_sources==0.1.2-beta',
             'Kahi_elasticsearch_works==0.1.1-beta',
             'Kahi_impactu_postcalculations==0.1.6',
@@ -90,7 +90,8 @@ def main():
             'Kahi_minciencias_opendata_works==0.1.12',
             'Kahi_minciencias_opendata_works_misc == 0.1.0-beta',
             'Kahi_minciencias_opendata_projects==0.1.2-beta',
-            'Kahi_minciencias_opendata_patents==0.1.2-beta',
+            'Kahi_minciencias_opendata_patents==0.1.3-beta',
+            'Kahi_lens_patents==0.0.1-alpha',
             'Kahi_minciencias_opendata_events==0.1.2-beta',
             'Kahi_dspace_works==0.0.8-alpha',
             'Kahi_openalex_affiliations==0.1.5',
