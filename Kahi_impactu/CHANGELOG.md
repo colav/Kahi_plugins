@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.46] - 2026-11-15
+
+### Changed
+
+- Pinned Kahi_impactu_postcalculations 0.1.11 (DIVIPOLA mapping of Colombian
+  addresses; research groups only with Colombian addresses).
+
 ## [0.0.45] - 2026-11-15
 
 ### Changed
