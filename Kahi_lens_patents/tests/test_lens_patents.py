@@ -3,6 +3,14 @@ import importlib
 import mongomock
 import pytest
 
+from kahi_lens_patents.merging import (
+    choose_survivor,
+    clusters,
+    inventor_tokens,
+    is_lens_inventor,
+    merge_documents,
+    same_inventor,
+)
 from kahi_lens_patents.matching import (
     LensIndex,
     content_overlap,
@@ -26,6 +34,10 @@ PATENT_TYPE = {"provenance": "scienti", "source": "impactu", "type": "Patente"}
     ("12-163128", "CO", "CO12163128"),
     ("WO2023/275652", None, "WO2023275652"),
     ("MX/a/2024/002278", None, "MX2024002278"),
+    ("13-192338-00000-0000", "CO", "CO13192338"),
+    ("15-017263-00000-000", "CO", "CO15017263"),
+    ("9-108636", "CO", "CO09108636"),
+    ("US008303926B1", None, "US8303926"),
 ])
 def test_number_keys(raw, country, expected):
     assert expected in number_keys(raw, country)
@@ -167,3 +179,118 @@ def test_plugin_requires_a_complete_patents_run(monkeypatch):
     kahi.minciencias_opendata_patents_runs.delete_many({})
     with pytest.raises(RuntimeError, match="no complete snapshot run"):
         Plugin(config).run()
+
+
+LENS_INVENTORS = ["PARRA MORENO HECTOR JULIO", "DUQUE LUNA JHONY EDWARD", "PEÑA TORRES JESSICA"]
+
+
+def member(identifier, matched_by, *names, author_ids=(), owner_ids=()):
+    return {"_id": identifier, "matched_by": matched_by, "names": list(names),
+            "author_ids": list(author_ids), "owner_ids": list(owner_ids)}
+
+
+def test_inventor_names_need_more_than_shared_given_names():
+    assert same_inventor(inventor_tokens("Hector Julio PARRA MORENO"),
+                         inventor_tokens("Héctor Parra Moreno"))
+    assert not same_inventor(inventor_tokens("Juan Carlos Perez"),
+                             inventor_tokens("Juan Carlos Gomez"))
+    assert is_lens_inventor([inventor_tokens("Jonny Edward Duque Luna")], LENS_INVENTORS)
+    assert not is_lens_inventor([inventor_tokens("Hector Julio Gomez")], LENS_INVENTORS)
+
+
+def test_clusters_require_number_inventor_or_owner_evidence():
+    members = [
+        member("by-number", "number", "Hector Julio PARRA MORENO", author_ids=["0001317393"]),
+        member("same-inventor", "title_exact", "Hector Julio PARRA MORENO"),
+        member("lens-inventor", "title_exact", "Jonny Edward Duque Luna"),
+        member("official", "title_exact", owner_ids=["0001317393"]),
+        member("title-only", "title_exact", "Pedro Pablo Ruiz Diaz"),
+        member("no-evidence", "title_fuzzy"),
+    ]
+    found = clusters(members, LENS_INVENTORS)
+    assert len(found) == 1
+    assert sorted(found[0]["ids"]) == ["by-number", "lens-inventor", "official", "same-inventor"]
+    assert found[0]["evidence"]["lens-inventor"] == ["lens_inventor"]
+    assert found[0]["evidence"]["official"] == ["shared_owner"]
+    assert "number" in found[0]["evidence"]["by-number"]
+    assert choose_survivor(members[:4]) == "by-number"
+    # Two title-only patents of different people stay apart.
+    assert clusters([members[4], member("other", "title_exact", "Ana Maria Gomez Ruiz")],
+                    LENS_INVENTORS) == []
+
+
+def test_merge_documents_unions_people_groups_and_identifiers():
+    survivor = {"_id": "a", "titles": [{"title": "Trampa para Aedes"}],
+                "authors": [{"id": "1", "full_name": "Hector Parra"}], "author_count": 1,
+                "groups": [{"id": "G1"}], "external_ids": [{"source": "minciencias", "id": "a"}],
+                "updated": [{"source": "minciencias", "time": 1}, {"source": "lens", "time": 2}]}
+    other = {"_id": "b", "titles": [{"title": "TRAMPA PARA AEDES"}],
+             "authors": [{"id": "1", "full_name": "Hector Julio Parra"},
+                         {"id": "2", "full_name": "Jonny Duque"}],
+             "groups": [{"id": "G1"}, {"id": "G2"}],
+             "external_ids": [{"source": "minciencias", "id": "b"}],
+             "updated": [{"source": "minciencias", "time": 1}]}
+    merged = merge_documents(survivor, [other])
+    assert [author["id"] for author in merged["authors"]] == ["1", "2"]
+    assert merged["author_count"] == 2 and len(merged["titles"]) == 1
+    assert [group["id"] for group in merged["groups"]] == ["G1", "G2"]
+    assert [item["id"] for item in merged["external_ids"]] == ["a", "b"]
+    assert [item["source"] for item in merged["updated"]] == ["minciencias", "lens"]
+
+
+def duplicated(monkeypatch, **options):
+    lens_docs = [lens_record("010-1", "2013095397", "Trampa para captura y monitoreo de Aedes "
+                             "aegypti", inventors=LENS_INVENTORS)]
+    first = kahi_patent("P1", "Trampa para captura y monitoreo de Aedes aegypti")
+    first["authors"] = [{"id": "0001317393", "full_name": "Hector Julio PARRA MORENO"}]
+    second = kahi_patent("P2", "TRAMPA PARA CAPTURA Y MONITOREO DE AEDES AEGYPTI")
+    second["authors"] = [{"id": "0000075183", "full_name": "Jonny Edward Duque Luna"}]
+    official = kahi_patent("P3", "Trampa para captura y monitoreo de Aedes aegypti")
+    official["authors"] = []
+    official["groups"] = [{"id": "COL1", "name": "Grupo"}]
+    stranger = kahi_patent("P4", "Trampa para captura y monitoreo de Aedes aegypti")
+    stranger["authors"] = [{"id": "9", "full_name": "Pedro Pablo Ruiz Diaz"}]
+    snapshot = [snapshot_doc("P1", "NC2013/0095397"), snapshot_doc("P2", None),
+                snapshot_doc("P3", None), snapshot_doc("P4", None)]
+    snapshot[0]["authors"] = [{"id": "0001317393"}]
+    snapshot[2]["source_metadata"]["occurrences"][0]["metadata"]["owner_ids"] = ["0001317393"]
+    kahi, config = prepare(monkeypatch, lens_docs, [first, second, official, stranger], snapshot)
+    config["lens_patents"].update(options)
+    return kahi, config
+
+
+def test_plugin_merges_proven_duplicates_and_keeps_them_recoverable(monkeypatch):
+    kahi, config = duplicated(monkeypatch, merge_duplicates=True)
+
+    Plugin(config).run()
+
+    assert sorted(doc["_id"] for doc in kahi.patents.find()) == ["P1", "P4"]
+    survivor = kahi.patents.find_one({"_id": "P1"})
+    assert [author["id"] for author in survivor["authors"]] == ["0001317393", "0000075183"]
+    assert survivor["author_count"] == 2 and survivor["groups"] == [{"id": "COL1", "name": "Grupo"}]
+    assert [item["id"] for item in survivor["external_ids"]] == ["P1", "P2", "P3", "010-1"]
+    assert len([item for item in survivor["external_ids"] if item["source"] == "lens"]) == 1
+    assert len(survivor["titles"]) == 1
+    merge = kahi.lens_patents_merges.find_one({"_id": "P2"})
+    assert merge["merged_into"] == "P1" and merge["evidence"] == ["lens_inventor"]
+    assert merge["document"]["authors"][0]["full_name"] == "Jonny Edward Duque Luna"
+    assert kahi.lens_patents_merges.find_one({"_id": "P3"})["evidence"] == ["shared_owner"]
+    assert kahi.lens_patents_matches.find_one({"_id": "P2"})["merged_into"] == "P1"
+    assert "merged_into" not in kahi.lens_patents_matches.find_one({"_id": "P4"})
+
+    Plugin(config).run()
+    assert kahi.patents.find_one({"_id": "P1"}) == survivor
+    assert kahi.patents.count_documents({}) == 2
+
+
+def test_merge_is_off_by_default_and_dry_run_deletes_nothing(monkeypatch):
+    kahi, config = duplicated(monkeypatch)
+    Plugin(config).run()
+    assert kahi.patents.count_documents({}) == 4
+    assert "lens_patents_merges" not in kahi.list_collection_names()
+
+    config["lens_patents"]["merge_dry_run"] = True
+    Plugin(config).run()
+    assert kahi.patents.count_documents({}) == 4
+    assert sorted(doc["_id"] for doc in kahi.lens_patents_merges_dry_run.find()) == ["P2", "P3"]
+    assert "lens_patents_merges" not in kahi.list_collection_names()

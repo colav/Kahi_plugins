@@ -105,13 +105,20 @@ def number_keys(raw, default_country=None):
 
     Examples: ``NC2023/0017292`` -> ``CO2023017292``; ``PCT/IB2019/053356`` ->
     ``IB2019053356``; ``US 7,041,647`` -> ``US7041647``; ``US20250127805A1``
-    -> ``US20250127805``; ``16146449`` with country US -> ``US16146449``.
+    -> ``US20250127805``; ``16146449`` with country US -> ``US16146449``;
+    ``13-192338-00000-0000`` with country CO -> ``CO13192338``; ``9-108636``
+    with country CO -> ``CO09108636``; ``US008303926B1`` -> ``US8303926``.
     """
-    text = unidecode(str(raw or "")).upper()
+    text = unidecode(str(raw or "")).upper().strip()
+    # Colombian file numbers come padded with empty sequence groups.
+    text = re.sub(r"(-0+)+$", "", text)
+    keys = set()
+    match = re.fullmatch(r"(\d{1,2})-(\d{5,6})", text)
+    if match and default_country == "CO":
+        keys.add(f"CO{int(match[1]):02d}{int(match[2]):06d}")
     compact = re.sub(r"[\s.,\-_]", "", text)
     if not compact:
         return set()
-    keys = set()
     match = re.fullmatch(r"(NC|CO)?(\d{4})/(\d{1,7})", compact) or re.fullmatch(
         r"(NC|CO)(\d{4})(\d{7})", compact
     )
@@ -132,6 +139,7 @@ def number_keys(raw, default_country=None):
     match = re.fullmatch(r"([A-Z]{2})(\d{5,})([A-Z]\d?)?", plain)
     if match:
         keys.add(match[1] + match[2])
+        keys.add(match[1] + match[2].lstrip("0"))
         if match[1] == "BR":
             keys.add(match[1] + match[2][:-1])  # trailing check digit
     elif plain.isdigit() and len(plain) >= 5 and default_country:
@@ -188,10 +196,11 @@ class LensIndex:
         family_ids = sorted(
             {member.get("lens_id") for member in members if member.get("lens_id")} | {lens_id}
         )
-        inventors = [
-            _name_tokens((inventor.get("extracted_name") or {}).get("value"))
+        inventor_names = [
+            (inventor.get("extracted_name") or {}).get("value")
             for inventor in (biblio.get("parties") or {}).get("inventors") or []
         ]
+        inventors = [_name_tokens(name) for name in inventor_names]
         titles = [
             normalize_text(item.get("text"))
             for item in biblio.get("invention_title") or []
@@ -205,6 +214,7 @@ class LensIndex:
             "has_abstract": bool(record.get("abstract")),
             "titles": titles,
             "inventors": [tokens for tokens in inventors if tokens],
+            "inventor_names": [name for name in inventor_names if name],
         }
         self.by_family[family_ids[0]].add(lens_id)
         own = {f"{jurisdiction}{record.get('doc_number')}"}

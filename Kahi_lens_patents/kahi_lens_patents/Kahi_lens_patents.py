@@ -10,18 +10,25 @@ current matches; an unchanged patent is not rewritten.
 
 Every decision is written to the audit collection (``lens_patents_matches``
 by default), one document per patent, including the ones without a match.
+
+With ``merge_duplicates`` the patents that matched the same Lens record and
+are proven to be the same patent (see ``merging.clusters``) become one: the
+survivor absorbs authors, groups, identifiers, titles and types of the others,
+which are deleted and kept whole in ``lens_patents_merges`` so the merge can be
+undone. ``merge_dry_run`` only writes ``lens_patents_merges_dry_run``.
 """
 
 import re
-from collections import Counter
+from collections import Counter, defaultdict
 from time import time
 
 from kahi.KahiBase import KahiBase
 from kahi.progress import ProgressLogger
 from kahi_impactu_utils.String import text_to_inverted_index
-from pymongo import MongoClient, UpdateOne
+from pymongo import DeleteOne, MongoClient, UpdateOne
 
 from kahi_lens_patents.matching import LensIndex, country_code, match_patent
+from kahi_lens_patents.merging import choose_survivor, clusters, merge_documents
 
 LENS_URL = "https://www.lens.org/lens/patent/{}"
 PATENT_FILTER = {"types": {"$elemMatch": {"source": "impactu", "type": "Patente"}}}
@@ -134,6 +141,9 @@ class Kahi_lens_patents(KahiBase):
             plugin.get("snapshot_database_url", plugin["database_url"])
         )
         self.snapshot_db = self.snapshot_client[plugin.get("snapshot_database_name", "dam")]
+        self.merge_duplicates = bool(plugin.get("merge_duplicates", False))
+        self.merge_dry_run = bool(plugin.get("merge_dry_run", False))
+        self.merges_name = plugin.get("merges_collection", "lens_patents_merges")
         self.verbose = plugin.get("verbose", 0)
 
     def snapshot_collection(self):
@@ -166,7 +176,7 @@ class Kahi_lens_patents(KahiBase):
             doc["_id"]: doc
             for doc in snapshot.find(
                 {"_id": {"$in": [patent["_id"] for patent in patents]}},
-                {"source_metadata.occurrences.metadata": 1},
+                {"source_metadata.occurrences.metadata": 1, "authors.id": 1},
             )
         }
         progress = ProgressLogger("lens_patents:match", total=len(patents)).start(
@@ -205,4 +215,77 @@ class Kahi_lens_patents(KahiBase):
             con_abstract=sum(1 for doc in matched if doc["has_abstract"]),
             lens_distintos=len({doc["lens_id"] for doc in matched}),
         )
+        if self.merge_duplicates or self.merge_dry_run:
+            self.merge(matched, sources, index, now)
         return 0
+
+    def merge(self, matched, sources, index, now):
+        """Merge the patents of each Lens record that are proven to be one patent."""
+        dry_run = self.merge_dry_run
+        target = self.db[self.merges_name + "_dry_run" if dry_run else self.merges_name]
+        if dry_run:
+            target.delete_many({})
+        by_lens = defaultdict(list)
+        for doc in matched:
+            by_lens[doc["lens_id"]].append(doc)
+        shared = {lens_id: docs for lens_id, docs in by_lens.items() if len(docs) > 1}
+        progress = ProgressLogger("lens_patents:merge", total=len(shared)).start(
+            "dry_run" if dry_run else ""
+        )
+        updates, deletes, records, removed_total = [], [], [], 0
+        for lens_id, docs in sorted(shared.items()):
+            full = {
+                patent["_id"]: patent
+                for patent in self.collection.find({"_id": {"$in": [doc["_id"] for doc in docs]}})
+            }
+            members = []
+            for doc in docs:
+                patent = full.get(doc["_id"])
+                if not patent:
+                    continue
+                snapshot = sources.get(doc["_id"]) or {}
+                occurrences = (snapshot.get("source_metadata") or {}).get("occurrences") or []
+                members.append({
+                    "_id": doc["_id"],
+                    "matched_by": doc.get("matched_by"),
+                    "names": [author.get("full_name") for author in patent.get("authors") or []
+                              if author.get("full_name")],
+                    "author_ids": [str(author["id"]) for author in snapshot.get("authors") or []
+                                   if author.get("id")],
+                    "owner_ids": [str(owner) for occurrence in occurrences
+                                  for owner in (occurrence.get("metadata") or {}).get("owner_ids")
+                                  or []],
+                })
+            found = clusters(members, index.records[lens_id]["inventor_names"])
+            for cluster in found:
+                survivor = choose_survivor(
+                    [member for member in members if member["_id"] in cluster["ids"]]
+                )
+                others = [full[item] for item in cluster["ids"] if item != survivor]
+                updates.append(UpdateOne(
+                    {"_id": survivor}, {"$set": merge_documents(full[survivor], others)}
+                ))
+                for other in others:
+                    deletes.append(DeleteOne({"_id": other["_id"]}))
+                    records.append(UpdateOne({"_id": other["_id"]}, {"$set": {
+                        "merged_into": survivor,
+                        "lens_id": lens_id,
+                        "evidence": cluster["evidence"][other["_id"]],
+                        "survivor_evidence": cluster["evidence"][survivor],
+                        "document": other,
+                        "run_at": now,
+                    }}, upsert=True))
+                removed_total += len(others)
+            progress.step("grupos_unidos" if found else "grupos_sin_evidencia")
+        if records:
+            target.bulk_write(records, ordered=False)
+        if updates and not dry_run:
+            self.collection.bulk_write(updates, ordered=False)
+            self.collection.bulk_write(deletes, ordered=False)
+            self.audit.bulk_write([
+                UpdateOne({"_id": record._filter["_id"]},
+                          {"$set": {"merged_into": record._doc["$set"]["merged_into"]}})
+                for record in records
+            ], ordered=False)
+        progress.done(eliminadas=removed_total, sobrevivientes=len(updates))
+        return removed_total

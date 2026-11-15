@@ -39,6 +39,30 @@ written to `lens_patents_matches` (one document per patent).
 Lens data is non commercial (CC BY-NC-SA like terms): whoever shows it must
 display the Lens logo and a link to lens.org (https://about.lens.org/policies/#attribution).
 
+# Merging duplicated patents
+
+MinCiencias publishes a patent once per CvLAC that declares it (each with its
+owner as the only author) and once per official measurement record (no authors).
+With `merge_duplicates: true` the patents that matched the same Lens record
+become one when there is hard evidence that they are the same patent:
+
+- the patent matched Lens by number or family (`number`, `family`);
+- one of its authors is an inventor of the Lens record (`lens_inventor`);
+- it shares an inventor with another patent of the group (`shared_inventor`);
+- its owner (COD_RH of the official record) is an author or the owner of another
+  patent of the group (`shared_owner`).
+
+A title-only match with none of these stays apart. The survivor (matched by
+number or family, then most authors) absorbs authors, groups, identifiers,
+titles, types and ranking; the others are deleted and stored whole in
+`lens_patents_merges` (`merged_into`, `evidence`, `document`), so a merge can be
+undone. `merge_dry_run: true` deletes nothing and writes
+`lens_patents_merges_dry_run`. Importing `minciencias_opendata_patents` again
+restores the deleted patents; run this plugin after it.
+
+On the November 2026 cut: 6 847 patents, 4 565 matched, 1 944 merged away
+(4 903 remain); 132 patents still share 60 Lens records without evidence.
+
 # Usage
 ```yaml
 config:
@@ -51,6 +75,8 @@ workflow:
     database_name: lens
     collection_name: patents
     snapshot_database_name: dam
+    merge_duplicates: false
+    merge_dry_run: false
     verbose: 1
 ```
 
