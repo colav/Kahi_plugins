@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.8 - 2026-11-14
+
+### Added
+
+- Tests that fail if a denormalization stage rebuilds `authors` without the
+  original author fields, or if author reconciliation drops the `type`
+  (advisor, author) of thesis authors. No behaviour change.
+
 ## 0.1.7 - 2026-11-14
 
 ### Added
