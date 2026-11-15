@@ -132,6 +132,11 @@ Notes:
 - The internal denormalization parallel setup is fixed to `parallel_collections = true`.
 - The internal denormalization parallel setup is fixed to `collection_jobs = 3`.
 - These two values are defined in code and are not configurable from the workflow YAML.
+- Topics for projects: add `projects` to `topic_collections`. Projects keep the
+  abstract as plain text, so they are inferred from the title plus `abstract`,
+  else `topic_text` (SIIU: general objective and problem statement), else the
+  title alone. Project topics are not part of `person_topics`, which only reads
+  works.
 - Topic inference sends `topic_batch_size` works per request and writes each
   completed batch with a single unordered bulk operation.
 - `inference_endpoints` creates one sequential worker per isolated model

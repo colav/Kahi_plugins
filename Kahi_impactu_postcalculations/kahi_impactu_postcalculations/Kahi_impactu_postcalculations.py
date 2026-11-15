@@ -24,6 +24,8 @@ from kahi_impactu_postcalculations.topics import (
     load_openalex_topics,
     prefer_abstract_langs,
     process_topic_batch,
+    topic_projection,
+    topic_query,
     process_topic_batches_pool,
     request_topic_inference_batch,
 )
@@ -492,17 +494,7 @@ class Kahi_impactu_postcalculations(KahiBase):
                 + (f" (abstract languages: {', '.join(langs)})" if langs else "")
             )
             cursor = db[collection_name].find(
-                {
-                    "primary_topic": {"$in": [{}, None]},
-                    "abstracts.0": {"$exists": True},
-                },
-                {
-                    "titles": 1,
-                    "abstracts": 1,
-                    "source": 1,
-                    "primary_topic": 1,
-                    "topics": 1,
-                },
+                topic_query(collection_name), topic_projection(collection_name)
             )
             topic_batches = batched(
                 prefer_abstract_langs(cursor, langs), self.topic_batch_size

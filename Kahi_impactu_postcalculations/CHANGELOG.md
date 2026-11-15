@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.12 - 2026-11-15
+
+### Added
+
+- Topics for projects (`topic_collections: [works, patents, projects]`). A
+  project carries its abstract as plain text, so the payload is built from the
+  title plus the `abstract`, else `topic_text`, else nothing: every project
+  with a title is sent, whatever the length of its text. Works and patents
+  still need an abstract. Requires Kahi 0.1.7 for the project template.
+
 ## 0.1.11 - 2026-11-15
 
 ### Added

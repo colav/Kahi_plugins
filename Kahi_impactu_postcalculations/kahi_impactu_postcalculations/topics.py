@@ -34,16 +34,63 @@ def prefer_abstract_langs(documents, langs):
         yield document
 
 
+# Collections whose abstract is plain text (``abstract``) instead of a list of
+# inverted indexes (``abstracts``). Their topics are inferred from the title
+# plus whatever text there is: the abstract, else ``topic_text``, else nothing.
+TEXT_ABSTRACT_COLLECTIONS = ("projects",)
+PENDING_TOPIC = {"primary_topic": {"$in": [{}, None]}}
+
+
+def topic_query(collection_name):
+    """Documents of ``collection_name`` that can be sent to topic inference."""
+    if collection_name in TEXT_ABSTRACT_COLLECTIONS:
+        return {**PENDING_TOPIC, "titles.0": {"$exists": True}}
+    return {**PENDING_TOPIC, "abstracts.0": {"$exists": True}}
+
+
+def topic_projection(collection_name):
+    projection = {"titles": 1, "source": 1, "primary_topic": 1, "topics": 1}
+    if collection_name in TEXT_ABSTRACT_COLLECTIONS:
+        projection.update(abstract=1, topic_text=1)
+    else:
+        projection["abstracts"] = 1
+    return projection
+
+
+def text_to_inverted_index(text):
+    """Inverted index of a plain text, the shape the model takes for abstracts."""
+    index = {}
+    for position, word in enumerate(str(text or "").split()):
+        index.setdefault(word, []).append(position)
+    return index
+
+
+def _text_abstract(document):
+    """Inverted index of a plain-text abstract (or of ``topic_text``); ``{}`` without text."""
+    for field in ("abstract", "topic_text"):
+        text = document.get(field)
+        if isinstance(text, str) and text.strip():
+            return text_to_inverted_index(text)
+    return {}
+
+
 def _topic_payload(work):
     """Build the inference payload for a work, or return None if it is invalid."""
     titles = work.get("titles") or []
     abstracts = work.get("abstracts") or []
-    if not titles or not abstracts:
+    text_schema = "abstracts" not in work and ("abstract" in work or "topic_text" in work)
+    if not titles or not (abstracts or text_schema):
         return None
     title = titles[0].get("title")
-    abstract = abstracts[0].get("abstract")
-    if not isinstance(title, str) or not title.strip() or not abstract:
+    if not isinstance(title, str) or not title.strip():
         return None
+    if text_schema:
+        # A project: the title alone is enough, any text adds to it.
+        abstract = _text_abstract(work)
+    else:
+        abstract = abstracts[0].get("abstract")
+        if not abstract:
+            return None
     source = work.get("source") or {}
     return {
         "title": title,

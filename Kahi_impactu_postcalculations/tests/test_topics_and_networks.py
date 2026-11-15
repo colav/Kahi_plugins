@@ -396,3 +396,47 @@ def test_process_topics_covers_configured_collections(monkeypatch):
     assert [doc["_id"] for doc in seen["patents"]] == ["p"]
     assert seen["patents"][0]["abstracts"][0]["lang"] == "en"
     assert db.patents.find_one({"_id": "p"})["abstracts"][0]["lang"] == "es"
+
+
+def test_project_payload_uses_the_plain_abstract_then_topic_text_then_only_the_title():
+    title = [{"title": "Biomasa residual y biocombustibles"}]
+    with_abstract = topics._topic_payload(
+        {"titles": title, "abstract": "Caracterización de la biomasa de la biomasa",
+         "topic_text": "No se usa"})
+    assert with_abstract["title"] == "Biomasa residual y biocombustibles"
+    assert with_abstract["inverted"] is True
+    assert with_abstract["abstract_inverted_index"] == {
+        "Caracterización": [0], "de": [1, 4], "la": [2, 5], "biomasa": [3, 6]}
+    with_topic_text = topics._topic_payload(
+        {"titles": title, "abstract": "", "topic_text": "Evaluar la conectividad"})
+    assert with_topic_text["abstract_inverted_index"] == {
+        "Evaluar": [0], "la": [1], "conectividad": [2]}
+    only_title = topics._topic_payload({"titles": title, "abstract": ""})
+    assert only_title["abstract_inverted_index"] == {} and only_title["title"]
+    assert topics._topic_payload({"titles": [], "abstract": "Texto"}) is None
+    assert topics._topic_payload({"titles": [{"title": "  "}], "abstract": "Texto"}) is None
+
+
+def test_works_and_patents_still_need_an_abstract():
+    title = [{"title": "Título"}]
+    assert topics._topic_payload({"titles": title, "abstracts": []}) is None
+    assert topics._topic_payload({"titles": title}) is None
+    assert topics._topic_payload({"titles": title, "abstracts": [{"abstract": {}}]}) is None
+    # A document with the list schema never falls back to plain-text fields.
+    assert topics._topic_payload({"titles": title, "abstracts": [], "abstract": "x"}) is None
+    assert topics._topic_payload(
+        {"titles": title, "abstracts": [{"abstract": {"a": [0]}}]}
+    )["abstract_inverted_index"] == {"a": [0]}
+
+
+def test_topic_query_per_collection():
+    pending = {"$in": [{}, None]}
+    assert topics.topic_query("works") == {
+        "primary_topic": pending, "abstracts.0": {"$exists": True}}
+    assert topics.topic_query("patents") == topics.topic_query("works")
+    assert topics.topic_query("projects") == {
+        "primary_topic": pending, "titles.0": {"$exists": True}}
+    assert topics.topic_projection("projects") == {
+        "titles": 1, "source": 1, "primary_topic": 1, "topics": 1,
+        "abstract": 1, "topic_text": 1}
+    assert "abstracts" in topics.topic_projection("works")
