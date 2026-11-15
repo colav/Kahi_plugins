@@ -12,6 +12,7 @@ from kahi_impactu_postcalculations.process_one import (
 )
 from kahi_impactu_postcalculations.indexes import create_indexes
 from kahi_impactu_postcalculations.denormalization import denormalize
+from kahi_impactu_postcalculations.affiliation_names import normalize_affiliation_names
 from kahi_impactu_postcalculations.typing import (
     build_type_lookup,
     clear_impactu_types,
@@ -191,6 +192,9 @@ class Kahi_impactu_postcalculations(KahiBase):
             )
         self.denormalization_enabled = self.config["impactu_postcalculations"].get(
             "denormalization_enabled", True
+        )
+        self.affiliation_names_enabled = self.config["impactu_postcalculations"].get(
+            "affiliation_names_enabled", True
         )
         self.persistent_ids_enabled = self.config["impactu_postcalculations"].get(
             "persistent_ids_enabled", True
@@ -854,6 +858,13 @@ class Kahi_impactu_postcalculations(KahiBase):
             )
         else:
             print("INFO: Person topic aggregation disabled by workflow")
+
+        if self.affiliation_names_enabled:
+            print("INFO: Setting the Spanish name of affiliations wherever it is copied")
+            names_report = normalize_affiliation_names(db)
+            print(f"INFO: Affiliation names in Spanish: {names_report}")
+        else:
+            print("INFO: Spanish affiliation names disabled by workflow")
 
         if self.denormalization_enabled:
             print(f"INFO: Denormalizing data in {self.database_name}")

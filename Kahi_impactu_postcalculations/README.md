@@ -102,6 +102,14 @@ Notes:
 - Use `geographic_normalization_dry_run: true` to audit changes without writing.
 - OpenAlex enrichment runs before IDs, types and topic inference. It restores
   missing abstracts and native topics by exact OpenAlex work identifier.
+- Spanish affiliation names: before denormalization, every copy of an
+  affiliation name (`affiliations.relations`, `person.affiliations`, author
+  affiliations of works, patents, projects and events) is rewritten with the
+  Spanish name of the affiliation: ROR `es`, else SNIES `es`, else MinCiencias
+  or staff `es` for institutions. Foreign institutions are translated when ROR
+  has a Spanish name ("Harvard University" becomes "Universidad de Harvard").
+  Wikidata and ScienTI names are never used. Disable with
+  `affiliation_names_enabled: false`.
 - Person age: the last person stage sets `age` (completed years at the run date;
   `None` outside 15-100 years or when the value is not a date) and clears
   `birthdate` to `-1`. The published profile carries the age, never the birth

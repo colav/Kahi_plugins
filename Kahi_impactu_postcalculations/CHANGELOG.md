@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.10 - 2026-11-15
+
+### Added
+
+- Stage `normalize_affiliation_names` (before denormalization, switch
+  `affiliation_names_enabled`, default true): the affiliation name copied in
+  `affiliations.relations`, `person.affiliations` and the author affiliations
+  of works, patents, projects and events becomes the Spanish name of the
+  affiliation: ROR `es`, else SNIES `es`, else MinCiencias or staff `es` for
+  institutions. Wikidata and ScienTI names are not used; groups, departments
+  and faculties keep their names; with no Spanish name the copy is left as it
+  is (colav/impactu#706).
+
 ## 0.1.9 - 2026-11-14
 
 ### Added
