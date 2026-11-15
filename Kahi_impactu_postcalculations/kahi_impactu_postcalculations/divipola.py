@@ -8,7 +8,9 @@ municipality with a unique name is corrected ("Bogotá" in "Nariño").
 
 A research group inherits one address per related institution, so groups ended
 up with foreign cities. A group keeps only Colombian addresses, and each city
-once.
+once. Addresses whose city cannot be placed in Colombia (empty, "No disponible",
+a city of another country tagged as Colombian) are dropped when the group has a
+located one; a group with none keeps a single address that says only Colombia.
 """
 
 import json
@@ -46,6 +48,8 @@ DEFAULT_CITY_CODES = {
 MISASSIGNED_COUNTRY_CODES = {"AF"}
 LOWERCASE_WORDS = {"de", "del", "la", "las", "los", "el", "y"}
 GROUP_TYPE = "group"
+# Empty values of the address schema, as the affiliation plugins write them.
+EMPTY_ADDRESS = {"lat": "", "lng": "", "postcode": "", "state": "", "city": ""}
 
 
 def _title(name):
@@ -129,8 +133,8 @@ def normalize_colombian_addresses(addresses, divipola, is_group=False):
         (Colombian city not found or ambiguous), ``country_fixed``,
         ``foreign_removed`` and ``duplicates_removed``.
     """
-    counts = {"mapped": 0, "unresolved": 0, "country_fixed": 0,
-              "foreign_removed": 0, "duplicates_removed": 0}
+    counts = {"mapped": 0, "unresolved": 0, "country_fixed": 0, "foreign_removed": 0,
+              "duplicates_removed": 0, "unlocated_removed": 0, "groups_without_city": 0}
     result = []
     for address in addresses or []:
         if not isinstance(address, dict):
@@ -177,7 +181,19 @@ def normalize_colombian_addresses(addresses, divipola, is_group=False):
                 continue
             seen[key] = address
             unique.append(address)
-        result = unique
+        located = [address for address in unique
+                   if isinstance(address, dict) and address.get("city_code")]
+        if located:
+            counts["unlocated_removed"] = len(unique) - len(located)
+            result = located
+        elif unique or counts["foreign_removed"]:
+            # Nothing places the group in a city: say only that it is in Colombia.
+            counts["unlocated_removed"] = max(len(unique) - 1, 0)
+            counts["groups_without_city"] = 1
+            result = [{**EMPTY_ADDRESS, "country": "Colombia", "country_code": "CO"}]
+        else:
+            result = unique
+        counts["unresolved"] = 0
     return result, counts
 
 
@@ -186,7 +202,7 @@ def map_affiliation_addresses(collection, dry_run=False, batch_size=1000, divipo
     divipola = divipola or Divipola()
     report = {"documents_scanned": 0, "documents_changed": 0, "mapped": 0, "unresolved": 0,
               "country_fixed": 0, "foreign_removed": 0, "duplicates_removed": 0,
-              "unresolved_samples": []}
+              "unlocated_removed": 0, "groups_without_city": 0, "unresolved_samples": []}
     operations = []
     cursor = collection.find({"addresses.0": {"$exists": True}},
                              {"addresses": 1, "types.type": 1}).batch_size(batch_size)

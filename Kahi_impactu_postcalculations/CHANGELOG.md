@@ -17,6 +17,10 @@
   addresses inherited from related institutions are removed, and an address
   without a real country (empty, or the misassigned "Afganistán") whose city is
   a Colombian municipality becomes Colombian.
+- A group address whose city cannot be placed in Colombia (empty, "No
+  disponible", a city of another country tagged as Colombian) is dropped when
+  the group has a located address; a group with none keeps one address that
+  says only Colombia, with the empty values of the schema.
 
 ### Changed
 

@@ -69,8 +69,8 @@ def test_colombian_address_gets_codes_names_and_missing_coordinates():
                          "state_code": "11", "lat": 4.649251, "lng": -74.106992}
     assert (result[1]["lat"], result[1]["lng"], result[1]["city_code"]) == (6.25184, -75.56359, "05001")
     assert result[2] == address("San Pedro") and result[3] == address("Paris", "", "Francia", "FR")
-    assert counts == {"mapped": 2, "unresolved": 1, "country_fixed": 0,
-                      "foreign_removed": 0, "duplicates_removed": 0}
+    assert counts == {"mapped": 2, "unresolved": 1, "country_fixed": 0, "foreign_removed": 0,
+                      "duplicates_removed": 0, "unlocated_removed": 0, "groups_without_city": 0}
 
 
 def test_group_keeps_only_colombian_addresses_once_per_city():
@@ -84,11 +84,34 @@ def test_group_keeps_only_colombian_addresses_once_per_city():
     ]
     result, counts = normalize_colombian_addresses(addresses, DIVIPOLA, is_group=True)
     assert [(item["city"], item["country_code"], item.get("city_code")) for item in result] == [
-        ("Medellín", "CO", "05001"), ("Pereira", "CO", "66001"), ("Bogotá", "CO", "11001"),
-        ("", "", None)]
+        ("Medellín", "CO", "05001"), ("Pereira", "CO", "66001"), ("Bogotá", "CO", "11001")]
     assert result[0]["lat"] == 6.25184
-    assert counts == {"mapped": 4, "unresolved": 0, "country_fixed": 2,
-                      "foreign_removed": 1, "duplicates_removed": 1}
+    assert counts == {"mapped": 4, "unresolved": 0, "country_fixed": 2, "foreign_removed": 1,
+                      "duplicates_removed": 1, "unlocated_removed": 1, "groups_without_city": 0}
+
+
+def test_group_drops_addresses_that_cannot_be_placed_in_colombia():
+    result, counts = normalize_colombian_addresses(
+        [address("Pereira", "Risaralda"), address("Koh Band", "Kapisa"),
+         address("No disponible", "No disponible", "No disponible", ""), address("", "")],
+        DIVIPOLA, is_group=True)
+    assert [(item["city"], item["city_code"]) for item in result] == [("Pereira", "66001")]
+    assert counts["unlocated_removed"] == 3 and counts["groups_without_city"] == 0
+
+
+def test_group_without_any_located_address_only_says_colombia():
+    only_colombia = {"lat": "", "lng": "", "postcode": "", "state": "", "city": "",
+                     "country": "Colombia", "country_code": "CO"}
+    for addresses in (
+        [address("Khwahan", "Badahsan"), address("No disponible", "No disponible", "No disponible", "")],
+        [address("", "")],
+        [address("Madrid", "Madrid", "Spain", "ES"), address("", "", "", "")],
+        [address("Madrid", "Madrid", "Spain", "ES")],
+    ):
+        result, counts = normalize_colombian_addresses(addresses, DIVIPOLA, is_group=True)
+        assert result == [only_colombia] and counts["groups_without_city"] == 1
+        assert normalize_colombian_addresses(result, DIVIPOLA, is_group=True)[0] == result
+    assert normalize_colombian_addresses([], DIVIPOLA, is_group=True)[0] == []
 
 
 def test_institutions_keep_foreign_and_repeated_addresses():
