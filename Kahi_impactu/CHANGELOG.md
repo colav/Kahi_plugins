@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.43] - 2026-11-14
+
+### Changed
+
+- Pinned Kahi_scienti_works 0.1.11 (thesis advisors kept when the work already
+  exists) and Kahi_impactu_postcalculations 0.1.8 (author type guard tests).
+
 ## [0.0.42] - 2026-11-14
 
 ### Changed
