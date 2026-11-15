@@ -317,7 +317,12 @@ class Kahi_minciencias_opendata_projects(KahiBase):
         return output
 
     def _project(self, source, people, groups):
-        output = {field: deepcopy(source[field]) for field in self.empty_project()}
+        # Fields the snapshot does not carry (topics, filled later by
+        # postcalculations) start from the empty template.
+        output = {
+            field: deepcopy(source[field]) if field in source else empty
+            for field, empty in self.empty_project().items()
+        }
         output["_id"] = source["_id"]
         output["authors"] = [
             self._resolve_author(author, people, groups)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.3-beta - 2026-11-15
+
+- Template fields the snapshot does not carry (`primary_topic`, `topics`,
+  `topic_text`, added in Kahi 0.1.7) start from the empty template instead of
+  failing; a re-import keeps the topics already inferred
+
 ## 0.1.2-beta - 2026-11-06
 
 - Restore an explicit isolated `legacy` reader for `gruplac_production_data`.

@@ -112,7 +112,7 @@ def test_imports_snapshot_resolves_references_and_is_idempotent(monkeypatch):
     assert project["authors"][0]["affiliations"][0]["id"] == "group-canonical"
     assert project["groups"] == [{"id": "group-canonical", "name": "Grupo canónico"}]
     assert "source_metadata" not in project
-    assert set(project) == {"_id"} | plugin_module.PROJECT_FIELDS
+    assert set(project) == {"_id"} | set(Plugin.empty_project(None))
     assert list(target.person.find()) == people_before
     assert source.projects_final.index_information() == indexes
 
