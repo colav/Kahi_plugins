@@ -44,6 +44,10 @@ def test_catalog_is_the_whole_divipola():
     ("PUPIALES", "NARIÑO", ("Pupiales", "Nariño", "52585", "52")),
     ("Armenia", "", ("Armenia", "Quindío", "63001", "63")),                    # default
     ("Armenia", "Antioquia", ("Armenia", "Antioquia", "05059", "05")),
+    ("Rionegro", "", ("Rionegro", "Antioquia", "05615", "05")),
+    ("Rionegro", "Santander", ("Rionegro", "Santander", "68615", "68")),
+    ("Florencia", "Badahsan", ("Florencia", "Caquetá", "18001", "18")),
+    ("Florencia", "Cauca", ("Florencia", "Cauca", "19290", "19")),
     ("Guayabal de Síquima", "Cundinamarca", ("Guayabal de Síquima", "Cundinamarca", "25328", "25")),
 ])
 def test_find(city, state, expected):
@@ -51,7 +55,7 @@ def test_find(city, state, expected):
     assert (found["city"], found["state"], found["city_code"], found["state_code"]) == expected
 
 
-@pytest.mark.parametrize("city, state", [("Florencia", ""), ("Colima", "Colima"), ("", "Antioquia")])
+@pytest.mark.parametrize("city, state", [("San Pedro", ""), ("Colima", "Colima"), ("", "Antioquia")])
 def test_ambiguous_or_unknown_cities_are_not_guessed(city, state):
     assert DIVIPOLA.find(city, state) is None
 
@@ -59,12 +63,12 @@ def test_ambiguous_or_unknown_cities_are_not_guessed(city, state):
 def test_colombian_address_gets_codes_names_and_missing_coordinates():
     known = address("Medellín", "Antioquia", lat=6.25184, lng=-75.56359)
     result, counts = normalize_colombian_addresses(
-        [address("Bogotá", "NARIÑO"), known, address("Florencia"), address("Paris", "", "Francia", "FR")],
+        [address("Bogotá", "NARIÑO"), known, address("San Pedro"), address("Paris", "", "Francia", "FR")],
         DIVIPOLA)
     assert result[0] == {**address("Bogotá", "Bogotá, D.C."), "city_code": "11001",
                          "state_code": "11", "lat": 4.649251, "lng": -74.106992}
     assert (result[1]["lat"], result[1]["lng"], result[1]["city_code"]) == (6.25184, -75.56359, "05001")
-    assert result[2] == address("Florencia") and result[3] == address("Paris", "", "Francia", "FR")
+    assert result[2] == address("San Pedro") and result[3] == address("Paris", "", "Francia", "FR")
     assert counts == {"mapped": 2, "unresolved": 1, "country_fixed": 0,
                       "foreign_removed": 0, "duplicates_removed": 0}
 

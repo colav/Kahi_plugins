@@ -10,8 +10,9 @@
   "Bogotá", "Cartagena", "Cúcuta"; the official name otherwise), `state` the
   department, plus the new `city_code` and `state_code`; empty `lat`/`lng` take
   the coordinates of the municipality. A department that contradicts a
-  municipality with a unique name is corrected; "Armenia" without department is
-  Armenia, Quindío; other ambiguous names are left and reported.
+  municipality with a unique name is corrected; "Armenia", "Rionegro" and "Florencia"
+  without a matching department are Armenia (Quindío), Rionegro (Antioquia) and
+  Florencia (Caquetá); other ambiguous names are left and reported.
 - Research groups keep only Colombian addresses, one per city: foreign
   addresses inherited from related institutions are removed, and an address
   without a real country (empty, or the misassigned "Afganistán") whose city is

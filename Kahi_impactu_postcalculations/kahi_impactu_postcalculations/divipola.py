@@ -37,7 +37,11 @@ CITY_ALIASES = {
     "cali": "76001", "cartagena": "13001", "cucuta": "54001",
 }
 # Municipality meant when the name exists in several departments and none is given.
-DEFAULT_CITY_CODES = {"armenia": "63001"}
+DEFAULT_CITY_CODES = {
+    "armenia": "63001",    # Armenia, Quindío
+    "rionegro": "05615",   # Rionegro, Antioquia
+    "florencia": "18001",  # Florencia, Caquetá
+}
 # The sources write this country on addresses that had none.
 MISASSIGNED_COUNTRY_CODES = {"AF"}
 LOWERCASE_WORDS = {"de", "del", "la", "las", "los", "el", "y"}
