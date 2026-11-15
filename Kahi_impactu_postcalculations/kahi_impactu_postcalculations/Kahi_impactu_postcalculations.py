@@ -13,6 +13,7 @@ from kahi_impactu_postcalculations.process_one import (
 from kahi_impactu_postcalculations.indexes import create_indexes
 from kahi_impactu_postcalculations.denormalization import denormalize
 from kahi_impactu_postcalculations.affiliation_names import normalize_affiliation_names
+from kahi_impactu_postcalculations.divipola import map_affiliation_addresses
 from kahi_impactu_postcalculations.typing import (
     build_type_lookup,
     clear_impactu_types,
@@ -726,6 +727,15 @@ class Kahi_impactu_postcalculations(KahiBase):
                     "WARNING: Geographic normalization unresolved samples: "
                     f"{geographic_report['issue_samples']}"
                 )
+            divipola_report = map_affiliation_addresses(
+                db["affiliations"],
+                dry_run=self.geographic_normalization_dry_run,
+                batch_size=self.geographic_batch_size,
+            )
+            samples = divipola_report.pop("unresolved_samples")
+            print(f"INFO: {action} Colombian addresses with DIVIPOLA: {divipola_report}")
+            if self.verbose >= 2 and samples:
+                print(f"WARNING: Colombian cities not found in DIVIPOLA: {samples}")
         else:
             print("INFO: Geographic normalization disabled by workflow")
 

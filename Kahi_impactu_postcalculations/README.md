@@ -102,6 +102,13 @@ Notes:
 - Use `geographic_normalization_dry_run: true` to audit changes without writing.
 - OpenAlex enrichment runs before IDs, types and topic inference. It restores
   missing abstracts and native topics by exact OpenAlex work identifier.
+- DIVIPOLA: after the geographic normalization, every Colombian address of an
+  affiliation is matched to its municipality (DANE DIVIPOLA, packaged). The
+  address keeps the common city name, gets the department name and the codes
+  `city_code` / `state_code`, and takes the municipality coordinates when it
+  had none. Research groups keep only Colombian addresses, one per city.
+  Controlled by `geographic_normalization_enabled` and
+  `geographic_normalization_dry_run`.
 - Spanish affiliation names: before denormalization, every copy of an
   affiliation name (`affiliations.relations`, `person.affiliations`, author
   affiliations of works, patents, projects and events) is rewritten with the

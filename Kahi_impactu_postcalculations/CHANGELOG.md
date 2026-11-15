@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.1.11 - 2026-11-15
+
+### Added
+
+- Colombian addresses are mapped to DIVIPOLA (DANE, 1 122 municipalities,
+  packaged in `data/divipola_municipios.json`) right after the geographic
+  normalization and under its switches: `city` gets the common name ("Cali",
+  "Bogotá", "Cartagena", "Cúcuta"; the official name otherwise), `state` the
+  department, plus the new `city_code` and `state_code`; empty `lat`/`lng` take
+  the coordinates of the municipality. A department that contradicts a
+  municipality with a unique name is corrected; "Armenia" without department is
+  Armenia, Quindío; other ambiguous names are left and reported.
+- Research groups keep only Colombian addresses, one per city: foreign
+  addresses inherited from related institutions are removed, and an address
+  without a real country (empty, or the misassigned "Afganistán") whose city is
+  a Colombian municipality becomes Colombian.
+
+### Changed
+
+- The city alias `Cartagena -> Cartagena de Indias` is gone: the common name is
+  kept.
+
 ## 0.1.10 - 2026-11-15
 
 ### Added

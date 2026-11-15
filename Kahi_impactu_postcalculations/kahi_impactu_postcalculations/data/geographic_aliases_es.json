@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "country_aliases": {
     "Bosnia-Herzegovina": {"name": "Bosnia y Herzegovina", "code": "BA"},
     "Bonaire, Sint Eustatius, and Saba": {"name": "Caribe neerlandés", "code": "BQ"},
@@ -44,7 +44,6 @@
       "Bogota": "Bogotá",
       "Bogota D.C.": "Bogotá",
       "Bogotá, D.C.": "Bogotá",
-      "Cartagena": "Cartagena de Indias",
       "Santiago de Cali": "Cali",
       "Saint Andrews": "San Andrés"
     },

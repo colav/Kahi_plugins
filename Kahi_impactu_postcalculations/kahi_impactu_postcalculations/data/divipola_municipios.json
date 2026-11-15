@@ -1,0 +1,10104 @@
+{
+"source": "DANE, DIVIPOLA codigos municipios (datos.gov.co, dataset gdxc-w37w)",
+"retrieved": "2026-11-15",
+"municipalities": [
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05001",
+"city": "MEDELLÍN",
+"kind": "Municipio",
+"lat": 6.246631,
+"lng": -75.581775
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05002",
+"city": "ABEJORRAL",
+"kind": "Municipio",
+"lat": 5.789315,
+"lng": -75.428739
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05004",
+"city": "ABRIAQUÍ",
+"kind": "Municipio",
+"lat": 6.632282,
+"lng": -76.064304
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05021",
+"city": "ALEJANDRÍA",
+"kind": "Municipio",
+"lat": 6.376061,
+"lng": -75.141346
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05030",
+"city": "AMAGÁ",
+"kind": "Municipio",
+"lat": 6.038708,
+"lng": -75.702188
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05031",
+"city": "AMALFI",
+"kind": "Municipio",
+"lat": 6.909655,
+"lng": -75.077501
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05034",
+"city": "ANDES",
+"kind": "Municipio",
+"lat": 5.657194,
+"lng": -75.878828
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05036",
+"city": "ANGELÓPOLIS",
+"kind": "Municipio",
+"lat": 6.109719,
+"lng": -75.711389
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05038",
+"city": "ANGOSTURA",
+"kind": "Municipio",
+"lat": 6.885175,
+"lng": -75.335116
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05040",
+"city": "ANORÍ",
+"kind": "Municipio",
+"lat": 7.074703,
+"lng": -75.148355
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05042",
+"city": "SANTA FÉ DE ANTIOQUIA",
+"kind": "Municipio",
+"lat": 6.556484,
+"lng": -75.826648
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05044",
+"city": "ANZÁ",
+"kind": "Municipio",
+"lat": 6.302641,
+"lng": -75.854442
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05045",
+"city": "APARTADÓ",
+"kind": "Municipio",
+"lat": 7.882968,
+"lng": -76.625279
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05051",
+"city": "ARBOLETES",
+"kind": "Municipio",
+"lat": 8.849317,
+"lng": -76.426708
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05055",
+"city": "ARGELIA",
+"kind": "Municipio",
+"lat": 5.731474,
+"lng": -75.14107
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05059",
+"city": "ARMENIA",
+"kind": "Municipio",
+"lat": 6.155667,
+"lng": -75.786647
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05079",
+"city": "BARBOSA",
+"kind": "Municipio",
+"lat": 6.439195,
+"lng": -75.331627
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05086",
+"city": "BELMIRA",
+"kind": "Municipio",
+"lat": 6.606319,
+"lng": -75.667779
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05088",
+"city": "BELLO",
+"kind": "Municipio",
+"lat": 6.333587,
+"lng": -75.555245
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05091",
+"city": "BETANIA",
+"kind": "Municipio",
+"lat": 5.74615,
+"lng": -75.97679
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05093",
+"city": "BETULIA",
+"kind": "Municipio",
+"lat": 6.115208,
+"lng": -75.984452
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05101",
+"city": "CIUDAD BOLÍVAR",
+"kind": "Municipio",
+"lat": 5.850273,
+"lng": -76.021509
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05107",
+"city": "BRICEÑO",
+"kind": "Municipio",
+"lat": 7.112803,
+"lng": -75.55036
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05113",
+"city": "BURITICÁ",
+"kind": "Municipio",
+"lat": 6.720759,
+"lng": -75.907
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05120",
+"city": "CÁCERES",
+"kind": "Municipio",
+"lat": 7.578366,
+"lng": -75.35205
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05125",
+"city": "CAICEDO",
+"kind": "Municipio",
+"lat": 6.405607,
+"lng": -75.98293
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05129",
+"city": "CALDAS",
+"kind": "Municipio",
+"lat": 6.091077,
+"lng": -75.633673
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05134",
+"city": "CAMPAMENTO",
+"kind": "Municipio",
+"lat": 6.979771,
+"lng": -75.298091
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05138",
+"city": "CAÑASGORDAS",
+"kind": "Municipio",
+"lat": 6.753859,
+"lng": -76.028228
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05142",
+"city": "CARACOLÍ",
+"kind": "Municipio",
+"lat": 6.409829,
+"lng": -74.757421
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05145",
+"city": "CARAMANTA",
+"kind": "Municipio",
+"lat": 5.54853,
+"lng": -75.643868
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05147",
+"city": "CAREPA",
+"kind": "Municipio",
+"lat": 7.755148,
+"lng": -76.652652
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05148",
+"city": "EL CARMEN DE VIBORAL",
+"kind": "Municipio",
+"lat": 6.082885,
+"lng": -75.333901
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05150",
+"city": "CAROLINA",
+"kind": "Municipio",
+"lat": 6.725995,
+"lng": -75.283192
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05154",
+"city": "CAUCASIA",
+"kind": "Municipio",
+"lat": 7.977278,
+"lng": -75.197996
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05172",
+"city": "CHIGORODÓ",
+"kind": "Municipio",
+"lat": 7.666147,
+"lng": -76.681531
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05190",
+"city": "CISNEROS",
+"kind": "Municipio",
+"lat": 6.537829,
+"lng": -75.087047
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05197",
+"city": "COCORNÁ",
+"kind": "Municipio",
+"lat": 6.058295,
+"lng": -75.185483
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05206",
+"city": "CONCEPCIÓN",
+"kind": "Municipio",
+"lat": 6.394348,
+"lng": -75.257587
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05209",
+"city": "CONCORDIA",
+"kind": "Municipio",
+"lat": 6.045738,
+"lng": -75.908448
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05212",
+"city": "COPACABANA",
+"kind": "Municipio",
+"lat": 6.348557,
+"lng": -75.509384
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05234",
+"city": "DABEIBA",
+"kind": "Municipio",
+"lat": 6.998112,
+"lng": -76.261614
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05237",
+"city": "DONMATÍAS",
+"kind": "Municipio",
+"lat": 6.485603,
+"lng": -75.39263
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05240",
+"city": "EBÉJICO",
+"kind": "Municipio",
+"lat": 6.325615,
+"lng": -75.766413
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05250",
+"city": "EL BAGRE",
+"kind": "Municipio",
+"lat": 7.5975,
+"lng": -74.799097
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05264",
+"city": "ENTRERRÍOS",
+"kind": "Municipio",
+"lat": 6.566273,
+"lng": -75.517685
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05266",
+"city": "ENVIGADO",
+"kind": "Municipio",
+"lat": 6.166695,
+"lng": -75.582192
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05282",
+"city": "FREDONIA",
+"kind": "Municipio",
+"lat": 5.928039,
+"lng": -75.675072
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05284",
+"city": "FRONTINO",
+"kind": "Municipio",
+"lat": 6.776066,
+"lng": -76.130765
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05306",
+"city": "GIRALDO",
+"kind": "Municipio",
+"lat": 6.680808,
+"lng": -75.952158
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05308",
+"city": "GIRARDOTA",
+"kind": "Municipio",
+"lat": 6.379472,
+"lng": -75.444238
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05310",
+"city": "GÓMEZ PLATA",
+"kind": "Municipio",
+"lat": 6.683269,
+"lng": -75.220018
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05313",
+"city": "GRANADA",
+"kind": "Municipio",
+"lat": 6.142892,
+"lng": -75.184446
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05315",
+"city": "GUADALUPE",
+"kind": "Municipio",
+"lat": 6.815069,
+"lng": -75.239862
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05318",
+"city": "GUARNE",
+"kind": "Municipio",
+"lat": 6.27787,
+"lng": -75.441612
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05321",
+"city": "GUATAPÉ",
+"kind": "Municipio",
+"lat": 6.232461,
+"lng": -75.160041
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05347",
+"city": "HELICONIA",
+"kind": "Municipio",
+"lat": 6.206757,
+"lng": -75.734322
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05353",
+"city": "HISPANIA",
+"kind": "Municipio",
+"lat": 5.799461,
+"lng": -75.906587
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05360",
+"city": "ITAGÜÍ",
+"kind": "Municipio",
+"lat": 6.175079,
+"lng": -75.612056
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05361",
+"city": "ITUANGO",
+"kind": "Municipio",
+"lat": 7.171629,
+"lng": -75.764673
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05364",
+"city": "JARDÍN",
+"kind": "Municipio",
+"lat": 5.597542,
+"lng": -75.818982
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05368",
+"city": "JERICÓ",
+"kind": "Municipio",
+"lat": 5.789748,
+"lng": -75.785499
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05376",
+"city": "LA CEJA",
+"kind": "Municipio",
+"lat": 6.028062,
+"lng": -75.429433
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05380",
+"city": "LA ESTRELLA",
+"kind": "Municipio",
+"lat": 6.145238,
+"lng": -75.637708
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05390",
+"city": "LA PINTADA",
+"kind": "Municipio",
+"lat": 5.743808,
+"lng": -75.60781
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05400",
+"city": "LA UNIÓN",
+"kind": "Municipio",
+"lat": 5.973845,
+"lng": -75.360874
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05411",
+"city": "LIBORINA",
+"kind": "Municipio",
+"lat": 6.677316,
+"lng": -75.812838
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05425",
+"city": "MACEO",
+"kind": "Municipio",
+"lat": 6.552116,
+"lng": -74.78716
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05440",
+"city": "MARINILLA",
+"kind": "Municipio",
+"lat": 6.173995,
+"lng": -75.339345
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05467",
+"city": "MONTEBELLO",
+"kind": "Municipio",
+"lat": 5.946313,
+"lng": -75.523455
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05475",
+"city": "MURINDÓ",
+"kind": "Municipio",
+"lat": 6.97771,
+"lng": -76.817485
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05480",
+"city": "MUTATÁ",
+"kind": "Municipio",
+"lat": 7.242875,
+"lng": -76.435875
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05483",
+"city": "NARIÑO",
+"kind": "Municipio",
+"lat": 5.610777,
+"lng": -75.176262
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05490",
+"city": "NECOCLÍ",
+"kind": "Municipio",
+"lat": 8.434526,
+"lng": -76.787271
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05495",
+"city": "NECHÍ",
+"kind": "Municipio",
+"lat": 8.094129,
+"lng": -74.77647
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05501",
+"city": "OLAYA",
+"kind": "Municipio",
+"lat": 6.626492,
+"lng": -75.811773
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05541",
+"city": "PEÑOL",
+"kind": "Municipio",
+"lat": 6.219349,
+"lng": -75.242693
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05543",
+"city": "PEQUE",
+"kind": "Municipio",
+"lat": 7.021029,
+"lng": -75.910357
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05576",
+"city": "PUEBLORRICO",
+"kind": "Municipio",
+"lat": 5.79158,
+"lng": -75.839903
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05579",
+"city": "PUERTO BERRÍO",
+"kind": "Municipio",
+"lat": 6.487028,
+"lng": -74.410016
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05585",
+"city": "PUERTO NARE",
+"kind": "Municipio",
+"lat": 6.186025,
+"lng": -74.583012
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05591",
+"city": "PUERTO TRIUNFO",
+"kind": "Municipio",
+"lat": 5.871318,
+"lng": -74.64119
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05604",
+"city": "REMEDIOS",
+"kind": "Municipio",
+"lat": 7.029424,
+"lng": -74.698135
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05607",
+"city": "RETIRO",
+"kind": "Municipio",
+"lat": 6.062454,
+"lng": -75.501301
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05615",
+"city": "RIONEGRO",
+"kind": "Municipio",
+"lat": 6.147148,
+"lng": -75.377316
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05628",
+"city": "SABANALARGA",
+"kind": "Municipio",
+"lat": 6.850028,
+"lng": -75.816645
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05631",
+"city": "SABANETA",
+"kind": "Municipio",
+"lat": 6.149903,
+"lng": -75.615479
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05642",
+"city": "SALGAR",
+"kind": "Municipio",
+"lat": 5.964198,
+"lng": -75.976807
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05647",
+"city": "SAN ANDRÉS DE CUERQUÍA",
+"kind": "Municipio",
+"lat": 6.916676,
+"lng": -75.674564
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05649",
+"city": "SAN CARLOS",
+"kind": "Municipio",
+"lat": 6.187746,
+"lng": -74.988097
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05652",
+"city": "SAN FRANCISCO",
+"kind": "Municipio",
+"lat": 5.963476,
+"lng": -75.101562
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05656",
+"city": "SAN JERÓNIMO",
+"kind": "Municipio",
+"lat": 6.44809,
+"lng": -75.726975
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05658",
+"city": "SAN JOSÉ DE LA MONTAÑA",
+"kind": "Municipio",
+"lat": 6.85009,
+"lng": -75.683352
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05659",
+"city": "SAN JUAN DE URABÁ",
+"kind": "Municipio",
+"lat": 8.758964,
+"lng": -76.52857
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05660",
+"city": "SAN LUIS",
+"kind": "Municipio",
+"lat": 6.043017,
+"lng": -74.993619
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05664",
+"city": "SAN PEDRO DE LOS MILAGROS",
+"kind": "Municipio",
+"lat": 6.46012,
+"lng": -75.556743
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05665",
+"city": "SAN PEDRO DE URABÁ",
+"kind": "Municipio",
+"lat": 8.276884,
+"lng": -76.380567
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05667",
+"city": "SAN RAFAEL",
+"kind": "Municipio",
+"lat": 6.293759,
+"lng": -75.02849
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05670",
+"city": "SAN ROQUE",
+"kind": "Municipio",
+"lat": 6.485939,
+"lng": -75.019109
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05674",
+"city": "SAN VICENTE FERRER",
+"kind": "Municipio",
+"lat": 6.282164,
+"lng": -75.332616
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05679",
+"city": "SANTA BÁRBARA",
+"kind": "Municipio",
+"lat": 5.875527,
+"lng": -75.567351
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05686",
+"city": "SANTA ROSA DE OSOS",
+"kind": "Municipio",
+"lat": 6.643366,
+"lng": -75.460723
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05690",
+"city": "SANTO DOMINGO",
+"kind": "Municipio",
+"lat": 6.473032,
+"lng": -75.164903
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05697",
+"city": "EL SANTUARIO",
+"kind": "Municipio",
+"lat": 6.136871,
+"lng": -75.265465
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05736",
+"city": "SEGOVIA",
+"kind": "Municipio",
+"lat": 7.079648,
+"lng": -74.701596
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05756",
+"city": "SONSÓN",
+"kind": "Municipio",
+"lat": 5.714851,
+"lng": -75.309596
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05761",
+"city": "SOPETRÁN",
+"kind": "Municipio",
+"lat": 6.500745,
+"lng": -75.747378
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05789",
+"city": "TÁMESIS",
+"kind": "Municipio",
+"lat": 5.664645,
+"lng": -75.714429
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05790",
+"city": "TARAZÁ",
+"kind": "Municipio",
+"lat": 7.580127,
+"lng": -75.401407
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05792",
+"city": "TARSO",
+"kind": "Municipio",
+"lat": 5.864542,
+"lng": -75.822956
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05809",
+"city": "TITIRIBÍ",
+"kind": "Municipio",
+"lat": 6.062391,
+"lng": -75.791887
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05819",
+"city": "TOLEDO",
+"kind": "Municipio",
+"lat": 7.010328,
+"lng": -75.692281
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05837",
+"city": "TURBO",
+"kind": "Municipio",
+"lat": 8.089929,
+"lng": -76.728858
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05842",
+"city": "URAMITA",
+"kind": "Municipio",
+"lat": 6.898393,
+"lng": -76.173284
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05847",
+"city": "URRAO",
+"kind": "Municipio",
+"lat": 6.317343,
+"lng": -76.133951
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05854",
+"city": "VALDIVIA",
+"kind": "Municipio",
+"lat": 7.1652,
+"lng": -75.439274
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05856",
+"city": "VALPARAÍSO",
+"kind": "Municipio",
+"lat": 5.614555,
+"lng": -75.624452
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05858",
+"city": "VEGACHÍ",
+"kind": "Municipio",
+"lat": 6.773525,
+"lng": -74.798714
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05861",
+"city": "VENECIA",
+"kind": "Municipio",
+"lat": 5.964693,
+"lng": -75.735544
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05873",
+"city": "VIGÍA DEL FUERTE",
+"kind": "Municipio",
+"lat": 6.588164,
+"lng": -76.896004
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05885",
+"city": "YALÍ",
+"kind": "Municipio",
+"lat": 6.676554,
+"lng": -74.840059
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05887",
+"city": "YARUMAL",
+"kind": "Municipio",
+"lat": 6.963832,
+"lng": -75.418828
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05890",
+"city": "YOLOMBÓ",
+"kind": "Municipio",
+"lat": 6.594511,
+"lng": -75.013385
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05893",
+"city": "YONDÓ",
+"kind": "Municipio",
+"lat": 7.00396,
+"lng": -73.912445
+},
+{
+"state_code": "05",
+"state": "ANTIOQUIA",
+"city_code": "05895",
+"city": "ZARAGOZA",
+"kind": "Municipio",
+"lat": 7.488583,
+"lng": -74.867075
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08001",
+"city": "BARRANQUILLA",
+"kind": "Municipio",
+"lat": 10.977961,
+"lng": -74.815546
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08078",
+"city": "BARANOA",
+"kind": "Municipio",
+"lat": 10.79445,
+"lng": -74.916077
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08137",
+"city": "CAMPO DE LA CRUZ",
+"kind": "Municipio",
+"lat": 10.378291,
+"lng": -74.880847
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08141",
+"city": "CANDELARIA",
+"kind": "Municipio",
+"lat": 10.461903,
+"lng": -74.879717
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08296",
+"city": "GALAPA",
+"kind": "Municipio",
+"lat": 10.919033,
+"lng": -74.870385
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08372",
+"city": "JUAN DE ACOSTA",
+"kind": "Municipio",
+"lat": 10.83254,
+"lng": -75.041032
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08421",
+"city": "LURUACO",
+"kind": "Municipio",
+"lat": 10.610491,
+"lng": -75.14199
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08433",
+"city": "MALAMBO",
+"kind": "Municipio",
+"lat": 10.857086,
+"lng": -74.776923
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08436",
+"city": "MANATÍ",
+"kind": "Municipio",
+"lat": 10.449089,
+"lng": -74.956867
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08520",
+"city": "PALMAR DE VARELA",
+"kind": "Municipio",
+"lat": 10.738591,
+"lng": -74.754765
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08549",
+"city": "PIOJÓ",
+"kind": "Municipio",
+"lat": 10.749216,
+"lng": -75.107592
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08558",
+"city": "POLONUEVO",
+"kind": "Municipio",
+"lat": 10.777363,
+"lng": -74.852981
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08560",
+"city": "PONEDERA",
+"kind": "Municipio",
+"lat": 10.641779,
+"lng": -74.753885
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08573",
+"city": "PUERTO COLOMBIA",
+"kind": "Municipio",
+"lat": 11.015322,
+"lng": -74.888627
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08606",
+"city": "REPELÓN",
+"kind": "Municipio",
+"lat": 10.493357,
+"lng": -75.125534
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08634",
+"city": "SABANAGRANDE",
+"kind": "Municipio",
+"lat": 10.792453,
+"lng": -74.759496
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08638",
+"city": "SABANALARGA",
+"kind": "Municipio",
+"lat": 10.632091,
+"lng": -74.921256
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08675",
+"city": "SANTA LUCÍA",
+"kind": "Municipio",
+"lat": 10.324303,
+"lng": -74.959204
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08685",
+"city": "SANTO TOMÁS",
+"kind": "Municipio",
+"lat": 10.758735,
+"lng": -74.757859
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08758",
+"city": "SOLEDAD",
+"kind": "Municipio",
+"lat": 10.909921,
+"lng": -74.786054
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08770",
+"city": "SUAN",
+"kind": "Municipio",
+"lat": 10.335432,
+"lng": -74.881687
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08832",
+"city": "TUBARÁ",
+"kind": "Municipio",
+"lat": 10.873586,
+"lng": -74.978704
+},
+{
+"state_code": "08",
+"state": "ATLÁNTICO",
+"city_code": "08849",
+"city": "USIACURÍ",
+"kind": "Municipio",
+"lat": 10.74298,
+"lng": -74.976985
+},
+{
+"state_code": "11",
+"state": "BOGOTÁ, D.C.",
+"city_code": "11001",
+"city": "BOGOTÁ, D.C.",
+"kind": "Municipio",
+"lat": 4.649251,
+"lng": -74.106992
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13001",
+"city": "CARTAGENA DE INDIAS",
+"kind": "Municipio",
+"lat": 10.385126,
+"lng": -75.496269
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13006",
+"city": "ACHÍ",
+"kind": "Municipio",
+"lat": 8.570107,
+"lng": -74.557676
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13030",
+"city": "ALTOS DEL ROSARIO",
+"kind": "Municipio",
+"lat": 8.791865,
+"lng": -74.164905
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13042",
+"city": "ARENAL",
+"kind": "Municipio",
+"lat": 8.458865,
+"lng": -73.941099
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13052",
+"city": "ARJONA",
+"kind": "Municipio",
+"lat": 10.25666,
+"lng": -75.344332
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13062",
+"city": "ARROYOHONDO",
+"kind": "Municipio",
+"lat": 10.250075,
+"lng": -75.019215
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13074",
+"city": "BARRANCO DE LOBA",
+"kind": "Municipio",
+"lat": 8.947787,
+"lng": -74.104391
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13140",
+"city": "CALAMAR",
+"kind": "Municipio",
+"lat": 10.250431,
+"lng": -74.916144
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13160",
+"city": "CANTAGALLO",
+"kind": "Municipio",
+"lat": 7.378678,
+"lng": -73.914605
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13188",
+"city": "CICUCO",
+"kind": "Municipio",
+"lat": 9.274281,
+"lng": -74.645981
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13212",
+"city": "CÓRDOBA",
+"kind": "Municipio",
+"lat": 9.586942,
+"lng": -74.827399
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13222",
+"city": "CLEMENCIA",
+"kind": "Municipio",
+"lat": 10.567452,
+"lng": -75.328469
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13244",
+"city": "EL CARMEN DE BOLÍVAR",
+"kind": "Municipio",
+"lat": 9.718653,
+"lng": -75.121178
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13248",
+"city": "EL GUAMO",
+"kind": "Municipio",
+"lat": 10.030958,
+"lng": -74.976084
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13268",
+"city": "EL PEÑÓN",
+"kind": "Municipio",
+"lat": 8.988271,
+"lng": -73.949274
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13300",
+"city": "HATILLO DE LOBA",
+"kind": "Municipio",
+"lat": 8.956014,
+"lng": -74.077912
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13430",
+"city": "MAGANGUÉ",
+"kind": "Municipio",
+"lat": 9.263799,
+"lng": -74.766742
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13433",
+"city": "MAHATES",
+"kind": "Municipio",
+"lat": 10.233285,
+"lng": -75.191643
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13440",
+"city": "MARGARITA",
+"kind": "Municipio",
+"lat": 9.15784,
+"lng": -74.285137
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13442",
+"city": "MARÍA LA BAJA",
+"kind": "Municipio",
+"lat": 9.982402,
+"lng": -75.300516
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13458",
+"city": "MONTECRISTO",
+"kind": "Municipio",
+"lat": 8.297234,
+"lng": -74.471176
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13468",
+"city": "SANTA CRUZ DE MOMPOX",
+"kind": "Municipio",
+"lat": 9.244241,
+"lng": -74.42818
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13473",
+"city": "MORALES",
+"kind": "Municipio",
+"lat": 8.276558,
+"lng": -73.868172
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13490",
+"city": "NOROSÍ",
+"kind": "Municipio",
+"lat": 8.526259,
+"lng": -74.038003
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13549",
+"city": "PINILLOS",
+"kind": "Municipio",
+"lat": 8.914947,
+"lng": -74.462279
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13580",
+"city": "REGIDOR",
+"kind": "Municipio",
+"lat": 8.666258,
+"lng": -73.821638
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13600",
+"city": "RÍO VIEJO",
+"kind": "Municipio",
+"lat": 8.58795,
+"lng": -73.840466
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13620",
+"city": "SAN CRISTÓBAL",
+"kind": "Municipio",
+"lat": 10.392836,
+"lng": -75.065076
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13647",
+"city": "SAN ESTANISLAO",
+"kind": "Municipio",
+"lat": 10.398602,
+"lng": -75.153101
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13650",
+"city": "SAN FERNANDO",
+"kind": "Municipio",
+"lat": 9.214183,
+"lng": -74.323811
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13654",
+"city": "SAN JACINTO",
+"kind": "Municipio",
+"lat": 9.830275,
+"lng": -75.12105
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13655",
+"city": "SAN JACINTO DEL CAUCA",
+"kind": "Municipio",
+"lat": 8.25158,
+"lng": -74.721156
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13657",
+"city": "SAN JUAN NEPOMUCENO",
+"kind": "Municipio",
+"lat": 9.953751,
+"lng": -75.081761
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13667",
+"city": "SAN MARTÍN DE LOBA",
+"kind": "Municipio",
+"lat": 8.937485,
+"lng": -74.039134
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13670",
+"city": "SAN PABLO",
+"kind": "Municipio",
+"lat": 7.476747,
+"lng": -73.924602
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13673",
+"city": "SANTA CATALINA",
+"kind": "Municipio",
+"lat": 10.605294,
+"lng": -75.287855
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13683",
+"city": "SANTA ROSA",
+"kind": "Municipio",
+"lat": 10.444396,
+"lng": -75.369824
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13688",
+"city": "SANTA ROSA DEL SUR",
+"kind": "Municipio",
+"lat": 7.963938,
+"lng": -74.052243
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13744",
+"city": "SIMITÍ",
+"kind": "Municipio",
+"lat": 7.953916,
+"lng": -73.947264
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13760",
+"city": "SOPLAVIENTO",
+"kind": "Municipio",
+"lat": 10.38839,
+"lng": -75.136404
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13780",
+"city": "TALAIGUA NUEVO",
+"kind": "Municipio",
+"lat": 9.30403,
+"lng": -74.567479
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13810",
+"city": "TIQUISIO",
+"kind": "Municipio",
+"lat": 8.558666,
+"lng": -74.262922
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13836",
+"city": "TURBACO",
+"kind": "Municipio",
+"lat": 10.348316,
+"lng": -75.427249
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13838",
+"city": "TURBANÁ",
+"kind": "Municipio",
+"lat": 10.274585,
+"lng": -75.44265
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13873",
+"city": "VILLANUEVA",
+"kind": "Municipio",
+"lat": 10.444089,
+"lng": -75.275613
+},
+{
+"state_code": "13",
+"state": "BOLÍVAR",
+"city_code": "13894",
+"city": "ZAMBRANO",
+"kind": "Municipio",
+"lat": 9.746306,
+"lng": -74.817879
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15001",
+"city": "TUNJA",
+"kind": "Municipio",
+"lat": 5.53988,
+"lng": -73.355539
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15022",
+"city": "ALMEIDA",
+"kind": "Municipio",
+"lat": 4.970857,
+"lng": -73.378933
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15047",
+"city": "AQUITANIA",
+"kind": "Municipio",
+"lat": 5.518602,
+"lng": -72.88399
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15051",
+"city": "ARCABUCO",
+"kind": "Municipio",
+"lat": 5.755673,
+"lng": -73.437503
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15087",
+"city": "BELÉN",
+"kind": "Municipio",
+"lat": 5.98923,
+"lng": -72.911641
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15090",
+"city": "BERBEO",
+"kind": "Municipio",
+"lat": 5.227451,
+"lng": -73.12721
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15092",
+"city": "BETÉITIVA",
+"kind": "Municipio",
+"lat": 5.909978,
+"lng": -72.809014
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15097",
+"city": "BOAVITA",
+"kind": "Municipio",
+"lat": 6.330703,
+"lng": -72.584905
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15104",
+"city": "BOYACÁ",
+"kind": "Municipio",
+"lat": 5.454578,
+"lng": -73.361945
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15106",
+"city": "BRICEÑO",
+"kind": "Municipio",
+"lat": 5.690879,
+"lng": -73.92326
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15109",
+"city": "BUENAVISTA",
+"kind": "Municipio",
+"lat": 5.512594,
+"lng": -73.94217
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15114",
+"city": "BUSBANZÁ",
+"kind": "Municipio",
+"lat": 5.831393,
+"lng": -72.884158
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15131",
+"city": "CALDAS",
+"kind": "Municipio",
+"lat": 5.55458,
+"lng": -73.865553
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15135",
+"city": "CAMPOHERMOSO",
+"kind": "Municipio",
+"lat": 5.031676,
+"lng": -73.104173
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15162",
+"city": "CERINZA",
+"kind": "Municipio",
+"lat": 5.955939,
+"lng": -72.947918
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15172",
+"city": "CHINAVITA",
+"kind": "Municipio",
+"lat": 5.167486,
+"lng": -73.368476
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15176",
+"city": "CHIQUINQUIRÁ",
+"kind": "Municipio",
+"lat": 5.61379,
+"lng": -73.818745
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15180",
+"city": "CHISCAS",
+"kind": "Municipio",
+"lat": 6.553136,
+"lng": -72.500957
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15183",
+"city": "CHITA",
+"kind": "Municipio",
+"lat": 6.187083,
+"lng": -72.471892
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15185",
+"city": "CHITARAQUE",
+"kind": "Municipio",
+"lat": 6.027425,
+"lng": -73.4471
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15187",
+"city": "CHIVATÁ",
+"kind": "Municipio",
+"lat": 5.558949,
+"lng": -73.282529
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15189",
+"city": "CIÉNEGA",
+"kind": "Municipio",
+"lat": 5.408694,
+"lng": -73.296049
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15204",
+"city": "CÓMBITA",
+"kind": "Municipio",
+"lat": 5.634545,
+"lng": -73.323957
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15212",
+"city": "COPER",
+"kind": "Municipio",
+"lat": 5.475074,
+"lng": -74.045636
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15215",
+"city": "CORRALES",
+"kind": "Municipio",
+"lat": 5.828064,
+"lng": -72.844795
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15218",
+"city": "COVARACHÍA",
+"kind": "Municipio",
+"lat": 6.500177,
+"lng": -72.738978
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15223",
+"city": "CUBARÁ",
+"kind": "Municipio",
+"lat": 6.997275,
+"lng": -72.107939
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15224",
+"city": "CUCAITA",
+"kind": "Municipio",
+"lat": 5.544452,
+"lng": -73.454338
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15226",
+"city": "CUÍTIVA",
+"kind": "Municipio",
+"lat": 5.580367,
+"lng": -72.965923
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15232",
+"city": "CHÍQUIZA",
+"kind": "Municipio",
+"lat": 5.639834,
+"lng": -73.449463
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15236",
+"city": "CHIVOR",
+"kind": "Municipio",
+"lat": 4.888173,
+"lng": -73.368398
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15238",
+"city": "DUITAMA",
+"kind": "Municipio",
+"lat": 5.822964,
+"lng": -73.03063
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15244",
+"city": "EL COCUY",
+"kind": "Municipio",
+"lat": 6.407738,
+"lng": -72.444537
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15248",
+"city": "EL ESPINO",
+"kind": "Municipio",
+"lat": 6.483027,
+"lng": -72.497007
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15272",
+"city": "FIRAVITOBA",
+"kind": "Municipio",
+"lat": 5.668885,
+"lng": -72.993392
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15276",
+"city": "FLORESTA",
+"kind": "Municipio",
+"lat": 5.859519,
+"lng": -72.918111
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15293",
+"city": "GACHANTIVÁ",
+"kind": "Municipio",
+"lat": 5.751891,
+"lng": -73.549092
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15296",
+"city": "GÁMEZA",
+"kind": "Municipio",
+"lat": 5.802333,
+"lng": -72.80553
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15299",
+"city": "GARAGOA",
+"kind": "Municipio",
+"lat": 5.083234,
+"lng": -73.364413
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15317",
+"city": "GUACAMAYAS",
+"kind": "Municipio",
+"lat": 6.459667,
+"lng": -72.500812
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15322",
+"city": "GUATEQUE",
+"kind": "Municipio",
+"lat": 5.007321,
+"lng": -73.471207
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15325",
+"city": "GUAYATÁ",
+"kind": "Municipio",
+"lat": 4.967122,
+"lng": -73.489698
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15332",
+"city": "GÜICÁN DE LA SIERRA",
+"kind": "Municipio",
+"lat": 6.462864,
+"lng": -72.411763
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15362",
+"city": "IZA",
+"kind": "Municipio",
+"lat": 5.611577,
+"lng": -72.979559
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15367",
+"city": "JENESANO",
+"kind": "Municipio",
+"lat": 5.385813,
+"lng": -73.363738
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15368",
+"city": "JERICÓ",
+"kind": "Municipio",
+"lat": 6.145735,
+"lng": -72.571122
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15377",
+"city": "LABRANZAGRANDE",
+"kind": "Municipio",
+"lat": 5.562687,
+"lng": -72.57777
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15380",
+"city": "LA CAPILLA",
+"kind": "Municipio",
+"lat": 5.095687,
+"lng": -73.444347
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15401",
+"city": "LA VICTORIA",
+"kind": "Municipio",
+"lat": 5.523792,
+"lng": -74.234393
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15403",
+"city": "LA UVITA",
+"kind": "Municipio",
+"lat": 6.31616,
+"lng": -72.559982
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15407",
+"city": "VILLA DE LEYVA",
+"kind": "Municipio",
+"lat": 5.632455,
+"lng": -73.524948
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15425",
+"city": "MACANAL",
+"kind": "Municipio",
+"lat": 4.972464,
+"lng": -73.319593
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15442",
+"city": "MARIPÍ",
+"kind": "Municipio",
+"lat": 5.550091,
+"lng": -74.00405
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15455",
+"city": "MIRAFLORES",
+"kind": "Municipio",
+"lat": 5.196515,
+"lng": -73.14563
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15464",
+"city": "MONGUA",
+"kind": "Municipio",
+"lat": 5.754242,
+"lng": -72.79809
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15466",
+"city": "MONGUÍ",
+"kind": "Municipio",
+"lat": 5.723486,
+"lng": -72.849292
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15469",
+"city": "MONIQUIRÁ",
+"kind": "Municipio",
+"lat": 5.876331,
+"lng": -73.573374
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15476",
+"city": "MOTAVITA",
+"kind": "Municipio",
+"lat": 5.5777,
+"lng": -73.367841
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15480",
+"city": "MUZO",
+"kind": "Municipio",
+"lat": 5.532758,
+"lng": -74.10269
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15491",
+"city": "NOBSA",
+"kind": "Municipio",
+"lat": 5.768046,
+"lng": -72.937042
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15494",
+"city": "NUEVO COLÓN",
+"kind": "Municipio",
+"lat": 5.355317,
+"lng": -73.456759
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15500",
+"city": "OICATÁ",
+"kind": "Municipio",
+"lat": 5.595235,
+"lng": -73.308399
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15507",
+"city": "OTANCHE",
+"kind": "Municipio",
+"lat": 5.657536,
+"lng": -74.180965
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15511",
+"city": "PACHAVITA",
+"kind": "Municipio",
+"lat": 5.140065,
+"lng": -73.396953
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15514",
+"city": "PÁEZ",
+"kind": "Municipio",
+"lat": 5.097319,
+"lng": -73.052737
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15516",
+"city": "PAIPA",
+"kind": "Municipio",
+"lat": 5.779894,
+"lng": -73.11782
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15518",
+"city": "PAJARITO",
+"kind": "Municipio",
+"lat": 5.293783,
+"lng": -72.703231
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15522",
+"city": "PANQUEBA",
+"kind": "Municipio",
+"lat": 6.443416,
+"lng": -72.459424
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15531",
+"city": "PAUNA",
+"kind": "Municipio",
+"lat": 5.656323,
+"lng": -73.978449
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15533",
+"city": "PAYA",
+"kind": "Municipio",
+"lat": 5.625699,
+"lng": -72.423775
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15537",
+"city": "PAZ DE RÍO",
+"kind": "Municipio",
+"lat": 5.987645,
+"lng": -72.749137
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15542",
+"city": "PESCA",
+"kind": "Municipio",
+"lat": 5.558808,
+"lng": -73.050872
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15550",
+"city": "PISBA",
+"kind": "Municipio",
+"lat": 5.72141,
+"lng": -72.486023
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15572",
+"city": "PUERTO BOYACÁ",
+"kind": "Municipio",
+"lat": 5.976646,
+"lng": -74.587782
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15580",
+"city": "QUÍPAMA",
+"kind": "Municipio",
+"lat": 5.52055,
+"lng": -74.180033
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15599",
+"city": "RAMIRIQUÍ",
+"kind": "Municipio",
+"lat": 5.400303,
+"lng": -73.334839
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15600",
+"city": "RÁQUIRA",
+"kind": "Municipio",
+"lat": 5.539136,
+"lng": -73.632543
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15621",
+"city": "RONDÓN",
+"kind": "Municipio",
+"lat": 5.357378,
+"lng": -73.208474
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15632",
+"city": "SABOYÁ",
+"kind": "Municipio",
+"lat": 5.697756,
+"lng": -73.764456
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15638",
+"city": "SÁCHICA",
+"kind": "Municipio",
+"lat": 5.584305,
+"lng": -73.542539
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15646",
+"city": "SAMACÁ",
+"kind": "Municipio",
+"lat": 5.492161,
+"lng": -73.485589
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15660",
+"city": "SAN EDUARDO",
+"kind": "Municipio",
+"lat": 5.22401,
+"lng": -73.077747
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15664",
+"city": "SAN JOSÉ DE PARE",
+"kind": "Municipio",
+"lat": 6.018924,
+"lng": -73.545397
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15667",
+"city": "SAN LUIS DE GACENO",
+"kind": "Municipio",
+"lat": 4.81976,
+"lng": -73.168076
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15673",
+"city": "SAN MATEO",
+"kind": "Municipio",
+"lat": 6.401683,
+"lng": -72.555264
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15676",
+"city": "SAN MIGUEL DE SEMA",
+"kind": "Municipio",
+"lat": 5.518083,
+"lng": -73.722009
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15681",
+"city": "SAN PABLO DE BORBUR",
+"kind": "Municipio",
+"lat": 5.650743,
+"lng": -74.069963
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15686",
+"city": "SANTANA",
+"kind": "Municipio",
+"lat": 6.056866,
+"lng": -73.481639
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15690",
+"city": "SANTA MARÍA",
+"kind": "Municipio",
+"lat": 4.857193,
+"lng": -73.263518
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15693",
+"city": "SANTA ROSA DE VITERBO",
+"kind": "Municipio",
+"lat": 5.874547,
+"lng": -72.982461
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15696",
+"city": "SANTA SOFÍA",
+"kind": "Municipio",
+"lat": 5.713269,
+"lng": -73.602707
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15720",
+"city": "SATIVANORTE",
+"kind": "Municipio",
+"lat": 6.131132,
+"lng": -72.708458
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15723",
+"city": "SATIVASUR",
+"kind": "Municipio",
+"lat": 6.093183,
+"lng": -72.712435
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15740",
+"city": "SIACHOQUE",
+"kind": "Municipio",
+"lat": 5.511811,
+"lng": -73.24466
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15753",
+"city": "SOATÁ",
+"kind": "Municipio",
+"lat": 6.331945,
+"lng": -72.684051
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15755",
+"city": "SOCOTÁ",
+"kind": "Municipio",
+"lat": 6.041162,
+"lng": -72.636653
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15757",
+"city": "SOCHA",
+"kind": "Municipio",
+"lat": 5.996717,
+"lng": -72.691963
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15759",
+"city": "SOGAMOSO",
+"kind": "Municipio",
+"lat": 5.723976,
+"lng": -72.924355
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15761",
+"city": "SOMONDOCO",
+"kind": "Municipio",
+"lat": 4.985726,
+"lng": -73.433393
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15762",
+"city": "SORA",
+"kind": "Municipio",
+"lat": 5.56684,
+"lng": -73.450153
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15763",
+"city": "SOTAQUIRÁ",
+"kind": "Municipio",
+"lat": 5.764986,
+"lng": -73.246585
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15764",
+"city": "SORACÁ",
+"kind": "Municipio",
+"lat": 5.500898,
+"lng": -73.332804
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15774",
+"city": "SUSACÓN",
+"kind": "Municipio",
+"lat": 6.230332,
+"lng": -72.690289
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15776",
+"city": "SUTAMARCHÁN",
+"kind": "Municipio",
+"lat": 5.619781,
+"lng": -73.620536
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15778",
+"city": "SUTATENZA",
+"kind": "Municipio",
+"lat": 5.022989,
+"lng": -73.452317
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15790",
+"city": "TASCO",
+"kind": "Municipio",
+"lat": 5.909821,
+"lng": -72.781011
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15798",
+"city": "TENZA",
+"kind": "Municipio",
+"lat": 5.076781,
+"lng": -73.421176
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15804",
+"city": "TIBANÁ",
+"kind": "Municipio",
+"lat": 5.317251,
+"lng": -73.396457
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15806",
+"city": "TIBASOSA",
+"kind": "Municipio",
+"lat": 5.74723,
+"lng": -72.999449
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15808",
+"city": "TINJACÁ",
+"kind": "Municipio",
+"lat": 5.579713,
+"lng": -73.646847
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15810",
+"city": "TIPACOQUE",
+"kind": "Municipio",
+"lat": 6.419203,
+"lng": -72.691729
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15814",
+"city": "TOCA",
+"kind": "Municipio",
+"lat": 5.566464,
+"lng": -73.184794
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15816",
+"city": "TOGÜÍ",
+"kind": "Municipio",
+"lat": 5.937438,
+"lng": -73.513655
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15820",
+"city": "TÓPAGA",
+"kind": "Municipio",
+"lat": 5.768201,
+"lng": -72.832245
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15822",
+"city": "TOTA",
+"kind": "Municipio",
+"lat": 5.560497,
+"lng": -72.985898
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15832",
+"city": "TUNUNGUÁ",
+"kind": "Municipio",
+"lat": 5.730582,
+"lng": -73.933155
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15835",
+"city": "TURMEQUÉ",
+"kind": "Municipio",
+"lat": 5.323261,
+"lng": -73.491825
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15837",
+"city": "TUTA",
+"kind": "Municipio",
+"lat": 5.689082,
+"lng": -73.230285
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15839",
+"city": "TUTAZÁ",
+"kind": "Municipio",
+"lat": 6.032608,
+"lng": -72.856035
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15842",
+"city": "ÚMBITA",
+"kind": "Municipio",
+"lat": 5.221176,
+"lng": -73.456917
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15861",
+"city": "VENTAQUEMADA",
+"kind": "Municipio",
+"lat": 5.368739,
+"lng": -73.522368
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15879",
+"city": "VIRACACHÁ",
+"kind": "Municipio",
+"lat": 5.436833,
+"lng": -73.296894
+},
+{
+"state_code": "15",
+"state": "BOYACÁ",
+"city_code": "15897",
+"city": "ZETAQUIRA",
+"kind": "Municipio",
+"lat": 5.283443,
+"lng": -73.17098
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17001",
+"city": "MANIZALES",
+"kind": "Municipio",
+"lat": 5.057657,
+"lng": -75.491025
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17013",
+"city": "AGUADAS",
+"kind": "Municipio",
+"lat": 5.610244,
+"lng": -75.45487
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17042",
+"city": "ANSERMA",
+"kind": "Municipio",
+"lat": 5.236471,
+"lng": -75.784343
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17050",
+"city": "ARANZAZU",
+"kind": "Municipio",
+"lat": 5.271195,
+"lng": -75.49129
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17088",
+"city": "BELALCÁZAR",
+"kind": "Municipio",
+"lat": 4.993785,
+"lng": -75.811918
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17174",
+"city": "CHINCHINÁ",
+"kind": "Municipio",
+"lat": 4.985227,
+"lng": -75.607529
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17272",
+"city": "FILADELFIA",
+"kind": "Municipio",
+"lat": 5.297091,
+"lng": -75.562474
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17380",
+"city": "LA DORADA",
+"kind": "Municipio",
+"lat": 5.460834,
+"lng": -74.668819
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17388",
+"city": "LA MERCED",
+"kind": "Municipio",
+"lat": 5.39647,
+"lng": -75.546486
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17433",
+"city": "MANZANARES",
+"kind": "Municipio",
+"lat": 5.255699,
+"lng": -75.152829
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17442",
+"city": "MARMATO",
+"kind": "Municipio",
+"lat": 5.47422,
+"lng": -75.600049
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17444",
+"city": "MARQUETALIA",
+"kind": "Municipio",
+"lat": 5.297525,
+"lng": -75.053097
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17446",
+"city": "MARULANDA",
+"kind": "Municipio",
+"lat": 5.284304,
+"lng": -75.259721
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17486",
+"city": "NEIRA",
+"kind": "Municipio",
+"lat": 5.166895,
+"lng": -75.520006
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17495",
+"city": "NORCASIA",
+"kind": "Municipio",
+"lat": 5.574796,
+"lng": -74.889543
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17513",
+"city": "PÁCORA",
+"kind": "Municipio",
+"lat": 5.527172,
+"lng": -75.459621
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17524",
+"city": "PALESTINA",
+"kind": "Municipio",
+"lat": 5.017879,
+"lng": -75.624577
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17541",
+"city": "PENSILVANIA",
+"kind": "Municipio",
+"lat": 5.383281,
+"lng": -75.160299
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17614",
+"city": "RIOSUCIO",
+"kind": "Municipio",
+"lat": 5.423673,
+"lng": -75.702104
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17616",
+"city": "RISARALDA",
+"kind": "Municipio",
+"lat": 5.164509,
+"lng": -75.76722
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17653",
+"city": "SALAMINA",
+"kind": "Municipio",
+"lat": 5.403025,
+"lng": -75.487223
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17662",
+"city": "SAMANÁ",
+"kind": "Municipio",
+"lat": 5.41308,
+"lng": -74.992263
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17665",
+"city": "SAN JOSÉ",
+"kind": "Municipio",
+"lat": 5.08231,
+"lng": -75.792063
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17777",
+"city": "SUPÍA",
+"kind": "Municipio",
+"lat": 5.446843,
+"lng": -75.64966
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17867",
+"city": "VICTORIA",
+"kind": "Municipio",
+"lat": 5.317437,
+"lng": -74.911239
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17873",
+"city": "VILLAMARÍA",
+"kind": "Municipio",
+"lat": 5.038925,
+"lng": -75.502487
+},
+{
+"state_code": "17",
+"state": "CALDAS",
+"city_code": "17877",
+"city": "VITERBO",
+"kind": "Municipio",
+"lat": 5.062664,
+"lng": -75.87061
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18001",
+"city": "FLORENCIA",
+"kind": "Municipio",
+"lat": 1.618196,
+"lng": -75.609831
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18029",
+"city": "ALBANIA",
+"kind": "Municipio",
+"lat": 1.328526,
+"lng": -75.878375
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18094",
+"city": "BELÉN DE LOS ANDAQUÍES",
+"kind": "Municipio",
+"lat": 1.415812,
+"lng": -75.872405
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18150",
+"city": "CARTAGENA DEL CHAIRÁ",
+"kind": "Municipio",
+"lat": 1.332371,
+"lng": -74.847867
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18205",
+"city": "CURILLO",
+"kind": "Municipio",
+"lat": 1.033473,
+"lng": -75.919205
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18247",
+"city": "EL DONCELLO",
+"kind": "Municipio",
+"lat": 1.679951,
+"lng": -75.283631
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18256",
+"city": "EL PAUJÍL",
+"kind": "Municipio",
+"lat": 1.570226,
+"lng": -75.326093
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18410",
+"city": "LA MONTAÑITA",
+"kind": "Municipio",
+"lat": 1.479173,
+"lng": -75.436408
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18460",
+"city": "MILÁN",
+"kind": "Municipio",
+"lat": 1.29021,
+"lng": -75.506926
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18479",
+"city": "MORELIA",
+"kind": "Municipio",
+"lat": 1.486611,
+"lng": -75.724146
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18592",
+"city": "PUERTO RICO",
+"kind": "Municipio",
+"lat": 1.909063,
+"lng": -75.157604
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18610",
+"city": "SAN JOSÉ DEL FRAGUA",
+"kind": "Municipio",
+"lat": 1.330266,
+"lng": -75.973796
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18753",
+"city": "SAN VICENTE DEL CAGUÁN",
+"kind": "Municipio",
+"lat": 2.119413,
+"lng": -74.767894
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18756",
+"city": "SOLANO",
+"kind": "Municipio",
+"lat": 0.699077,
+"lng": -75.253702
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18785",
+"city": "SOLITA",
+"kind": "Municipio",
+"lat": 0.87654,
+"lng": -75.619902
+},
+{
+"state_code": "18",
+"state": "CAQUETÁ",
+"city_code": "18860",
+"city": "VALPARAÍSO",
+"kind": "Municipio",
+"lat": 1.194619,
+"lng": -75.70671
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19001",
+"city": "POPAYÁN",
+"kind": "Municipio",
+"lat": 2.459641,
+"lng": -76.599377
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19022",
+"city": "ALMAGUER",
+"kind": "Municipio",
+"lat": 1.913429,
+"lng": -76.85607
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19050",
+"city": "ARGELIA",
+"kind": "Municipio",
+"lat": 2.257427,
+"lng": -77.24905
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19075",
+"city": "BALBOA",
+"kind": "Municipio",
+"lat": 2.040998,
+"lng": -77.215773
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19100",
+"city": "BOLÍVAR",
+"kind": "Municipio",
+"lat": 1.837538,
+"lng": -76.966215
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19110",
+"city": "BUENOS AIRES",
+"kind": "Municipio",
+"lat": 3.015382,
+"lng": -76.642238
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19130",
+"city": "CAJIBÍO",
+"kind": "Municipio",
+"lat": 2.623371,
+"lng": -76.570682
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19137",
+"city": "CALDONO",
+"kind": "Municipio",
+"lat": 2.798059,
+"lng": -76.484319
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19142",
+"city": "CALOTO",
+"kind": "Municipio",
+"lat": 3.034531,
+"lng": -76.408941
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19212",
+"city": "CORINTO",
+"kind": "Municipio",
+"lat": 3.173854,
+"lng": -76.261866
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19256",
+"city": "EL TAMBO",
+"kind": "Municipio",
+"lat": 2.451409,
+"lng": -76.810911
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19290",
+"city": "FLORENCIA",
+"kind": "Municipio",
+"lat": 1.682535,
+"lng": -77.072547
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19300",
+"city": "GUACHENÉ",
+"kind": "Municipio",
+"lat": 3.134153,
+"lng": -76.392189
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19318",
+"city": "GUAPI",
+"kind": "Municipio",
+"lat": 2.571337,
+"lng": -77.88797
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19355",
+"city": "INZÁ",
+"kind": "Municipio",
+"lat": 2.549183,
+"lng": -76.063503
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19364",
+"city": "JAMBALÓ",
+"kind": "Municipio",
+"lat": 2.777834,
+"lng": -76.323877
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19392",
+"city": "LA SIERRA",
+"kind": "Municipio",
+"lat": 2.179383,
+"lng": -76.763278
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19397",
+"city": "LA VEGA",
+"kind": "Municipio",
+"lat": 2.001803,
+"lng": -76.778771
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19418",
+"city": "LÓPEZ DE MICAY",
+"kind": "Municipio",
+"lat": 2.846788,
+"lng": -77.247803
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19450",
+"city": "MERCADERES",
+"kind": "Municipio",
+"lat": 1.789193,
+"lng": -77.164319
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19455",
+"city": "MIRANDA",
+"kind": "Municipio",
+"lat": 3.254651,
+"lng": -76.228722
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19473",
+"city": "MORALES",
+"kind": "Municipio",
+"lat": 2.754684,
+"lng": -76.629106
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19513",
+"city": "PADILLA",
+"kind": "Municipio",
+"lat": 3.220984,
+"lng": -76.313265
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19517",
+"city": "PÁEZ",
+"kind": "Municipio",
+"lat": 2.645724,
+"lng": -75.970685
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19532",
+"city": "PATÍA",
+"kind": "Municipio",
+"lat": 2.115875,
+"lng": -76.981075
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19533",
+"city": "PIAMONTE",
+"kind": "Municipio",
+"lat": 1.11754,
+"lng": -76.327588
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19548",
+"city": "PIENDAMÓ - TUNÍA",
+"kind": "Municipio",
+"lat": 2.64228,
+"lng": -76.528615
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19573",
+"city": "PUERTO TEJADA",
+"kind": "Municipio",
+"lat": 3.233254,
+"lng": -76.417673
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19585",
+"city": "PURACÉ",
+"kind": "Municipio",
+"lat": 2.341507,
+"lng": -76.496698
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19622",
+"city": "ROSAS",
+"kind": "Municipio",
+"lat": 2.260941,
+"lng": -76.740336
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19693",
+"city": "SAN SEBASTIÁN",
+"kind": "Municipio",
+"lat": 1.838451,
+"lng": -76.769467
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19698",
+"city": "SANTANDER DE QUILICHAO",
+"kind": "Municipio",
+"lat": 3.015008,
+"lng": -76.485141
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19701",
+"city": "SANTA ROSA",
+"kind": "Municipio",
+"lat": 1.700916,
+"lng": -76.573252
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19743",
+"city": "SILVIA",
+"kind": "Municipio",
+"lat": 2.611927,
+"lng": -76.379753
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19760",
+"city": "SOTARÁ - PAISPAMBA",
+"kind": "Municipio",
+"lat": 2.253156,
+"lng": -76.613365
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19780",
+"city": "SUÁREZ",
+"kind": "Municipio",
+"lat": 2.959785,
+"lng": -76.69357
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19785",
+"city": "SUCRE",
+"kind": "Municipio",
+"lat": 2.038237,
+"lng": -76.926279
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19807",
+"city": "TIMBÍO",
+"kind": "Municipio",
+"lat": 2.349686,
+"lng": -76.684476
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19809",
+"city": "TIMBIQUÍ",
+"kind": "Municipio",
+"lat": 2.777312,
+"lng": -77.667541
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19821",
+"city": "TORIBÍO",
+"kind": "Municipio",
+"lat": 2.953017,
+"lng": -76.270284
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19824",
+"city": "TOTORÓ",
+"kind": "Municipio",
+"lat": 2.510252,
+"lng": -76.403628
+},
+{
+"state_code": "19",
+"state": "CAUCA",
+"city_code": "19845",
+"city": "VILLA RICA",
+"kind": "Municipio",
+"lat": 3.17762,
+"lng": -76.458025
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20001",
+"city": "VALLEDUPAR",
+"kind": "Municipio",
+"lat": 10.460472,
+"lng": -73.259398
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20011",
+"city": "AGUACHICA",
+"kind": "Municipio",
+"lat": 8.306811,
+"lng": -73.614027
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20013",
+"city": "AGUSTÍN CODAZZI",
+"kind": "Municipio",
+"lat": 10.040454,
+"lng": -73.238389
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20032",
+"city": "ASTREA",
+"kind": "Municipio",
+"lat": 9.498062,
+"lng": -73.975842
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20045",
+"city": "BECERRIL",
+"kind": "Municipio",
+"lat": 9.704404,
+"lng": -73.278707
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20060",
+"city": "BOSCONIA",
+"kind": "Municipio",
+"lat": 9.975098,
+"lng": -73.888761
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20175",
+"city": "CHIMICHAGUA",
+"kind": "Municipio",
+"lat": 9.25875,
+"lng": -73.813278
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20178",
+"city": "CHIRIGUANÁ",
+"kind": "Municipio",
+"lat": 9.361058,
+"lng": -73.599913
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20228",
+"city": "CURUMANÍ",
+"kind": "Municipio",
+"lat": 9.201716,
+"lng": -73.540843
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20238",
+"city": "EL COPEY",
+"kind": "Municipio",
+"lat": 10.149883,
+"lng": -73.962703
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20250",
+"city": "EL PASO",
+"kind": "Municipio",
+"lat": 9.668461,
+"lng": -73.742012
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20295",
+"city": "GAMARRA",
+"kind": "Municipio",
+"lat": 8.324793,
+"lng": -73.737558
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20310",
+"city": "GONZÁLEZ",
+"kind": "Municipio",
+"lat": 8.389604,
+"lng": -73.38004
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20383",
+"city": "LA GLORIA",
+"kind": "Municipio",
+"lat": 8.619298,
+"lng": -73.80321
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20400",
+"city": "LA JAGUA DE IBIRICO",
+"kind": "Municipio",
+"lat": 9.563752,
+"lng": -73.334143
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20443",
+"city": "MANAURE BALCÓN DEL CESAR",
+"kind": "Municipio",
+"lat": 10.390776,
+"lng": -73.029472
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20517",
+"city": "PAILITAS",
+"kind": "Municipio",
+"lat": 8.959399,
+"lng": -73.625825
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20550",
+"city": "PELAYA",
+"kind": "Municipio",
+"lat": 8.689451,
+"lng": -73.666735
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20570",
+"city": "PUEBLO BELLO",
+"kind": "Municipio",
+"lat": 10.417321,
+"lng": -73.586211
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20614",
+"city": "RÍO DE ORO",
+"kind": "Municipio",
+"lat": 8.292292,
+"lng": -73.386393
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20621",
+"city": "LA PAZ",
+"kind": "Municipio",
+"lat": 10.387552,
+"lng": -73.171365
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20710",
+"city": "SAN ALBERTO",
+"kind": "Municipio",
+"lat": 7.76111,
+"lng": -73.393889
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20750",
+"city": "SAN DIEGO",
+"kind": "Municipio",
+"lat": 10.333039,
+"lng": -73.181208
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20770",
+"city": "SAN MARTÍN",
+"kind": "Municipio",
+"lat": 7.999855,
+"lng": -73.510914
+},
+{
+"state_code": "20",
+"state": "CESAR",
+"city_code": "20787",
+"city": "TAMALAMEQUE",
+"kind": "Municipio",
+"lat": 8.861725,
+"lng": -73.812172
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23001",
+"city": "MONTERÍA",
+"kind": "Municipio",
+"lat": 8.759789,
+"lng": -75.873096
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23068",
+"city": "AYAPEL",
+"kind": "Municipio",
+"lat": 8.313838,
+"lng": -75.146048
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23079",
+"city": "BUENAVISTA",
+"kind": "Municipio",
+"lat": 8.221187,
+"lng": -75.480897
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23090",
+"city": "CANALETE",
+"kind": "Municipio",
+"lat": 8.786939,
+"lng": -76.241476
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23162",
+"city": "CERETÉ",
+"kind": "Municipio",
+"lat": 8.888532,
+"lng": -75.796093
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23168",
+"city": "CHIMÁ",
+"kind": "Municipio",
+"lat": 9.149698,
+"lng": -75.626886
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23182",
+"city": "CHINÚ",
+"kind": "Municipio",
+"lat": 9.105473,
+"lng": -75.399633
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23189",
+"city": "CIÉNAGA DE ORO",
+"kind": "Municipio",
+"lat": 8.875794,
+"lng": -75.620807
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23300",
+"city": "COTORRA",
+"kind": "Municipio",
+"lat": 9.037163,
+"lng": -75.799216
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23350",
+"city": "LA APARTADA",
+"kind": "Municipio",
+"lat": 8.050125,
+"lng": -75.336031
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23417",
+"city": "LORICA",
+"kind": "Municipio",
+"lat": 9.240789,
+"lng": -75.816084
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23419",
+"city": "LOS CÓRDOBAS",
+"kind": "Municipio",
+"lat": 8.892098,
+"lng": -76.35518
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23464",
+"city": "MOMIL",
+"kind": "Municipio",
+"lat": 9.240707,
+"lng": -75.67796
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23466",
+"city": "MONTELÍBANO",
+"kind": "Municipio",
+"lat": 7.973777,
+"lng": -75.416818
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23500",
+"city": "MOÑITOS",
+"kind": "Municipio",
+"lat": 9.245223,
+"lng": -76.1291
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23555",
+"city": "PLANETA RICA",
+"kind": "Municipio",
+"lat": 8.4082,
+"lng": -75.583241
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23570",
+"city": "PUEBLO NUEVO",
+"kind": "Municipio",
+"lat": 8.504099,
+"lng": -75.508035
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23574",
+"city": "PUERTO ESCONDIDO",
+"kind": "Municipio",
+"lat": 9.005372,
+"lng": -76.260411
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23580",
+"city": "PUERTO LIBERTADOR",
+"kind": "Municipio",
+"lat": 7.888859,
+"lng": -75.671761
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23586",
+"city": "PURÍSIMA DE LA CONCEPCIÓN",
+"kind": "Municipio",
+"lat": 9.239295,
+"lng": -75.724987
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23660",
+"city": "SAHAGÚN",
+"kind": "Municipio",
+"lat": 8.943048,
+"lng": -75.445834
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23670",
+"city": "SAN ANDRÉS DE SOTAVENTO",
+"kind": "Municipio",
+"lat": 9.145448,
+"lng": -75.50879
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23672",
+"city": "SAN ANTERO",
+"kind": "Municipio",
+"lat": 9.376434,
+"lng": -75.76112
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23675",
+"city": "SAN BERNARDO DEL VIENTO",
+"kind": "Municipio",
+"lat": 9.35247,
+"lng": -75.955107
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23678",
+"city": "SAN CARLOS",
+"kind": "Municipio",
+"lat": 8.799282,
+"lng": -75.698799
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23682",
+"city": "SAN JOSÉ DE URÉ",
+"kind": "Municipio",
+"lat": 7.787303,
+"lng": -75.533476
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23686",
+"city": "SAN PELAYO",
+"kind": "Municipio",
+"lat": 8.958436,
+"lng": -75.835615
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23807",
+"city": "TIERRALTA",
+"kind": "Municipio",
+"lat": 8.170612,
+"lng": -76.059797
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23815",
+"city": "TUCHÍN",
+"kind": "Municipio",
+"lat": 9.186625,
+"lng": -75.553962
+},
+{
+"state_code": "23",
+"state": "CÓRDOBA",
+"city_code": "23855",
+"city": "VALENCIA",
+"kind": "Municipio",
+"lat": 8.255016,
+"lng": -76.150756
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25001",
+"city": "AGUA DE DIOS",
+"kind": "Municipio",
+"lat": 4.375309,
+"lng": -74.669221
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25019",
+"city": "ALBÁN",
+"kind": "Municipio",
+"lat": 4.878022,
+"lng": -74.438261
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25035",
+"city": "ANAPOIMA",
+"kind": "Municipio",
+"lat": 4.562737,
+"lng": -74.528676
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25040",
+"city": "ANOLAIMA",
+"kind": "Municipio",
+"lat": 4.7617,
+"lng": -74.46384
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25053",
+"city": "ARBELÁEZ",
+"kind": "Municipio",
+"lat": 4.272534,
+"lng": -74.414901
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25086",
+"city": "BELTRÁN",
+"kind": "Municipio",
+"lat": 4.802832,
+"lng": -74.741666
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25095",
+"city": "BITUIMA",
+"kind": "Municipio",
+"lat": 4.872171,
+"lng": -74.539609
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25099",
+"city": "BOJACÁ",
+"kind": "Municipio",
+"lat": 4.737205,
+"lng": -74.344594
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25120",
+"city": "CABRERA",
+"kind": "Municipio",
+"lat": 3.985164,
+"lng": -74.484549
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25123",
+"city": "CACHIPAY",
+"kind": "Municipio",
+"lat": 4.730957,
+"lng": -74.435711
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25126",
+"city": "CAJICÁ",
+"kind": "Municipio",
+"lat": 4.920009,
+"lng": -74.02298
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25148",
+"city": "CAPARRAPÍ",
+"kind": "Municipio",
+"lat": 5.34758,
+"lng": -74.491045
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25151",
+"city": "CÁQUEZA",
+"kind": "Municipio",
+"lat": 4.404112,
+"lng": -73.946473
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25154",
+"city": "CARMEN DE CARUPA",
+"kind": "Municipio",
+"lat": 5.349119,
+"lng": -73.901357
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25168",
+"city": "CHAGUANÍ",
+"kind": "Municipio",
+"lat": 4.948916,
+"lng": -74.593455
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25175",
+"city": "CHÍA",
+"kind": "Municipio",
+"lat": 4.866508,
+"lng": -74.05
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25178",
+"city": "CHIPAQUE",
+"kind": "Municipio",
+"lat": 4.442671,
+"lng": -74.044876
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25181",
+"city": "CHOACHÍ",
+"kind": "Municipio",
+"lat": 4.527048,
+"lng": -73.922894
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25183",
+"city": "CHOCONTÁ",
+"kind": "Municipio",
+"lat": 5.145224,
+"lng": -73.683533
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25200",
+"city": "COGUA",
+"kind": "Municipio",
+"lat": 5.061842,
+"lng": -73.978497
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25214",
+"city": "COTA",
+"kind": "Municipio",
+"lat": 4.812564,
+"lng": -74.102569
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25224",
+"city": "CUCUNUBÁ",
+"kind": "Municipio",
+"lat": 5.249795,
+"lng": -73.766113
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25245",
+"city": "EL COLEGIO",
+"kind": "Municipio",
+"lat": 4.577951,
+"lng": -74.442261
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25258",
+"city": "EL PEÑÓN",
+"kind": "Municipio",
+"lat": 5.248747,
+"lng": -74.290207
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25260",
+"city": "EL ROSAL",
+"kind": "Municipio",
+"lat": 4.850589,
+"lng": -74.263103
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25269",
+"city": "FACATATIVÁ",
+"kind": "Municipio",
+"lat": 4.813353,
+"lng": -74.350085
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25279",
+"city": "FÓMEQUE",
+"kind": "Municipio",
+"lat": 4.485474,
+"lng": -73.892523
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25281",
+"city": "FOSCA",
+"kind": "Municipio",
+"lat": 4.339093,
+"lng": -73.93902
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25286",
+"city": "FUNZA",
+"kind": "Municipio",
+"lat": 4.710412,
+"lng": -74.201528
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25288",
+"city": "FÚQUENE",
+"kind": "Municipio",
+"lat": 5.403997,
+"lng": -73.795855
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25290",
+"city": "FUSAGASUGÁ",
+"kind": "Municipio",
+"lat": 4.336723,
+"lng": -74.37543
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25293",
+"city": "GACHALÁ",
+"kind": "Municipio",
+"lat": 4.693579,
+"lng": -73.520161
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25295",
+"city": "GACHANCIPÁ",
+"kind": "Municipio",
+"lat": 4.990947,
+"lng": -73.873464
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25297",
+"city": "GACHETÁ",
+"kind": "Municipio",
+"lat": 4.816411,
+"lng": -73.636377
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25299",
+"city": "GAMA",
+"kind": "Municipio",
+"lat": 4.763325,
+"lng": -73.611037
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25307",
+"city": "GIRARDOT",
+"kind": "Municipio",
+"lat": 4.313069,
+"lng": -74.798201
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25312",
+"city": "GRANADA",
+"kind": "Municipio",
+"lat": 4.519763,
+"lng": -74.350766
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25317",
+"city": "GUACHETÁ",
+"kind": "Municipio",
+"lat": 5.383378,
+"lng": -73.686972
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25320",
+"city": "GUADUAS",
+"kind": "Municipio",
+"lat": 5.072076,
+"lng": -74.603402
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25322",
+"city": "GUASCA",
+"kind": "Municipio",
+"lat": 4.866719,
+"lng": -73.877143
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25324",
+"city": "GUATAQUÍ",
+"kind": "Municipio",
+"lat": 4.517517,
+"lng": -74.790058
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25326",
+"city": "GUATAVITA",
+"kind": "Municipio",
+"lat": 4.935211,
+"lng": -73.83293
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25328",
+"city": "GUAYABAL DE SÍQUIMA",
+"kind": "Municipio",
+"lat": 4.877968,
+"lng": -74.467437
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25335",
+"city": "GUAYABETAL",
+"kind": "Municipio",
+"lat": 4.215306,
+"lng": -73.815107
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25339",
+"city": "GUTIÉRREZ",
+"kind": "Municipio",
+"lat": 4.254679,
+"lng": -74.003042
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25368",
+"city": "JERUSALÉN",
+"kind": "Municipio",
+"lat": 4.562273,
+"lng": -74.695474
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25372",
+"city": "JUNÍN",
+"kind": "Municipio",
+"lat": 4.79057,
+"lng": -73.662961
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25377",
+"city": "LA CALERA",
+"kind": "Municipio",
+"lat": 4.721104,
+"lng": -73.968161
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25386",
+"city": "LA MESA",
+"kind": "Municipio",
+"lat": 4.631028,
+"lng": -74.461588
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25394",
+"city": "LA PALMA",
+"kind": "Municipio",
+"lat": 5.358816,
+"lng": -74.391022
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25398",
+"city": "LA PEÑA",
+"kind": "Municipio",
+"lat": 5.198945,
+"lng": -74.394105
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25402",
+"city": "LA VEGA",
+"kind": "Municipio",
+"lat": 4.997768,
+"lng": -74.336885
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25407",
+"city": "LENGUAZAQUE",
+"kind": "Municipio",
+"lat": 5.306131,
+"lng": -73.711512
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25426",
+"city": "MACHETÁ",
+"kind": "Municipio",
+"lat": 5.08007,
+"lng": -73.608226
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25430",
+"city": "MADRID",
+"kind": "Municipio",
+"lat": 4.732791,
+"lng": -74.265854
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25436",
+"city": "MANTA",
+"kind": "Municipio",
+"lat": 5.009008,
+"lng": -73.540444
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25438",
+"city": "MEDINA",
+"kind": "Municipio",
+"lat": 4.506298,
+"lng": -73.348449
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25473",
+"city": "MOSQUERA",
+"kind": "Municipio",
+"lat": 4.70653,
+"lng": -74.221154
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25483",
+"city": "NARIÑO",
+"kind": "Municipio",
+"lat": 4.399837,
+"lng": -74.824732
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25486",
+"city": "NEMOCÓN",
+"kind": "Municipio",
+"lat": 5.068705,
+"lng": -73.877888
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25488",
+"city": "NILO",
+"kind": "Municipio",
+"lat": 4.305838,
+"lng": -74.620009
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25489",
+"city": "NIMAIMA",
+"kind": "Municipio",
+"lat": 5.125992,
+"lng": -74.38604
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25491",
+"city": "NOCAIMA",
+"kind": "Municipio",
+"lat": 5.069466,
+"lng": -74.379093
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25506",
+"city": "VENECIA",
+"kind": "Municipio",
+"lat": 4.089056,
+"lng": -74.478301
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25513",
+"city": "PACHO",
+"kind": "Municipio",
+"lat": 5.136907,
+"lng": -74.156132
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25518",
+"city": "PAIME",
+"kind": "Municipio",
+"lat": 5.370487,
+"lng": -74.152213
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25524",
+"city": "PANDI",
+"kind": "Municipio",
+"lat": 4.190393,
+"lng": -74.486641
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25530",
+"city": "PARATEBUENO",
+"kind": "Municipio",
+"lat": 4.374832,
+"lng": -73.212825
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25535",
+"city": "PASCA",
+"kind": "Municipio",
+"lat": 4.308979,
+"lng": -74.302276
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25572",
+"city": "PUERTO SALGAR",
+"kind": "Municipio",
+"lat": 5.465413,
+"lng": -74.653695
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25580",
+"city": "PULÍ",
+"kind": "Municipio",
+"lat": 4.682022,
+"lng": -74.71438
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25592",
+"city": "QUEBRADANEGRA",
+"kind": "Municipio",
+"lat": 5.118076,
+"lng": -74.48014
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25594",
+"city": "QUETAME",
+"kind": "Municipio",
+"lat": 4.329884,
+"lng": -73.863214
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25596",
+"city": "QUIPILE",
+"kind": "Municipio",
+"lat": 4.74481,
+"lng": -74.533705
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25599",
+"city": "APULO",
+"kind": "Municipio",
+"lat": 4.520304,
+"lng": -74.593926
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25612",
+"city": "RICAURTE",
+"kind": "Municipio",
+"lat": 4.282113,
+"lng": -74.772861
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25645",
+"city": "SAN ANTONIO DEL TEQUENDAMA",
+"kind": "Municipio",
+"lat": 4.616138,
+"lng": -74.351443
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25649",
+"city": "SAN BERNARDO",
+"kind": "Municipio",
+"lat": 4.179433,
+"lng": -74.42296
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25653",
+"city": "SAN CAYETANO",
+"kind": "Municipio",
+"lat": 5.332938,
+"lng": -74.024754
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25658",
+"city": "SAN FRANCISCO",
+"kind": "Municipio",
+"lat": 4.972917,
+"lng": -74.289672
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25662",
+"city": "SAN JUAN DE RIOSECO",
+"kind": "Municipio",
+"lat": 4.847575,
+"lng": -74.621919
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25718",
+"city": "SASAIMA",
+"kind": "Municipio",
+"lat": 4.962167,
+"lng": -74.432628
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25736",
+"city": "SESQUILÉ",
+"kind": "Municipio",
+"lat": 5.04476,
+"lng": -73.796099
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25740",
+"city": "SIBATÉ",
+"kind": "Municipio",
+"lat": 4.492625,
+"lng": -74.257874
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25743",
+"city": "SILVANIA",
+"kind": "Municipio",
+"lat": 4.381981,
+"lng": -74.405534
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25745",
+"city": "SIMIJACA",
+"kind": "Municipio",
+"lat": 5.505231,
+"lng": -73.850703
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25754",
+"city": "SOACHA",
+"kind": "Municipio",
+"lat": 4.579268,
+"lng": -74.215463
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25758",
+"city": "SOPÓ",
+"kind": "Municipio",
+"lat": 4.915395,
+"lng": -73.943328
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25769",
+"city": "SUBACHOQUE",
+"kind": "Municipio",
+"lat": 4.929118,
+"lng": -74.172773
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25772",
+"city": "SUESCA",
+"kind": "Municipio",
+"lat": 5.103495,
+"lng": -73.798227
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25777",
+"city": "SUPATÁ",
+"kind": "Municipio",
+"lat": 5.06162,
+"lng": -74.235403
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25779",
+"city": "SUSA",
+"kind": "Municipio",
+"lat": 5.455291,
+"lng": -73.813938
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25781",
+"city": "SUTATAUSA",
+"kind": "Municipio",
+"lat": 5.247482,
+"lng": -73.853159
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25785",
+"city": "TABIO",
+"kind": "Municipio",
+"lat": 4.916832,
+"lng": -74.096461
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25793",
+"city": "TAUSA",
+"kind": "Municipio",
+"lat": 5.196333,
+"lng": -73.887813
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25797",
+"city": "TENA",
+"kind": "Municipio",
+"lat": 4.655286,
+"lng": -74.389193
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25799",
+"city": "TENJO",
+"kind": "Municipio",
+"lat": 4.872014,
+"lng": -74.143724
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25805",
+"city": "TIBACUY",
+"kind": "Municipio",
+"lat": 4.348605,
+"lng": -74.452662
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25807",
+"city": "TIBIRITA",
+"kind": "Municipio",
+"lat": 5.052278,
+"lng": -73.504514
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25815",
+"city": "TOCAIMA",
+"kind": "Municipio",
+"lat": 4.459279,
+"lng": -74.636296
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25817",
+"city": "TOCANCIPÁ",
+"kind": "Municipio",
+"lat": 4.964641,
+"lng": -73.91207
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25823",
+"city": "TOPAIPÍ",
+"kind": "Municipio",
+"lat": 5.336224,
+"lng": -74.300626
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25839",
+"city": "UBALÁ",
+"kind": "Municipio",
+"lat": 4.74762,
+"lng": -73.531489
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25841",
+"city": "UBAQUE",
+"kind": "Municipio",
+"lat": 4.483788,
+"lng": -73.933477
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25843",
+"city": "VILLA DE SAN DIEGO DE UBATÉ",
+"kind": "Municipio",
+"lat": 5.307463,
+"lng": -73.814367
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25845",
+"city": "UNE",
+"kind": "Municipio",
+"lat": 4.40245,
+"lng": -74.025183
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25851",
+"city": "ÚTICA",
+"kind": "Municipio",
+"lat": 5.19055,
+"lng": -74.483154
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25862",
+"city": "VERGARA",
+"kind": "Municipio",
+"lat": 5.117258,
+"lng": -74.346163
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25867",
+"city": "VIANÍ",
+"kind": "Municipio",
+"lat": 4.875208,
+"lng": -74.56132
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25871",
+"city": "VILLAGÓMEZ",
+"kind": "Municipio",
+"lat": 5.273024,
+"lng": -74.195145
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25873",
+"city": "VILLAPINZÓN",
+"kind": "Municipio",
+"lat": 5.216393,
+"lng": -73.595704
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25875",
+"city": "VILLETA",
+"kind": "Municipio",
+"lat": 5.012754,
+"lng": -74.469686
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25878",
+"city": "VIOTÁ",
+"kind": "Municipio",
+"lat": 4.43935,
+"lng": -74.523131
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25885",
+"city": "YACOPÍ",
+"kind": "Municipio",
+"lat": 5.459272,
+"lng": -74.33806
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25898",
+"city": "ZIPACÓN",
+"kind": "Municipio",
+"lat": 4.759932,
+"lng": -74.379566
+},
+{
+"state_code": "25",
+"state": "CUNDINAMARCA",
+"city_code": "25899",
+"city": "ZIPAQUIRÁ",
+"kind": "Municipio",
+"lat": 5.025477,
+"lng": -73.994444
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27001",
+"city": "QUIBDÓ",
+"kind": "Municipio",
+"lat": 5.682166,
+"lng": -76.638144
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27006",
+"city": "ACANDÍ",
+"kind": "Municipio",
+"lat": 8.512178,
+"lng": -77.279951
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27025",
+"city": "ALTO BAUDÓ",
+"kind": "Municipio",
+"lat": 5.516221,
+"lng": -76.974373
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27050",
+"city": "ATRATO",
+"kind": "Municipio",
+"lat": 5.531419,
+"lng": -76.635674
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27073",
+"city": "BAGADÓ",
+"kind": "Municipio",
+"lat": 5.409681,
+"lng": -76.416063
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27075",
+"city": "BAHÍA SOLANO",
+"kind": "Municipio",
+"lat": 6.222807,
+"lng": -77.401359
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27077",
+"city": "BAJO BAUDÓ",
+"kind": "Municipio",
+"lat": 4.954576,
+"lng": -77.365717
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27099",
+"city": "BOJAYÁ",
+"kind": "Municipio",
+"lat": 6.559708,
+"lng": -76.886773
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27135",
+"city": "EL CANTÓN DEL SAN PABLO",
+"kind": "Municipio",
+"lat": 5.335321,
+"lng": -76.726844
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27150",
+"city": "CARMEN DEL DARIÉN",
+"kind": "Municipio",
+"lat": 7.158294,
+"lng": -76.970798
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27160",
+"city": "CÉRTEGUI",
+"kind": "Municipio",
+"lat": 5.371373,
+"lng": -76.607619
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27205",
+"city": "CONDOTO",
+"kind": "Municipio",
+"lat": 5.091003,
+"lng": -76.650683
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27245",
+"city": "EL CARMEN DE ATRATO",
+"kind": "Municipio",
+"lat": 5.899789,
+"lng": -76.142112
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27250",
+"city": "EL LITORAL DEL SAN JUAN",
+"kind": "Municipio",
+"lat": 4.259564,
+"lng": -77.363702
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27361",
+"city": "ISTMINA",
+"kind": "Municipio",
+"lat": 5.153946,
+"lng": -76.68518
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27372",
+"city": "JURADÓ",
+"kind": "Municipio",
+"lat": 7.103619,
+"lng": -77.762751
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27413",
+"city": "LLORÓ",
+"kind": "Municipio",
+"lat": 5.49789,
+"lng": -76.545147
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27425",
+"city": "MEDIO ATRATO",
+"kind": "Municipio",
+"lat": 5.994935,
+"lng": -76.783042
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27430",
+"city": "MEDIO BAUDÓ",
+"kind": "Municipio",
+"lat": 5.192471,
+"lng": -76.950891
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27450",
+"city": "MEDIO SAN JUAN",
+"kind": "Municipio",
+"lat": 5.098291,
+"lng": -76.694409
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27491",
+"city": "NÓVITA",
+"kind": "Municipio",
+"lat": 4.956063,
+"lng": -76.609467
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27493",
+"city": "NUEVO BELÉN DE BAJIRÁ",
+"kind": "Municipio",
+"lat": 7.3719,
+"lng": -76.71727
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27495",
+"city": "NUQUÍ",
+"kind": "Municipio",
+"lat": 5.709812,
+"lng": -77.265507
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27580",
+"city": "RÍO IRÓ",
+"kind": "Municipio",
+"lat": 5.1863,
+"lng": -76.472925
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27600",
+"city": "RÍO QUITO",
+"kind": "Municipio",
+"lat": 5.483667,
+"lng": -76.740684
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27615",
+"city": "RIOSUCIO",
+"kind": "Municipio",
+"lat": 7.436704,
+"lng": -77.113156
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27660",
+"city": "SAN JOSÉ DEL PALMAR",
+"kind": "Municipio",
+"lat": 4.896954,
+"lng": -76.234227
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27745",
+"city": "SIPÍ",
+"kind": "Municipio",
+"lat": 4.65262,
+"lng": -76.643453
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27787",
+"city": "TADÓ",
+"kind": "Municipio",
+"lat": 5.264873,
+"lng": -76.558571
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27800",
+"city": "UNGUÍA",
+"kind": "Municipio",
+"lat": 8.04406,
+"lng": -77.092538
+},
+{
+"state_code": "27",
+"state": "CHOCÓ",
+"city_code": "27810",
+"city": "UNIÓN PANAMERICANA",
+"kind": "Municipio",
+"lat": 5.281108,
+"lng": -76.630143
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41001",
+"city": "NEIVA",
+"kind": "Municipio",
+"lat": 2.935432,
+"lng": -75.277327
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41006",
+"city": "ACEVEDO",
+"kind": "Municipio",
+"lat": 1.805173,
+"lng": -75.888706
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41013",
+"city": "AGRADO",
+"kind": "Municipio",
+"lat": 2.25987,
+"lng": -75.772022
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41016",
+"city": "AIPE",
+"kind": "Municipio",
+"lat": 3.223996,
+"lng": -75.239017
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41020",
+"city": "ALGECIRAS",
+"kind": "Municipio",
+"lat": 2.521674,
+"lng": -75.315389
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41026",
+"city": "ALTAMIRA",
+"kind": "Municipio",
+"lat": 2.063841,
+"lng": -75.788471
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41078",
+"city": "BARAYA",
+"kind": "Municipio",
+"lat": 3.152204,
+"lng": -75.054843
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41132",
+"city": "CAMPOALEGRE",
+"kind": "Municipio",
+"lat": 2.686767,
+"lng": -75.325748
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41206",
+"city": "COLOMBIA",
+"kind": "Municipio",
+"lat": 3.376745,
+"lng": -74.802815
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41244",
+"city": "ELÍAS",
+"kind": "Municipio",
+"lat": 2.012854,
+"lng": -75.938301
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41298",
+"city": "GARZÓN",
+"kind": "Municipio",
+"lat": 2.196493,
+"lng": -75.627057
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41306",
+"city": "GIGANTE",
+"kind": "Municipio",
+"lat": 2.384031,
+"lng": -75.547681
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41319",
+"city": "GUADALUPE",
+"kind": "Municipio",
+"lat": 2.02426,
+"lng": -75.757185
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41349",
+"city": "HOBO",
+"kind": "Municipio",
+"lat": 2.580812,
+"lng": -75.447697
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41357",
+"city": "ÍQUIRA",
+"kind": "Municipio",
+"lat": 2.649359,
+"lng": -75.634497
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41359",
+"city": "ISNOS",
+"kind": "Municipio",
+"lat": 1.929467,
+"lng": -76.217637
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41378",
+"city": "LA ARGENTINA",
+"kind": "Municipio",
+"lat": 2.198496,
+"lng": -75.979763
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41396",
+"city": "LA PLATA",
+"kind": "Municipio",
+"lat": 2.389263,
+"lng": -75.891254
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41483",
+"city": "NÁTAGA",
+"kind": "Municipio",
+"lat": 2.5451,
+"lng": -75.808756
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41503",
+"city": "OPORAPA",
+"kind": "Municipio",
+"lat": 2.025088,
+"lng": -75.995165
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41518",
+"city": "PAICOL",
+"kind": "Municipio",
+"lat": 2.449651,
+"lng": -75.773158
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41524",
+"city": "PALERMO",
+"kind": "Municipio",
+"lat": 2.889649,
+"lng": -75.435296
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41530",
+"city": "PALESTINA",
+"kind": "Municipio",
+"lat": 1.723725,
+"lng": -76.133251
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41548",
+"city": "PITAL",
+"kind": "Municipio",
+"lat": 2.266618,
+"lng": -75.804544
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41551",
+"city": "PITALITO",
+"kind": "Municipio",
+"lat": 1.852631,
+"lng": -76.049441
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41615",
+"city": "RIVERA",
+"kind": "Municipio",
+"lat": 2.777586,
+"lng": -75.258753
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41660",
+"city": "SALADOBLANCO",
+"kind": "Municipio",
+"lat": 1.9934,
+"lng": -76.044747
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41668",
+"city": "SAN AGUSTÍN",
+"kind": "Municipio",
+"lat": 1.881081,
+"lng": -76.27036
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41676",
+"city": "SANTA MARÍA",
+"kind": "Municipio",
+"lat": 2.939603,
+"lng": -75.586223
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41770",
+"city": "SUAZA",
+"kind": "Municipio",
+"lat": 1.976051,
+"lng": -75.79525
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41791",
+"city": "TARQUI",
+"kind": "Municipio",
+"lat": 2.111325,
+"lng": -75.823976
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41797",
+"city": "TESALIA",
+"kind": "Municipio",
+"lat": 2.486364,
+"lng": -75.730271
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41799",
+"city": "TELLO",
+"kind": "Municipio",
+"lat": 3.067538,
+"lng": -75.138773
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41801",
+"city": "TERUEL",
+"kind": "Municipio",
+"lat": 2.740968,
+"lng": -75.567034
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41807",
+"city": "TIMANÁ",
+"kind": "Municipio",
+"lat": 1.974539,
+"lng": -75.932167
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41872",
+"city": "VILLAVIEJA",
+"kind": "Municipio",
+"lat": 3.218822,
+"lng": -75.217174
+},
+{
+"state_code": "41",
+"state": "HUILA",
+"city_code": "41885",
+"city": "YAGUARÁ",
+"kind": "Municipio",
+"lat": 2.664694,
+"lng": -75.518023
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44001",
+"city": "RIOHACHA",
+"kind": "Municipio",
+"lat": 11.528588,
+"lng": -72.911795
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44035",
+"city": "ALBANIA",
+"kind": "Municipio",
+"lat": 11.151628,
+"lng": -72.61232
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44078",
+"city": "BARRANCAS",
+"kind": "Municipio",
+"lat": 10.958669,
+"lng": -72.793639
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44090",
+"city": "DIBULLA",
+"kind": "Municipio",
+"lat": 11.27155,
+"lng": -73.307598
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44098",
+"city": "DISTRACCIÓN",
+"kind": "Municipio",
+"lat": 10.898414,
+"lng": -72.887405
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44110",
+"city": "EL MOLINO",
+"kind": "Municipio",
+"lat": 10.653505,
+"lng": -72.92673
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44279",
+"city": "FONSECA",
+"kind": "Municipio",
+"lat": 10.886734,
+"lng": -72.846319
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44378",
+"city": "HATONUEVO",
+"kind": "Municipio",
+"lat": 11.068864,
+"lng": -72.75904
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44420",
+"city": "LA JAGUA DEL PILAR",
+"kind": "Municipio",
+"lat": 10.511862,
+"lng": -73.072638
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44430",
+"city": "MAICAO",
+"kind": "Municipio",
+"lat": 11.378535,
+"lng": -72.242738
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44560",
+"city": "MANAURE",
+"kind": "Municipio",
+"lat": 11.773767,
+"lng": -72.438739
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44650",
+"city": "SAN JUAN DEL CESAR",
+"kind": "Municipio",
+"lat": 10.769546,
+"lng": -73.000629
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44847",
+"city": "URIBIA",
+"kind": "Municipio",
+"lat": 11.711904,
+"lng": -72.265906
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44855",
+"city": "URUMITA",
+"kind": "Municipio",
+"lat": 10.560169,
+"lng": -73.012507
+},
+{
+"state_code": "44",
+"state": "LA GUAJIRA",
+"city_code": "44874",
+"city": "VILLANUEVA",
+"kind": "Municipio",
+"lat": 10.608774,
+"lng": -72.977583
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47001",
+"city": "SANTA MARTA",
+"kind": "Municipio",
+"lat": 11.204679,
+"lng": -74.199829
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47030",
+"city": "ALGARROBO",
+"kind": "Municipio",
+"lat": 10.188059,
+"lng": -74.061132
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47053",
+"city": "ARACATACA",
+"kind": "Municipio",
+"lat": 10.589791,
+"lng": -74.186702
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47058",
+"city": "ARIGUANÍ",
+"kind": "Municipio",
+"lat": 9.847047,
+"lng": -74.236515
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47161",
+"city": "CERRO DE SAN ANTONIO",
+"kind": "Municipio",
+"lat": 10.325531,
+"lng": -74.868474
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47170",
+"city": "CHIVOLO",
+"kind": "Municipio",
+"lat": 10.026631,
+"lng": -74.622242
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47189",
+"city": "CIÉNAGA",
+"kind": "Municipio",
+"lat": 11.006654,
+"lng": -74.241286
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47205",
+"city": "CONCORDIA",
+"kind": "Municipio",
+"lat": 10.257314,
+"lng": -74.83303
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47245",
+"city": "EL BANCO",
+"kind": "Municipio",
+"lat": 9.008503,
+"lng": -73.97437
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47258",
+"city": "EL PIÑÓN",
+"kind": "Municipio",
+"lat": 10.402781,
+"lng": -74.823094
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47268",
+"city": "EL RETÉN",
+"kind": "Municipio",
+"lat": 10.610488,
+"lng": -74.268444
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47288",
+"city": "FUNDACIÓN",
+"kind": "Municipio",
+"lat": 10.514146,
+"lng": -74.191453
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47318",
+"city": "GUAMAL",
+"kind": "Municipio",
+"lat": 9.144354,
+"lng": -74.223689
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47460",
+"city": "NUEVA GRANADA",
+"kind": "Municipio",
+"lat": 9.80186,
+"lng": -74.391841
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47541",
+"city": "PEDRAZA",
+"kind": "Municipio",
+"lat": 10.18825,
+"lng": -74.9154
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47545",
+"city": "PIJIÑO DEL CARMEN",
+"kind": "Municipio",
+"lat": 9.331922,
+"lng": -74.459034
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47551",
+"city": "PIVIJAY",
+"kind": "Municipio",
+"lat": 10.460707,
+"lng": -74.613312
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47555",
+"city": "PLATO",
+"kind": "Municipio",
+"lat": 9.796713,
+"lng": -74.784549
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47570",
+"city": "PUEBLOVIEJO",
+"kind": "Municipio",
+"lat": 10.994766,
+"lng": -74.28253
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47605",
+"city": "REMOLINO",
+"kind": "Municipio",
+"lat": 10.701952,
+"lng": -74.716172
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47660",
+"city": "SABANAS DE SAN ÁNGEL",
+"kind": "Municipio",
+"lat": 10.032536,
+"lng": -74.213946
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47675",
+"city": "SALAMINA",
+"kind": "Municipio",
+"lat": 10.491229,
+"lng": -74.794189
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47692",
+"city": "SAN SEBASTIÁN DE BUENAVISTA",
+"kind": "Municipio",
+"lat": 9.241656,
+"lng": -74.351498
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47703",
+"city": "SAN ZENÓN",
+"kind": "Municipio",
+"lat": 9.245061,
+"lng": -74.498992
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47707",
+"city": "SANTA ANA",
+"kind": "Municipio",
+"lat": 9.324294,
+"lng": -74.566845
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47720",
+"city": "SANTA BÁRBARA DE PINTO",
+"kind": "Municipio",
+"lat": 9.432263,
+"lng": -74.704667
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47745",
+"city": "SITIONUEVO",
+"kind": "Municipio",
+"lat": 10.775285,
+"lng": -74.720021
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47798",
+"city": "TENERIFE",
+"kind": "Municipio",
+"lat": 9.898273,
+"lng": -74.859783
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47960",
+"city": "ZAPAYÁN",
+"kind": "Municipio",
+"lat": 10.168297,
+"lng": -74.716878
+},
+{
+"state_code": "47",
+"state": "MAGDALENA",
+"city_code": "47980",
+"city": "ZONA BANANERA",
+"kind": "Municipio",
+"lat": 10.763024,
+"lng": -74.140091
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50001",
+"city": "VILLAVICENCIO",
+"kind": "Municipio",
+"lat": 4.126369,
+"lng": -73.622601
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50006",
+"city": "ACACÍAS",
+"kind": "Municipio",
+"lat": 3.990413,
+"lng": -73.766034
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50110",
+"city": "BARRANCA DE UPÍA",
+"kind": "Municipio",
+"lat": 4.566225,
+"lng": -72.961083
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50124",
+"city": "CABUYARO",
+"kind": "Municipio",
+"lat": 4.286705,
+"lng": -72.791768
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50150",
+"city": "CASTILLA LA NUEVA",
+"kind": "Municipio",
+"lat": 3.830005,
+"lng": -73.687302
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50223",
+"city": "CUBARRAL",
+"kind": "Municipio",
+"lat": 3.793653,
+"lng": -73.837999
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50226",
+"city": "CUMARAL",
+"kind": "Municipio",
+"lat": 4.270042,
+"lng": -73.487052
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50245",
+"city": "EL CALVARIO",
+"kind": "Municipio",
+"lat": 4.352665,
+"lng": -73.713325
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50251",
+"city": "EL CASTILLO",
+"kind": "Municipio",
+"lat": 3.563907,
+"lng": -73.794225
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50270",
+"city": "EL DORADO",
+"kind": "Municipio",
+"lat": 3.739984,
+"lng": -73.835264
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50287",
+"city": "FUENTE DE ORO",
+"kind": "Municipio",
+"lat": 3.462875,
+"lng": -73.618121
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50313",
+"city": "GRANADA",
+"kind": "Municipio",
+"lat": 3.547147,
+"lng": -73.705815
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50318",
+"city": "GUAMAL",
+"kind": "Municipio",
+"lat": 3.879657,
+"lng": -73.768815
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50325",
+"city": "MAPIRIPÁN",
+"kind": "Municipio",
+"lat": 2.896617,
+"lng": -72.135509
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50330",
+"city": "MESETAS",
+"kind": "Municipio",
+"lat": 3.382732,
+"lng": -74.044328
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50350",
+"city": "LA MACARENA",
+"kind": "Municipio",
+"lat": 2.177143,
+"lng": -73.78661
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50370",
+"city": "URIBE",
+"kind": "Municipio",
+"lat": 3.239634,
+"lng": -74.351508
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50400",
+"city": "LEJANÍAS",
+"kind": "Municipio",
+"lat": 3.525115,
+"lng": -74.023514
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50450",
+"city": "PUERTO CONCORDIA",
+"kind": "Municipio",
+"lat": 2.624006,
+"lng": -72.760209
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50568",
+"city": "PUERTO GAITÁN",
+"kind": "Municipio",
+"lat": 4.314905,
+"lng": -72.087649
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50573",
+"city": "PUERTO LÓPEZ",
+"kind": "Municipio",
+"lat": 4.09349,
+"lng": -72.957324
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50577",
+"city": "PUERTO LLERAS",
+"kind": "Municipio",
+"lat": 3.272117,
+"lng": -73.37385
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50590",
+"city": "PUERTO RICO",
+"kind": "Municipio",
+"lat": 2.939621,
+"lng": -73.206314
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50606",
+"city": "RESTREPO",
+"kind": "Municipio",
+"lat": 4.259556,
+"lng": -73.565408
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50680",
+"city": "SAN CARLOS DE GUAROA",
+"kind": "Municipio",
+"lat": 3.71065,
+"lng": -73.242253
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50683",
+"city": "SAN JUAN DE ARAMA",
+"kind": "Municipio",
+"lat": 3.373728,
+"lng": -73.875832
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50686",
+"city": "SAN JUANITO",
+"kind": "Municipio",
+"lat": 4.458181,
+"lng": -73.676699
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50689",
+"city": "SAN MARTÍN",
+"kind": "Municipio",
+"lat": 3.701899,
+"lng": -73.695812
+},
+{
+"state_code": "50",
+"state": "META",
+"city_code": "50711",
+"city": "VISTAHERMOSA",
+"kind": "Municipio",
+"lat": 3.125579,
+"lng": -73.750966
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52001",
+"city": "PASTO",
+"kind": "Municipio",
+"lat": 1.212352,
+"lng": -77.278795
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52019",
+"city": "ALBÁN",
+"kind": "Municipio",
+"lat": 1.474978,
+"lng": -77.080712
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52022",
+"city": "ALDANA",
+"kind": "Municipio",
+"lat": 0.882381,
+"lng": -77.700564
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52036",
+"city": "ANCUYA",
+"kind": "Municipio",
+"lat": 1.263276,
+"lng": -77.514512
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52051",
+"city": "ARBOLEDA",
+"kind": "Municipio",
+"lat": 1.503418,
+"lng": -77.135467
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52079",
+"city": "BARBACOAS",
+"kind": "Municipio",
+"lat": 1.671733,
+"lng": -78.13765
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52083",
+"city": "BELÉN",
+"kind": "Municipio",
+"lat": 1.595681,
+"lng": -77.015619
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52110",
+"city": "BUESACO",
+"kind": "Municipio",
+"lat": 1.381453,
+"lng": -77.156463
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52203",
+"city": "COLÓN",
+"kind": "Municipio",
+"lat": 1.643878,
+"lng": -77.019777
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52207",
+"city": "CONSACÁ",
+"kind": "Municipio",
+"lat": 1.207854,
+"lng": -77.466136
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52210",
+"city": "CONTADERO",
+"kind": "Municipio",
+"lat": 0.910458,
+"lng": -77.549409
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52215",
+"city": "CÓRDOBA",
+"kind": "Municipio",
+"lat": 0.854564,
+"lng": -77.517897
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52224",
+"city": "CUASPUD CARLOSAMA",
+"kind": "Municipio",
+"lat": 0.862978,
+"lng": -77.728947
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52227",
+"city": "CUMBAL",
+"kind": "Municipio",
+"lat": 0.906367,
+"lng": -77.792505
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52233",
+"city": "CUMBITARA",
+"kind": "Municipio",
+"lat": 1.647163,
+"lng": -77.578616
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52240",
+"city": "CHACHAGÜÍ",
+"kind": "Municipio",
+"lat": 1.360545,
+"lng": -77.281869
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52250",
+"city": "EL CHARCO",
+"kind": "Municipio",
+"lat": 2.479688,
+"lng": -78.110217
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52254",
+"city": "EL PEÑOL",
+"kind": "Municipio",
+"lat": 1.453567,
+"lng": -77.438522
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52256",
+"city": "EL ROSARIO",
+"kind": "Municipio",
+"lat": 1.745309,
+"lng": -77.33417
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52258",
+"city": "EL TABLÓN DE GÓMEZ",
+"kind": "Municipio",
+"lat": 1.427277,
+"lng": -77.097101
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52260",
+"city": "EL TAMBO",
+"kind": "Municipio",
+"lat": 1.407913,
+"lng": -77.390772
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52287",
+"city": "FUNES",
+"kind": "Municipio",
+"lat": 1.001159,
+"lng": -77.448913
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52317",
+"city": "GUACHUCAL",
+"kind": "Municipio",
+"lat": 0.959744,
+"lng": -77.731589
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52320",
+"city": "GUAITARILLA",
+"kind": "Municipio",
+"lat": 1.129574,
+"lng": -77.549824
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52323",
+"city": "GUALMATÁN",
+"kind": "Municipio",
+"lat": 0.919652,
+"lng": -77.568701
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52352",
+"city": "ILES",
+"kind": "Municipio",
+"lat": 0.96952,
+"lng": -77.521227
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52354",
+"city": "IMUÉS",
+"kind": "Municipio",
+"lat": 1.05506,
+"lng": -77.496339
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52356",
+"city": "IPIALES",
+"kind": "Municipio",
+"lat": 0.827732,
+"lng": -77.646367
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52378",
+"city": "LA CRUZ",
+"kind": "Municipio",
+"lat": 1.601318,
+"lng": -76.970504
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52381",
+"city": "LA FLORIDA",
+"kind": "Municipio",
+"lat": 1.29753,
+"lng": -77.402882
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52385",
+"city": "LA LLANADA",
+"kind": "Municipio",
+"lat": 1.472892,
+"lng": -77.58091
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52390",
+"city": "LA TOLA",
+"kind": "Municipio",
+"lat": 2.398999,
+"lng": -78.189725
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52399",
+"city": "LA UNIÓN",
+"kind": "Municipio",
+"lat": 1.600219,
+"lng": -77.131316
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52405",
+"city": "LEIVA",
+"kind": "Municipio",
+"lat": 1.934453,
+"lng": -77.306135
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52411",
+"city": "LINARES",
+"kind": "Municipio",
+"lat": 1.350814,
+"lng": -77.523953
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52418",
+"city": "LOS ANDES",
+"kind": "Municipio",
+"lat": 1.494587,
+"lng": -77.521303
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52427",
+"city": "MAGÜÍ",
+"kind": "Municipio",
+"lat": 1.765633,
+"lng": -78.182924
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52435",
+"city": "MALLAMA",
+"kind": "Municipio",
+"lat": 1.141037,
+"lng": -77.864549
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52473",
+"city": "MOSQUERA",
+"kind": "Municipio",
+"lat": 2.507139,
+"lng": -78.452992
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52480",
+"city": "NARIÑO",
+"kind": "Municipio",
+"lat": 1.288979,
+"lng": -77.357972
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52490",
+"city": "OLAYA HERRERA",
+"kind": "Municipio",
+"lat": 2.347457,
+"lng": -78.325814
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52506",
+"city": "OSPINA",
+"kind": "Municipio",
+"lat": 1.058433,
+"lng": -77.566082
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52520",
+"city": "FRANCISCO PIZARRO",
+"kind": "Municipio",
+"lat": 2.040629,
+"lng": -78.658361
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52540",
+"city": "POLICARPA",
+"kind": "Municipio",
+"lat": 1.627196,
+"lng": -77.458686
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52560",
+"city": "POTOSÍ",
+"kind": "Municipio",
+"lat": 0.806639,
+"lng": -77.573003
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52565",
+"city": "PROVIDENCIA",
+"kind": "Municipio",
+"lat": 1.237814,
+"lng": -77.596794
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52573",
+"city": "PUERRES",
+"kind": "Municipio",
+"lat": 0.885125,
+"lng": -77.504211
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52585",
+"city": "PUPIALES",
+"kind": "Municipio",
+"lat": 0.870442,
+"lng": -77.636042
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52612",
+"city": "RICAURTE",
+"kind": "Municipio",
+"lat": 1.212492,
+"lng": -77.995153
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52621",
+"city": "ROBERTO PAYÁN",
+"kind": "Municipio",
+"lat": 1.697492,
+"lng": -78.245716
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52678",
+"city": "SAMANIEGO",
+"kind": "Municipio",
+"lat": 1.335438,
+"lng": -77.594341
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52683",
+"city": "SANDONÁ",
+"kind": "Municipio",
+"lat": 1.283438,
+"lng": -77.47313
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52685",
+"city": "SAN BERNARDO",
+"kind": "Municipio",
+"lat": 1.513762,
+"lng": -77.0475
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52687",
+"city": "SAN LORENZO",
+"kind": "Municipio",
+"lat": 1.503362,
+"lng": -77.21542
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52693",
+"city": "SAN PABLO",
+"kind": "Municipio",
+"lat": 1.669429,
+"lng": -77.013984
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52694",
+"city": "SAN PEDRO DE CARTAGO",
+"kind": "Municipio",
+"lat": 1.551572,
+"lng": -77.11941
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52696",
+"city": "SANTA BÁRBARA",
+"kind": "Municipio",
+"lat": 2.449653,
+"lng": -77.979916
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52699",
+"city": "SANTACRUZ",
+"kind": "Municipio",
+"lat": 1.222589,
+"lng": -77.677035
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52720",
+"city": "SAPUYES",
+"kind": "Municipio",
+"lat": 1.037536,
+"lng": -77.62028
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52786",
+"city": "TAMINANGO",
+"kind": "Municipio",
+"lat": 1.570358,
+"lng": -77.2808
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52788",
+"city": "TANGUA",
+"kind": "Municipio",
+"lat": 1.09482,
+"lng": -77.393735
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52835",
+"city": "SAN ANDRÉS DE TUMACO",
+"kind": "Municipio",
+"lat": 1.807399,
+"lng": -78.764073
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52838",
+"city": "TÚQUERRES",
+"kind": "Municipio",
+"lat": 1.085044,
+"lng": -77.61672
+},
+{
+"state_code": "52",
+"state": "NARIÑO",
+"city_code": "52885",
+"city": "YACUANQUER",
+"kind": "Municipio",
+"lat": 1.115937,
+"lng": -77.400169
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54001",
+"city": "SAN JOSÉ DE CÚCUTA",
+"kind": "Municipio",
+"lat": 7.905725,
+"lng": -72.508178
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54003",
+"city": "ÁBREGO",
+"kind": "Municipio",
+"lat": 8.081616,
+"lng": -73.221722
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54051",
+"city": "ARBOLEDAS",
+"kind": "Municipio",
+"lat": 7.642985,
+"lng": -72.798952
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54099",
+"city": "BOCHALEMA",
+"kind": "Municipio",
+"lat": 7.612192,
+"lng": -72.64701
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54109",
+"city": "BUCARASICA",
+"kind": "Municipio",
+"lat": 8.041299,
+"lng": -72.868231
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54125",
+"city": "CÁCOTA",
+"kind": "Municipio",
+"lat": 7.268705,
+"lng": -72.642059
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54128",
+"city": "CÁCHIRA",
+"kind": "Municipio",
+"lat": 7.741248,
+"lng": -73.048983
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54172",
+"city": "CHINÁCOTA",
+"kind": "Municipio",
+"lat": 7.603112,
+"lng": -72.601162
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54174",
+"city": "CHITAGÁ",
+"kind": "Municipio",
+"lat": 7.138187,
+"lng": -72.665468
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54206",
+"city": "CONVENCIÓN",
+"kind": "Municipio",
+"lat": 8.470374,
+"lng": -73.3372
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54223",
+"city": "CUCUTILLA",
+"kind": "Municipio",
+"lat": 7.539633,
+"lng": -72.772816
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54239",
+"city": "DURANIA",
+"kind": "Municipio",
+"lat": 7.714804,
+"lng": -72.658491
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54245",
+"city": "EL CARMEN",
+"kind": "Municipio",
+"lat": 8.510579,
+"lng": -73.446687
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54250",
+"city": "EL TARRA",
+"kind": "Municipio",
+"lat": 8.574281,
+"lng": -73.09614
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54261",
+"city": "EL ZULIA",
+"kind": "Municipio",
+"lat": 7.938572,
+"lng": -72.604717
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54313",
+"city": "GRAMALOTE",
+"kind": "Municipio",
+"lat": 7.916946,
+"lng": -72.787233
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54344",
+"city": "HACARÍ",
+"kind": "Municipio",
+"lat": 8.321506,
+"lng": -73.145997
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54347",
+"city": "HERRÁN",
+"kind": "Municipio",
+"lat": 7.506541,
+"lng": -72.483519
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54377",
+"city": "LABATECA",
+"kind": "Municipio",
+"lat": 7.298414,
+"lng": -72.495983
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54385",
+"city": "LA ESPERANZA",
+"kind": "Municipio",
+"lat": 7.639839,
+"lng": -73.328126
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54398",
+"city": "LA PLAYA",
+"kind": "Municipio",
+"lat": 8.21124,
+"lng": -73.239986
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54405",
+"city": "LOS PATIOS",
+"kind": "Municipio",
+"lat": 7.833186,
+"lng": -72.505612
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54418",
+"city": "LOURDES",
+"kind": "Municipio",
+"lat": 7.945631,
+"lng": -72.832376
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54480",
+"city": "MUTISCUA",
+"kind": "Municipio",
+"lat": 7.300469,
+"lng": -72.747169
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54498",
+"city": "OCAÑA",
+"kind": "Municipio",
+"lat": 8.248574,
+"lng": -73.35607
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54518",
+"city": "PAMPLONA",
+"kind": "Municipio",
+"lat": 7.372802,
+"lng": -72.647714
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54520",
+"city": "PAMPLONITA",
+"kind": "Municipio",
+"lat": 7.436745,
+"lng": -72.639111
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54553",
+"city": "PUERTO SANTANDER",
+"kind": "Municipio",
+"lat": 8.359993,
+"lng": -72.411363
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54599",
+"city": "RAGONVALIA",
+"kind": "Municipio",
+"lat": 7.577861,
+"lng": -72.476708
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54660",
+"city": "SALAZAR",
+"kind": "Municipio",
+"lat": 7.773683,
+"lng": -72.813064
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54670",
+"city": "SAN CALIXTO",
+"kind": "Municipio",
+"lat": 8.40214,
+"lng": -73.208622
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54673",
+"city": "SAN CAYETANO",
+"kind": "Municipio",
+"lat": 7.875695,
+"lng": -72.625459
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54680",
+"city": "SANTIAGO",
+"kind": "Municipio",
+"lat": 7.865856,
+"lng": -72.716203
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54720",
+"city": "SARDINATA",
+"kind": "Municipio",
+"lat": 8.082105,
+"lng": -72.800577
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54743",
+"city": "SILOS",
+"kind": "Municipio",
+"lat": 7.204736,
+"lng": -72.757128
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54800",
+"city": "TEORAMA",
+"kind": "Municipio",
+"lat": 8.438134,
+"lng": -73.28707
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54810",
+"city": "TIBÚ",
+"kind": "Municipio",
+"lat": 8.639891,
+"lng": -72.734496
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54820",
+"city": "TOLEDO",
+"kind": "Municipio",
+"lat": 7.307692,
+"lng": -72.481915
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54871",
+"city": "VILLA CARO",
+"kind": "Municipio",
+"lat": 7.914244,
+"lng": -72.973601
+},
+{
+"state_code": "54",
+"state": "NORTE DE SANTANDER",
+"city_code": "54874",
+"city": "VILLA DEL ROSARIO",
+"kind": "Municipio",
+"lat": 7.847672,
+"lng": -72.469758
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63001",
+"city": "ARMENIA",
+"kind": "Municipio",
+"lat": 4.53598,
+"lng": -75.680786
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63111",
+"city": "BUENAVISTA",
+"kind": "Municipio",
+"lat": 4.360029,
+"lng": -75.739572
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63130",
+"city": "CALARCÁ",
+"kind": "Municipio",
+"lat": 4.520982,
+"lng": -75.646085
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63190",
+"city": "CIRCASIA",
+"kind": "Municipio",
+"lat": 4.617759,
+"lng": -75.636533
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63212",
+"city": "CÓRDOBA",
+"kind": "Municipio",
+"lat": 4.392485,
+"lng": -75.687866
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63272",
+"city": "FILANDIA",
+"kind": "Municipio",
+"lat": 4.674338,
+"lng": -75.658387
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63302",
+"city": "GÉNOVA",
+"kind": "Municipio",
+"lat": 4.206641,
+"lng": -75.790402
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63401",
+"city": "LA TEBAIDA",
+"kind": "Municipio",
+"lat": 4.453755,
+"lng": -75.786887
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63470",
+"city": "MONTENEGRO",
+"kind": "Municipio",
+"lat": 4.565057,
+"lng": -75.749827
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63548",
+"city": "PIJAO",
+"kind": "Municipio",
+"lat": 4.335036,
+"lng": -75.703329
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63594",
+"city": "QUIMBAYA",
+"kind": "Municipio",
+"lat": 4.624387,
+"lng": -75.765074
+},
+{
+"state_code": "63",
+"state": "QUINDÍO",
+"city_code": "63690",
+"city": "SALENTO",
+"kind": "Municipio",
+"lat": 4.637157,
+"lng": -75.570844
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66001",
+"city": "PEREIRA",
+"kind": "Municipio",
+"lat": 4.804985,
+"lng": -75.719711
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66045",
+"city": "APÍA",
+"kind": "Municipio",
+"lat": 5.106526,
+"lng": -75.942356
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66075",
+"city": "BALBOA",
+"kind": "Municipio",
+"lat": 4.949096,
+"lng": -75.958663
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66088",
+"city": "BELÉN DE UMBRÍA",
+"kind": "Municipio",
+"lat": 5.200793,
+"lng": -75.868334
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66170",
+"city": "DOSQUEBRADAS",
+"kind": "Municipio",
+"lat": 4.833131,
+"lng": -75.675371
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66318",
+"city": "GUÁTICA",
+"kind": "Municipio",
+"lat": 5.315367,
+"lng": -75.799005
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66383",
+"city": "LA CELIA",
+"kind": "Municipio",
+"lat": 5.002787,
+"lng": -76.0032
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66400",
+"city": "LA VIRGINIA",
+"kind": "Municipio",
+"lat": 4.896624,
+"lng": -75.880394
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66440",
+"city": "MARSELLA",
+"kind": "Municipio",
+"lat": 4.935771,
+"lng": -75.73879
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66456",
+"city": "MISTRATÓ",
+"kind": "Municipio",
+"lat": 5.297039,
+"lng": -75.882886
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66572",
+"city": "PUEBLO RICO",
+"kind": "Municipio",
+"lat": 5.222043,
+"lng": -76.030801
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66594",
+"city": "QUINCHÍA",
+"kind": "Municipio",
+"lat": 5.340456,
+"lng": -75.730431
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66682",
+"city": "SANTA ROSA DE CABAL",
+"kind": "Municipio",
+"lat": 4.876271,
+"lng": -75.623268
+},
+{
+"state_code": "66",
+"state": "RISARALDA",
+"city_code": "66687",
+"city": "SANTUARIO",
+"kind": "Municipio",
+"lat": 5.074911,
+"lng": -75.964628
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68001",
+"city": "BUCARAMANGA",
+"kind": "Municipio",
+"lat": 7.11647,
+"lng": -73.132562
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68013",
+"city": "AGUADA",
+"kind": "Municipio",
+"lat": 6.162355,
+"lng": -73.523132
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68020",
+"city": "ALBANIA",
+"kind": "Municipio",
+"lat": 5.759166,
+"lng": -73.91336
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68051",
+"city": "ARATOCA",
+"kind": "Municipio",
+"lat": 6.694418,
+"lng": -73.01786
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68077",
+"city": "BARBOSA",
+"kind": "Municipio",
+"lat": 5.932531,
+"lng": -73.615965
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68079",
+"city": "BARICHARA",
+"kind": "Municipio",
+"lat": 6.634111,
+"lng": -73.223047
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68081",
+"city": "BARRANCABERMEJA",
+"kind": "Municipio",
+"lat": 7.064857,
+"lng": -73.849243
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68092",
+"city": "BETULIA",
+"kind": "Municipio",
+"lat": 6.899525,
+"lng": -73.283669
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68101",
+"city": "BOLÍVAR",
+"kind": "Municipio",
+"lat": 5.988953,
+"lng": -73.771346
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68121",
+"city": "CABRERA",
+"kind": "Municipio",
+"lat": 6.592118,
+"lng": -73.246475
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68132",
+"city": "CALIFORNIA",
+"kind": "Municipio",
+"lat": 7.347989,
+"lng": -72.946491
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68147",
+"city": "CAPITANEJO",
+"kind": "Municipio",
+"lat": 6.527394,
+"lng": -72.695427
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68152",
+"city": "CARCASÍ",
+"kind": "Municipio",
+"lat": 6.629016,
+"lng": -72.627099
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68160",
+"city": "CEPITÁ",
+"kind": "Municipio",
+"lat": 6.753518,
+"lng": -72.973536
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68162",
+"city": "CERRITO",
+"kind": "Municipio",
+"lat": 6.840405,
+"lng": -72.694851
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68167",
+"city": "CHARALÁ",
+"kind": "Municipio",
+"lat": 6.284339,
+"lng": -73.146873
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68169",
+"city": "CHARTA",
+"kind": "Municipio",
+"lat": 7.28082,
+"lng": -72.968798
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68176",
+"city": "CHIMA",
+"kind": "Municipio",
+"lat": 6.344348,
+"lng": -73.373656
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68179",
+"city": "CHIPATÁ",
+"kind": "Municipio",
+"lat": 6.062521,
+"lng": -73.637111
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68190",
+"city": "CIMITARRA",
+"kind": "Municipio",
+"lat": 6.320886,
+"lng": -73.953011
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68207",
+"city": "CONCEPCIÓN",
+"kind": "Municipio",
+"lat": 6.768908,
+"lng": -72.694567
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68209",
+"city": "CONFINES",
+"kind": "Municipio",
+"lat": 6.357327,
+"lng": -73.240554
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68211",
+"city": "CONTRATACIÓN",
+"kind": "Municipio",
+"lat": 6.290561,
+"lng": -73.474426
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68217",
+"city": "COROMORO",
+"kind": "Municipio",
+"lat": 6.294999,
+"lng": -73.040816
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68229",
+"city": "CURITÍ",
+"kind": "Municipio",
+"lat": 6.605099,
+"lng": -73.069383
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68235",
+"city": "EL CARMEN DE CHUCURÍ",
+"kind": "Municipio",
+"lat": 6.700038,
+"lng": -73.51066
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68245",
+"city": "EL GUACAMAYO",
+"kind": "Municipio",
+"lat": 6.245111,
+"lng": -73.496908
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68250",
+"city": "EL PEÑÓN",
+"kind": "Municipio",
+"lat": 6.05537,
+"lng": -73.815532
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68255",
+"city": "EL PLAYÓN",
+"kind": "Municipio",
+"lat": 7.470715,
+"lng": -73.20287
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68264",
+"city": "ENCINO",
+"kind": "Municipio",
+"lat": 6.137429,
+"lng": -73.098749
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68266",
+"city": "ENCISO",
+"kind": "Municipio",
+"lat": 6.668034,
+"lng": -72.699647
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68271",
+"city": "FLORIÁN",
+"kind": "Municipio",
+"lat": 5.804659,
+"lng": -73.97143
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68276",
+"city": "FLORIDABLANCA",
+"kind": "Municipio",
+"lat": 7.072329,
+"lng": -73.099104
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68296",
+"city": "GALÁN",
+"kind": "Municipio",
+"lat": 6.638423,
+"lng": -73.287769
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68298",
+"city": "GÁMBITA",
+"kind": "Municipio",
+"lat": 5.945998,
+"lng": -73.344185
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68307",
+"city": "GIRÓN",
+"kind": "Municipio",
+"lat": 7.070432,
+"lng": -73.166832
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68318",
+"city": "GUACA",
+"kind": "Municipio",
+"lat": 6.876563,
+"lng": -72.856322
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68320",
+"city": "GUADALUPE",
+"kind": "Municipio",
+"lat": 6.245847,
+"lng": -73.419292
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68322",
+"city": "GUAPOTÁ",
+"kind": "Municipio",
+"lat": 6.308635,
+"lng": -73.320732
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68324",
+"city": "GUAVATÁ",
+"kind": "Municipio",
+"lat": 5.954348,
+"lng": -73.700906
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68327",
+"city": "GÜEPSA",
+"kind": "Municipio",
+"lat": 6.025013,
+"lng": -73.575146
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68344",
+"city": "HATO",
+"kind": "Municipio",
+"lat": 6.543957,
+"lng": -73.308399
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68368",
+"city": "JESÚS MARÍA",
+"kind": "Municipio",
+"lat": 5.876497,
+"lng": -73.783396
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68370",
+"city": "JORDÁN",
+"kind": "Municipio",
+"lat": 6.732727,
+"lng": -73.096053
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68377",
+"city": "LA BELLEZA",
+"kind": "Municipio",
+"lat": 5.85925,
+"lng": -73.965494
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68385",
+"city": "LANDÁZURI",
+"kind": "Municipio",
+"lat": 6.218812,
+"lng": -73.811359
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68397",
+"city": "LA PAZ",
+"kind": "Municipio",
+"lat": 6.178509,
+"lng": -73.58959
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68406",
+"city": "LEBRIJA",
+"kind": "Municipio",
+"lat": 7.113351,
+"lng": -73.219524
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68418",
+"city": "LOS SANTOS",
+"kind": "Municipio",
+"lat": 6.755203,
+"lng": -73.102739
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68425",
+"city": "MACARAVITA",
+"kind": "Municipio",
+"lat": 6.50658,
+"lng": -72.593105
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68432",
+"city": "MÁLAGA",
+"kind": "Municipio",
+"lat": 6.703081,
+"lng": -72.732089
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68444",
+"city": "MATANZA",
+"kind": "Municipio",
+"lat": 7.323175,
+"lng": -73.015566
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68464",
+"city": "MOGOTES",
+"kind": "Municipio",
+"lat": 6.475246,
+"lng": -72.969807
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68468",
+"city": "MOLAGAVITA",
+"kind": "Municipio",
+"lat": 6.67432,
+"lng": -72.809175
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68498",
+"city": "OCAMONTE",
+"kind": "Municipio",
+"lat": 6.339988,
+"lng": -73.122563
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68500",
+"city": "OIBA",
+"kind": "Municipio",
+"lat": 6.26521,
+"lng": -73.299791
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68502",
+"city": "ONZAGA",
+"kind": "Municipio",
+"lat": 6.344104,
+"lng": -72.816766
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68522",
+"city": "PALMAR",
+"kind": "Municipio",
+"lat": 6.537789,
+"lng": -73.29109
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68524",
+"city": "PALMAS DEL SOCORRO",
+"kind": "Municipio",
+"lat": 6.406139,
+"lng": -73.287764
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68533",
+"city": "PÁRAMO",
+"kind": "Municipio",
+"lat": 6.416811,
+"lng": -73.17022
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68547",
+"city": "PIEDECUESTA",
+"kind": "Municipio",
+"lat": 6.997245,
+"lng": -73.054795
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68549",
+"city": "PINCHOTE",
+"kind": "Municipio",
+"lat": 6.531552,
+"lng": -73.174209
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68572",
+"city": "PUENTE NACIONAL",
+"kind": "Municipio",
+"lat": 5.878381,
+"lng": -73.677567
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68573",
+"city": "PUERTO PARRA",
+"kind": "Municipio",
+"lat": 6.650785,
+"lng": -74.056129
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68575",
+"city": "PUERTO WILCHES",
+"kind": "Municipio",
+"lat": 7.344057,
+"lng": -73.899909
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68615",
+"city": "RIONEGRO",
+"kind": "Municipio",
+"lat": 7.265014,
+"lng": -73.150177
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68655",
+"city": "SABANA DE TORRES",
+"kind": "Municipio",
+"lat": 7.391919,
+"lng": -73.49906
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68669",
+"city": "SAN ANDRÉS",
+"kind": "Municipio",
+"lat": 6.811511,
+"lng": -72.848864
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68673",
+"city": "SAN BENITO",
+"kind": "Municipio",
+"lat": 6.126656,
+"lng": -73.50907
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68679",
+"city": "SAN GIL",
+"kind": "Municipio",
+"lat": 6.551952,
+"lng": -73.134776
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68682",
+"city": "SAN JOAQUÍN",
+"kind": "Municipio",
+"lat": 6.427548,
+"lng": -72.867638
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68684",
+"city": "SAN JOSÉ DE MIRANDA",
+"kind": "Municipio",
+"lat": 6.658995,
+"lng": -72.733616
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68686",
+"city": "SAN MIGUEL",
+"kind": "Municipio",
+"lat": 6.575315,
+"lng": -72.644123
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68689",
+"city": "SAN VICENTE DE CHUCURÍ",
+"kind": "Municipio",
+"lat": 6.880383,
+"lng": -73.411024
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68705",
+"city": "SANTA BÁRBARA",
+"kind": "Municipio",
+"lat": 6.990996,
+"lng": -72.907445
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68720",
+"city": "SANTA HELENA DEL OPÓN",
+"kind": "Municipio",
+"lat": 6.339565,
+"lng": -73.616716
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68745",
+"city": "SIMACOTA",
+"kind": "Municipio",
+"lat": 6.443469,
+"lng": -73.337368
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68755",
+"city": "SOCORRO",
+"kind": "Municipio",
+"lat": 6.46387,
+"lng": -73.261198
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68770",
+"city": "SUAITA",
+"kind": "Municipio",
+"lat": 6.101329,
+"lng": -73.44165
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68773",
+"city": "SUCRE",
+"kind": "Municipio",
+"lat": 5.918743,
+"lng": -73.790975
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68780",
+"city": "SURATÁ",
+"kind": "Municipio",
+"lat": 7.36658,
+"lng": -72.984232
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68820",
+"city": "TONA",
+"kind": "Municipio",
+"lat": 7.201417,
+"lng": -72.967023
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68855",
+"city": "VALLE DE SAN JOSÉ",
+"kind": "Municipio",
+"lat": 6.448028,
+"lng": -73.143507
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68861",
+"city": "VÉLEZ",
+"kind": "Municipio",
+"lat": 6.009275,
+"lng": -73.672447
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68867",
+"city": "VETAS",
+"kind": "Municipio",
+"lat": 7.30981,
+"lng": -72.871041
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68872",
+"city": "VILLANUEVA",
+"kind": "Municipio",
+"lat": 6.670078,
+"lng": -73.174307
+},
+{
+"state_code": "68",
+"state": "SANTANDER",
+"city_code": "68895",
+"city": "ZAPATOCA",
+"kind": "Municipio",
+"lat": 6.814387,
+"lng": -73.268034
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70001",
+"city": "SINCELEJO",
+"kind": "Municipio",
+"lat": 9.302322,
+"lng": -75.395445
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70110",
+"city": "BUENAVISTA",
+"kind": "Municipio",
+"lat": 9.319794,
+"lng": -74.972827
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70124",
+"city": "CAIMITO",
+"kind": "Municipio",
+"lat": 8.789324,
+"lng": -75.117141
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70204",
+"city": "COLOSÓ",
+"kind": "Municipio",
+"lat": 9.494192,
+"lng": -75.353256
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70215",
+"city": "COROZAL",
+"kind": "Municipio",
+"lat": 9.318749,
+"lng": -75.293048
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70221",
+"city": "COVEÑAS",
+"kind": "Municipio",
+"lat": 9.402779,
+"lng": -75.680158
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70230",
+"city": "CHALÁN",
+"kind": "Municipio",
+"lat": 9.545352,
+"lng": -75.312697
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70233",
+"city": "EL ROBLE",
+"kind": "Municipio",
+"lat": 9.100647,
+"lng": -75.198378
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70235",
+"city": "GALERAS",
+"kind": "Municipio",
+"lat": 9.160379,
+"lng": -75.04959
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70265",
+"city": "GUARANDA",
+"kind": "Municipio",
+"lat": 8.468556,
+"lng": -74.537749
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70400",
+"city": "LA UNIÓN",
+"kind": "Municipio",
+"lat": 8.853975,
+"lng": -75.276056
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70418",
+"city": "LOS PALMITOS",
+"kind": "Municipio",
+"lat": 9.380269,
+"lng": -75.268716
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70429",
+"city": "MAJAGUAL",
+"kind": "Municipio",
+"lat": 8.541163,
+"lng": -74.628077
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70473",
+"city": "MORROA",
+"kind": "Municipio",
+"lat": 9.331395,
+"lng": -75.305949
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70508",
+"city": "OVEJAS",
+"kind": "Municipio",
+"lat": 9.527176,
+"lng": -75.229037
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70523",
+"city": "PALMITO",
+"kind": "Municipio",
+"lat": 9.333157,
+"lng": -75.541264
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70670",
+"city": "SAMPUÉS",
+"kind": "Municipio",
+"lat": 9.183193,
+"lng": -75.380222
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70678",
+"city": "SAN BENITO ABAD",
+"kind": "Municipio",
+"lat": 8.930108,
+"lng": -75.031089
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70702",
+"city": "SAN JUAN DE BETULIA",
+"kind": "Municipio",
+"lat": 9.273066,
+"lng": -75.243565
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70708",
+"city": "SAN MARCOS",
+"kind": "Municipio",
+"lat": 8.661774,
+"lng": -75.133831
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70713",
+"city": "SAN ONOFRE",
+"kind": "Municipio",
+"lat": 9.736955,
+"lng": -75.522398
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70717",
+"city": "SAN PEDRO",
+"kind": "Municipio",
+"lat": 9.39625,
+"lng": -75.063647
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70742",
+"city": "SAN LUIS DE SINCÉ",
+"kind": "Municipio",
+"lat": 9.244308,
+"lng": -75.145999
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70771",
+"city": "SUCRE",
+"kind": "Municipio",
+"lat": 8.811737,
+"lng": -74.723175
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70820",
+"city": "SANTIAGO DE TOLÚ",
+"kind": "Municipio",
+"lat": 9.525387,
+"lng": -75.581112
+},
+{
+"state_code": "70",
+"state": "SUCRE",
+"city_code": "70823",
+"city": "SAN JOSÉ DE TOLUVIEJO",
+"kind": "Municipio",
+"lat": 9.451819,
+"lng": -75.44085
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73001",
+"city": "IBAGUÉ",
+"kind": "Municipio",
+"lat": 4.432248,
+"lng": -75.19425
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73024",
+"city": "ALPUJARRA",
+"kind": "Municipio",
+"lat": 3.391548,
+"lng": -74.9329
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73026",
+"city": "ALVARADO",
+"kind": "Municipio",
+"lat": 4.567356,
+"lng": -74.953418
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73030",
+"city": "AMBALEMA",
+"kind": "Municipio",
+"lat": 4.782682,
+"lng": -74.764429
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73043",
+"city": "ANZOÁTEGUI",
+"kind": "Municipio",
+"lat": 4.631756,
+"lng": -75.093772
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73055",
+"city": "ARMERO",
+"kind": "Municipio",
+"lat": 5.030744,
+"lng": -74.884438
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73067",
+"city": "ATACO",
+"kind": "Municipio",
+"lat": 3.590591,
+"lng": -75.382545
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73124",
+"city": "CAJAMARCA",
+"kind": "Municipio",
+"lat": 4.438812,
+"lng": -75.431971
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73148",
+"city": "CARMEN DE APICALÁ",
+"kind": "Municipio",
+"lat": 4.152334,
+"lng": -74.717633
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73152",
+"city": "CASABIANCA",
+"kind": "Municipio",
+"lat": 5.078465,
+"lng": -75.120966
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73168",
+"city": "CHAPARRAL",
+"kind": "Municipio",
+"lat": 3.722918,
+"lng": -75.480765
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73200",
+"city": "COELLO",
+"kind": "Municipio",
+"lat": 4.287276,
+"lng": -74.898464
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73217",
+"city": "COYAIMA",
+"kind": "Municipio",
+"lat": 3.798036,
+"lng": -75.193862
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73226",
+"city": "CUNDAY",
+"kind": "Municipio",
+"lat": 4.059259,
+"lng": -74.692227
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73236",
+"city": "DOLORES",
+"kind": "Municipio",
+"lat": 3.539072,
+"lng": -74.896761
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73268",
+"city": "ESPINAL",
+"kind": "Municipio",
+"lat": 4.151314,
+"lng": -74.885446
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73270",
+"city": "FALAN",
+"kind": "Municipio",
+"lat": 5.123104,
+"lng": -74.953007
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73275",
+"city": "FLANDES",
+"kind": "Municipio",
+"lat": 4.276373,
+"lng": -74.818763
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73283",
+"city": "FRESNO",
+"kind": "Municipio",
+"lat": 5.153576,
+"lng": -75.035722
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73319",
+"city": "GUAMO",
+"kind": "Municipio",
+"lat": 4.030992,
+"lng": -74.968135
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73347",
+"city": "HERVEO",
+"kind": "Municipio",
+"lat": 5.080228,
+"lng": -75.177151
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73349",
+"city": "HONDA",
+"kind": "Municipio",
+"lat": 5.211816,
+"lng": -74.75699
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73352",
+"city": "ICONONZO",
+"kind": "Municipio",
+"lat": 4.176487,
+"lng": -74.531969
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73408",
+"city": "LÉRIDA",
+"kind": "Municipio",
+"lat": 4.862046,
+"lng": -74.910716
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73411",
+"city": "LÍBANO",
+"kind": "Municipio",
+"lat": 4.92042,
+"lng": -75.061959
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73443",
+"city": "SAN SEBASTIÁN DE MARIQUITA",
+"kind": "Municipio",
+"lat": 5.199708,
+"lng": -74.889276
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73449",
+"city": "MELGAR",
+"kind": "Municipio",
+"lat": 4.203655,
+"lng": -74.641317
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73461",
+"city": "MURILLO",
+"kind": "Municipio",
+"lat": 4.874341,
+"lng": -75.171022
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73483",
+"city": "NATAGAIMA",
+"kind": "Municipio",
+"lat": 3.624324,
+"lng": -75.093182
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73504",
+"city": "ORTEGA",
+"kind": "Municipio",
+"lat": 3.934916,
+"lng": -75.222601
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73520",
+"city": "PALOCABILDO",
+"kind": "Municipio",
+"lat": 5.120918,
+"lng": -75.022167
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73547",
+"city": "PIEDRAS",
+"kind": "Municipio",
+"lat": 4.543951,
+"lng": -74.878106
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73555",
+"city": "PLANADAS",
+"kind": "Municipio",
+"lat": 3.197911,
+"lng": -75.644163
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73563",
+"city": "PRADO",
+"kind": "Municipio",
+"lat": 3.750939,
+"lng": -74.927447
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73585",
+"city": "PURIFICACIÓN",
+"kind": "Municipio",
+"lat": 3.857246,
+"lng": -74.935555
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73616",
+"city": "RIOBLANCO",
+"kind": "Municipio",
+"lat": 3.529932,
+"lng": -75.644069
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73622",
+"city": "RONCESVALLES",
+"kind": "Municipio",
+"lat": 4.011567,
+"lng": -75.605959
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73624",
+"city": "ROVIRA",
+"kind": "Municipio",
+"lat": 4.239019,
+"lng": -75.240648
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73671",
+"city": "SALDAÑA",
+"kind": "Municipio",
+"lat": 3.929815,
+"lng": -75.016852
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73675",
+"city": "SAN ANTONIO",
+"kind": "Municipio",
+"lat": 3.914146,
+"lng": -75.480074
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73678",
+"city": "SAN LUIS",
+"kind": "Municipio",
+"lat": 4.133721,
+"lng": -75.095804
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73686",
+"city": "SANTA ISABEL",
+"kind": "Municipio",
+"lat": 4.713606,
+"lng": -75.097934
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73770",
+"city": "SUÁREZ",
+"kind": "Municipio",
+"lat": 4.048891,
+"lng": -74.831885
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73854",
+"city": "VALLE DE SAN JUAN",
+"kind": "Municipio",
+"lat": 4.197494,
+"lng": -75.115669
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73861",
+"city": "VENADILLO",
+"kind": "Municipio",
+"lat": 4.717878,
+"lng": -74.929333
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73870",
+"city": "VILLAHERMOSA",
+"kind": "Municipio",
+"lat": 5.030452,
+"lng": -75.117729
+},
+{
+"state_code": "73",
+"state": "TOLIMA",
+"city_code": "73873",
+"city": "VILLARRICA",
+"kind": "Municipio",
+"lat": 3.936902,
+"lng": -74.600285
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76001",
+"city": "SANTIAGO DE CALI",
+"kind": "Municipio",
+"lat": 3.413686,
+"lng": -76.52133
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76020",
+"city": "ALCALÁ",
+"kind": "Municipio",
+"lat": 4.674994,
+"lng": -75.779792
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76036",
+"city": "ANDALUCÍA",
+"kind": "Municipio",
+"lat": 4.171713,
+"lng": -76.167925
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76041",
+"city": "ANSERMANUEVO",
+"kind": "Municipio",
+"lat": 4.794984,
+"lng": -75.992003
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76054",
+"city": "ARGELIA",
+"kind": "Municipio",
+"lat": 4.726945,
+"lng": -76.119905
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76100",
+"city": "BOLÍVAR",
+"kind": "Municipio",
+"lat": 4.337846,
+"lng": -76.183583
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76109",
+"city": "BUENAVENTURA",
+"kind": "Municipio",
+"lat": 3.875708,
+"lng": -77.01074
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76111",
+"city": "GUADALAJARA DE BUGA",
+"kind": "Municipio",
+"lat": 3.900736,
+"lng": -76.298979
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76113",
+"city": "BUGALAGRANDE",
+"kind": "Municipio",
+"lat": 4.208358,
+"lng": -76.15682
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76122",
+"city": "CAICEDONIA",
+"kind": "Municipio",
+"lat": 4.334808,
+"lng": -75.830594
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76126",
+"city": "CALIMA",
+"kind": "Municipio",
+"lat": 3.933664,
+"lng": -76.484132
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76130",
+"city": "CANDELARIA",
+"kind": "Municipio",
+"lat": 3.408354,
+"lng": -76.346519
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76147",
+"city": "CARTAGO",
+"kind": "Municipio",
+"lat": 4.742192,
+"lng": -75.924374
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76233",
+"city": "DAGUA",
+"kind": "Municipio",
+"lat": 3.657318,
+"lng": -76.68886
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76243",
+"city": "EL ÁGUILA",
+"kind": "Municipio",
+"lat": 4.906062,
+"lng": -76.042779
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76246",
+"city": "EL CAIRO",
+"kind": "Municipio",
+"lat": 4.760874,
+"lng": -76.221611
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76248",
+"city": "EL CERRITO",
+"kind": "Municipio",
+"lat": 3.684229,
+"lng": -76.311972
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76250",
+"city": "EL DOVIO",
+"kind": "Municipio",
+"lat": 4.510452,
+"lng": -76.237084
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76275",
+"city": "FLORIDA",
+"kind": "Municipio",
+"lat": 3.324118,
+"lng": -76.234199
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76306",
+"city": "GINEBRA",
+"kind": "Municipio",
+"lat": 3.724181,
+"lng": -76.268068
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76318",
+"city": "GUACARÍ",
+"kind": "Municipio",
+"lat": 3.761815,
+"lng": -76.330911
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76364",
+"city": "JAMUNDÍ",
+"kind": "Municipio",
+"lat": 3.258751,
+"lng": -76.538472
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76377",
+"city": "LA CUMBRE",
+"kind": "Municipio",
+"lat": 3.649268,
+"lng": -76.56805
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76400",
+"city": "LA UNIÓN",
+"kind": "Municipio",
+"lat": 4.533869,
+"lng": -76.099661
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76403",
+"city": "LA VICTORIA",
+"kind": "Municipio",
+"lat": 4.523603,
+"lng": -76.036529
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76497",
+"city": "OBANDO",
+"kind": "Municipio",
+"lat": 4.575712,
+"lng": -75.974709
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76520",
+"city": "PALMIRA",
+"kind": "Municipio",
+"lat": 3.531544,
+"lng": -76.298846
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76563",
+"city": "PRADERA",
+"kind": "Municipio",
+"lat": 3.419793,
+"lng": -76.241799
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76606",
+"city": "RESTREPO",
+"kind": "Municipio",
+"lat": 3.821351,
+"lng": -76.523329
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76616",
+"city": "RIOFRÍO",
+"kind": "Municipio",
+"lat": 4.156908,
+"lng": -76.288313
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76622",
+"city": "ROLDANILLO",
+"kind": "Municipio",
+"lat": 4.413601,
+"lng": -76.152277
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76670",
+"city": "SAN PEDRO",
+"kind": "Municipio",
+"lat": 3.995073,
+"lng": -76.228692
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76736",
+"city": "SEVILLA",
+"kind": "Municipio",
+"lat": 4.270714,
+"lng": -75.931629
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76823",
+"city": "TORO",
+"kind": "Municipio",
+"lat": 4.608085,
+"lng": -76.076859
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76828",
+"city": "TRUJILLO",
+"kind": "Municipio",
+"lat": 4.212037,
+"lng": -76.318818
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76834",
+"city": "TULUÁ",
+"kind": "Municipio",
+"lat": 4.085399,
+"lng": -76.197731
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76845",
+"city": "ULLOA",
+"kind": "Municipio",
+"lat": 4.703623,
+"lng": -75.737808
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76863",
+"city": "VERSALLES",
+"kind": "Municipio",
+"lat": 4.575019,
+"lng": -76.199203
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76869",
+"city": "VIJES",
+"kind": "Municipio",
+"lat": 3.698686,
+"lng": -76.441804
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76890",
+"city": "YOTOCO",
+"kind": "Municipio",
+"lat": 3.861241,
+"lng": -76.382698
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76892",
+"city": "YUMBO",
+"kind": "Municipio",
+"lat": 3.540097,
+"lng": -76.499893
+},
+{
+"state_code": "76",
+"state": "VALLE DEL CAUCA",
+"city_code": "76895",
+"city": "ZARZAL",
+"kind": "Municipio",
+"lat": 4.392658,
+"lng": -76.070795
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81001",
+"city": "ARAUCA",
+"kind": "Municipio",
+"lat": 7.072726,
+"lng": -70.747408
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81065",
+"city": "ARAUQUITA",
+"kind": "Municipio",
+"lat": 7.02702,
+"lng": -71.426733
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81220",
+"city": "CRAVO NORTE",
+"kind": "Municipio",
+"lat": 6.303913,
+"lng": -70.204286
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81300",
+"city": "FORTUL",
+"kind": "Municipio",
+"lat": 6.796695,
+"lng": -71.76877
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81591",
+"city": "PUERTO RONDÓN",
+"kind": "Municipio",
+"lat": 6.281461,
+"lng": -71.10339
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81736",
+"city": "SARAVENA",
+"kind": "Municipio",
+"lat": 6.953926,
+"lng": -71.872812
+},
+{
+"state_code": "81",
+"state": "ARAUCA",
+"city_code": "81794",
+"city": "TAME",
+"kind": "Municipio",
+"lat": 6.453324,
+"lng": -71.754427
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85001",
+"city": "YOPAL",
+"kind": "Municipio",
+"lat": 5.327102,
+"lng": -72.396132
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85010",
+"city": "AGUAZUL",
+"kind": "Municipio",
+"lat": 5.172641,
+"lng": -72.546838
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85015",
+"city": "CHÁMEZA",
+"kind": "Municipio",
+"lat": 5.214527,
+"lng": -72.87016
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85125",
+"city": "HATO COROZAL",
+"kind": "Municipio",
+"lat": 6.154099,
+"lng": -71.764213
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85136",
+"city": "LA SALINA",
+"kind": "Municipio",
+"lat": 6.127762,
+"lng": -72.334978
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85139",
+"city": "MANÍ",
+"kind": "Municipio",
+"lat": 4.81681,
+"lng": -72.281384
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85162",
+"city": "MONTERREY",
+"kind": "Municipio",
+"lat": 4.877017,
+"lng": -72.894065
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85225",
+"city": "NUNCHÍA",
+"kind": "Municipio",
+"lat": 5.636474,
+"lng": -72.195323
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85230",
+"city": "OROCUÉ",
+"kind": "Municipio",
+"lat": 4.790258,
+"lng": -71.338533
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85250",
+"city": "PAZ DE ARIPORO",
+"kind": "Municipio",
+"lat": 5.879827,
+"lng": -71.890348
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85263",
+"city": "PORE",
+"kind": "Municipio",
+"lat": 5.72773,
+"lng": -71.99286
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85279",
+"city": "RECETOR",
+"kind": "Municipio",
+"lat": 5.229181,
+"lng": -72.760991
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85300",
+"city": "SABANALARGA",
+"kind": "Municipio",
+"lat": 4.854787,
+"lng": -73.038696
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85315",
+"city": "SÁCAMA",
+"kind": "Municipio",
+"lat": 6.096738,
+"lng": -72.250157
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85325",
+"city": "SAN LUIS DE PALENQUE",
+"kind": "Municipio",
+"lat": 5.422397,
+"lng": -71.732198
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85400",
+"city": "TÁMARA",
+"kind": "Municipio",
+"lat": 5.829543,
+"lng": -72.16165
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85410",
+"city": "TAURAMENA",
+"kind": "Municipio",
+"lat": 5.018977,
+"lng": -72.74662
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85430",
+"city": "TRINIDAD",
+"kind": "Municipio",
+"lat": 5.412178,
+"lng": -71.662812
+},
+{
+"state_code": "85",
+"state": "CASANARE",
+"city_code": "85440",
+"city": "VILLANUEVA",
+"kind": "Municipio",
+"lat": 4.61035,
+"lng": -72.927797
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86001",
+"city": "MOCOA",
+"kind": "Municipio",
+"lat": 1.151172,
+"lng": -76.654238
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86219",
+"city": "COLÓN",
+"kind": "Municipio",
+"lat": 1.190133,
+"lng": -76.972566
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86320",
+"city": "ORITO",
+"kind": "Municipio",
+"lat": 0.663593,
+"lng": -76.873276
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86568",
+"city": "PUERTO ASÍS",
+"kind": "Municipio",
+"lat": 0.505627,
+"lng": -76.496887
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86569",
+"city": "PUERTO CAICEDO",
+"kind": "Municipio",
+"lat": 0.687784,
+"lng": -76.606118
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86571",
+"city": "PUERTO GUZMÁN",
+"kind": "Municipio",
+"lat": 0.962854,
+"lng": -76.407663
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86573",
+"city": "PUERTO LEGUÍZAMO",
+"kind": "Municipio",
+"lat": -0.192318,
+"lng": -74.781842
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86749",
+"city": "SIBUNDOY",
+"kind": "Municipio",
+"lat": 1.20026,
+"lng": -76.917814
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86755",
+"city": "SAN FRANCISCO",
+"kind": "Municipio",
+"lat": 1.174194,
+"lng": -76.879283
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86757",
+"city": "SAN MIGUEL",
+"kind": "Municipio",
+"lat": 0.34346,
+"lng": -76.91217
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86760",
+"city": "SANTIAGO",
+"kind": "Municipio",
+"lat": 1.147076,
+"lng": -77.002641
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86865",
+"city": "VALLE DEL GUAMUEZ",
+"kind": "Municipio",
+"lat": 0.423506,
+"lng": -76.906751
+},
+{
+"state_code": "86",
+"state": "PUTUMAYO",
+"city_code": "86885",
+"city": "VILLAGARZÓN",
+"kind": "Municipio",
+"lat": 1.028821,
+"lng": -76.61721
+},
+{
+"state_code": "88",
+"state": "ARCHIPIÉLAGO DE SAN ANDRÉS, PROVIDENCIA Y SANTA CATALINA",
+"city_code": "88001",
+"city": "SAN ANDRÉS",
+"kind": "Isla",
+"lat": 12.578108,
+"lng": -81.707181
+},
+{
+"state_code": "88",
+"state": "ARCHIPIÉLAGO DE SAN ANDRÉS, PROVIDENCIA Y SANTA CATALINA",
+"city_code": "88564",
+"city": "PROVIDENCIA",
+"kind": "Municipio",
+"lat": 13.373185,
+"lng": -81.368386
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91001",
+"city": "LETICIA",
+"kind": "Municipio",
+"lat": -4.19895,
+"lng": -69.941721
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91263",
+"city": "EL ENCANTO",
+"kind": "Área no municipalizada",
+"lat": -1.74806,
+"lng": -73.207114
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91405",
+"city": "LA CHORRERA",
+"kind": "Área no municipalizada",
+"lat": -1.442617,
+"lng": -72.791889
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91407",
+"city": "LA PEDRERA",
+"kind": "Área no municipalizada",
+"lat": -1.320301,
+"lng": -69.585499
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91430",
+"city": "LA VICTORIA",
+"kind": "Área no municipalizada",
+"lat": 0.054936,
+"lng": -71.223208
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91460",
+"city": "MIRITÍ - PARANÁ",
+"kind": "Área no municipalizada",
+"lat": -0.888833,
+"lng": -70.98893
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91530",
+"city": "PUERTO ALEGRÍA",
+"kind": "Área no municipalizada",
+"lat": -1.005674,
+"lng": -74.014461
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91536",
+"city": "PUERTO ARICA",
+"kind": "Área no municipalizada",
+"lat": -2.147039,
+"lng": -71.752186
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91540",
+"city": "PUERTO NARIÑO",
+"kind": "Municipio",
+"lat": -3.779934,
+"lng": -70.364937
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91669",
+"city": "PUERTO SANTANDER",
+"kind": "Área no municipalizada",
+"lat": -0.621184,
+"lng": -72.384213
+},
+{
+"state_code": "91",
+"state": "AMAZONAS",
+"city_code": "91798",
+"city": "TARAPACÁ",
+"kind": "Área no municipalizada",
+"lat": -2.890126,
+"lng": -69.741745
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94001",
+"city": "INÍRIDA",
+"kind": "Municipio",
+"lat": 3.866764,
+"lng": -67.918613
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94343",
+"city": "BARRANCOMINAS",
+"kind": "Municipio",
+"lat": 3.494178,
+"lng": -69.814066
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94883",
+"city": "SAN FELIPE",
+"kind": "Área no municipalizada",
+"lat": 1.912495,
+"lng": -67.067848
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94884",
+"city": "PUERTO COLOMBIA",
+"kind": "Área no municipalizada",
+"lat": 2.726438,
+"lng": -67.566774
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94885",
+"city": "LA GUADALUPE",
+"kind": "Área no municipalizada",
+"lat": 1.632464,
+"lng": -66.963692
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94886",
+"city": "CACAHUAL",
+"kind": "Área no municipalizada",
+"lat": 3.52617,
+"lng": -67.413312
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94887",
+"city": "PANA PANA",
+"kind": "Área no municipalizada",
+"lat": 1.865668,
+"lng": -69.0099
+},
+{
+"state_code": "94",
+"state": "GUAINÍA",
+"city_code": "94888",
+"city": "MORICHAL",
+"kind": "Área no municipalizada",
+"lat": 2.265132,
+"lng": -69.919404
+},
+{
+"state_code": "95",
+"state": "GUAVIARE",
+"city_code": "95001",
+"city": "SAN JOSÉ DEL GUAVIARE",
+"kind": "Municipio",
+"lat": 2.565932,
+"lng": -72.639254
+},
+{
+"state_code": "95",
+"state": "GUAVIARE",
+"city_code": "95015",
+"city": "CALAMAR",
+"kind": "Municipio",
+"lat": 1.960982,
+"lng": -72.655197
+},
+{
+"state_code": "95",
+"state": "GUAVIARE",
+"city_code": "95025",
+"city": "EL RETORNO",
+"kind": "Municipio",
+"lat": 2.330164,
+"lng": -72.627304
+},
+{
+"state_code": "95",
+"state": "GUAVIARE",
+"city_code": "95200",
+"city": "MIRAFLORES",
+"kind": "Municipio",
+"lat": 1.337539,
+"lng": -71.950416
+},
+{
+"state_code": "97",
+"state": "VAUPÉS",
+"city_code": "97001",
+"city": "MITÚ",
+"kind": "Municipio",
+"lat": 1.253151,
+"lng": -70.232641
+},
+{
+"state_code": "97",
+"state": "VAUPÉS",
+"city_code": "97161",
+"city": "CARURÚ",
+"kind": "Municipio",
+"lat": 1.016116,
+"lng": -71.30221
+},
+{
+"state_code": "97",
+"state": "VAUPÉS",
+"city_code": "97511",
+"city": "PACOA",
+"kind": "Área no municipalizada",
+"lat": 0.020698,
+"lng": -71.004339
+},
+{
+"state_code": "97",
+"state": "VAUPÉS",
+"city_code": "97666",
+"city": "TARAIRA",
+"kind": "Municipio",
+"lat": -0.564984,
+"lng": -69.635497
+},
+{
+"state_code": "97",
+"state": "VAUPÉS",
+"city_code": "97777",
+"city": "PAPUNAHUA",
+"kind": "Área no municipalizada",
+"lat": 1.908124,
+"lng": -70.76091
+},
+{
+"state_code": "97",
+"state": "VAUPÉS",
+"city_code": "97889",
+"city": "YAVARATÉ",
+"kind": "Área no municipalizada",
+"lat": 0.609142,
+"lng": -69.203337
+},
+{
+"state_code": "99",
+"state": "VICHADA",
+"city_code": "99001",
+"city": "PUERTO CARREÑO",
+"kind": "Municipio",
+"lat": 6.186636,
+"lng": -67.487095
+},
+{
+"state_code": "99",
+"state": "VICHADA",
+"city_code": "99524",
+"city": "LA PRIMAVERA",
+"kind": "Municipio",
+"lat": 5.486309,
+"lng": -70.410515
+},
+{
+"state_code": "99",
+"state": "VICHADA",
+"city_code": "99624",
+"city": "SANTA ROSALÍA",
+"kind": "Municipio",
+"lat": 5.136393,
+"lng": -70.859499
+},
+{
+"state_code": "99",
+"state": "VICHADA",
+"city_code": "99773",
+"city": "CUMARIBO",
+"kind": "Municipio",
+"lat": 4.446352,
+"lng": -69.795533
+}
+]
+}
