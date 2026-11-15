@@ -14,6 +14,76 @@ from copy import deepcopy
 
 
 _INSERT_LOCKS = tuple(Lock() for _ in range(256))
+# TPO_PARTICIPACION of a directed work: tutor, advisor, co-tutor; ORI is the student.
+ADVISOR_ROLES = ("TUT", "ASE", "COT")
+STUDENT_ROLE = "ORI"
+
+
+def thesis_roles(scienti_reg):
+    """Return ``{COD_RH: "advisor" | "author"}`` for the people of a directed work."""
+    roles = {}
+    for participant in scienti_reg.get("re_author_others") or []:
+        role = participant.get("TPO_PARTICIPACION")
+        if role in ADVISOR_ROLES:
+            kind = "advisor"
+        elif role == STUDENT_ROLE:
+            kind = "author"
+        else:
+            continue
+        cod_rh = None
+        if participant.get("author_others"):
+            cod_rh = participant["author_others"][0].get("COD_RH_REF")
+        if not cod_rh and participant.get("author"):
+            cod_rh = participant["author"][0].get("COD_RH")
+        if cod_rh and roles.get(cod_rh) != "advisor":
+            roles[cod_rh] = kind
+    return roles
+
+
+def apply_thesis_roles(scienti_reg, authors, db, owner_affiliations=None):
+    """
+    Make the advisors and the student of a directed work authors of the work.
+
+    A thesis already inserted by another source usually lists only the student, so
+    the owner of the CvLAC (its advisor) matches no existing author; without this
+    the advisor would be lost. An author type set by another source is kept.
+
+    Returns
+    -------
+    bool
+        True when ``authors`` changed.
+    """
+    roles = thesis_roles(scienti_reg)
+    if "advisor" not in roles.values():
+        return False
+    changed = False
+    for cod_rh, kind in roles.items():
+        person = db["person"].find_one(
+            {"external_ids.id.COD_RH": cod_rh}, {"_id": 1, "full_name": 1})
+        if not person:
+            continue
+        current = next(
+            (author for author in authors if author.get("id") == person["_id"]), None)
+        if current is None:
+            is_owner = cod_rh == scienti_reg.get("COD_RH")
+            authors.append({
+                "id": person["_id"],
+                "full_name": person["full_name"],
+                "affiliations": deepcopy(owner_affiliations or []) if is_owner else [],
+                "type": kind,
+            })
+            changed = True
+        elif not current.get("type"):
+            current["type"] = kind
+            changed = True
+    return changed
+
+
+def _with_type(author, previous):
+    """Keep the author type (advisor, author) when an author entry is rebuilt."""
+    if previous.get("type"):
+        author["type"] = previous["type"]
+    return author
 
 
 def run_es_operation(semaphore, operation, *args, **kwargs):
@@ -295,11 +365,11 @@ def process_author(entry, colav_reg, db, verbose=0):
                     for group in groups:
                         if group not in author["affiliations"]:
                             author["affiliations"].append(group)
-                    colav_reg["authors"][i] = {
+                    colav_reg["authors"][i] = _with_type({
                         "id": author_db["_id"],
                         "full_name": author_db["full_name"],
                         "affiliations": author["affiliations"]
-                    }
+                    }, author)
                     continue
                 author_reg = None
                 if author['id'] == "":
@@ -367,11 +437,11 @@ def process_author(entry, colav_reg, db, verbose=0):
                         if aff_unit not in author["affiliations"]:
                             author["affiliations"].append(aff_unit)
 
-                    colav_reg["authors"][i] = {
+                    colav_reg["authors"][i] = _with_type({
                         "id": author_db["_id"],
                         "full_name": author_db["full_name"],
                         "affiliations": author["affiliations"]
-                    }
+                    }, author)
                     break
 
                 else:
@@ -475,8 +545,11 @@ def process_one_update(
         for update in colav_reg.get("updated", [])
     )
     if already_updated:
-        if merge_scienti_source_institution(scienti_reg, entry, colav_reg, db):
+        roles_changed = "authors" in colav_reg and apply_thesis_roles(
+            scienti_reg, colav_reg["authors"], db)
+        if merge_scienti_source_institution(scienti_reg, entry, colav_reg, db) or roles_changed:
             core_updates["authors"] = colav_reg["authors"]
+            core_updates["author_count"] = len(colav_reg["authors"])
         if core_updates:
             collection.update_one(
                 {"_id": colav_reg["_id"]}, {"$set": core_updates})
@@ -560,6 +633,8 @@ def process_one_update(
 
     # scienti author
     process_author(entry, colav_reg, db, verbose)
+    apply_thesis_roles(
+        scienti_reg, colav_reg["authors"], db, entry["authors"][0].get("affiliations"))
     merge_scienti_source_institution(scienti_reg, entry, colav_reg, db)
 
     # the first author is the original one always (already inserted)
@@ -905,6 +980,7 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
                 "affiliations": []
             })
 
+    apply_thesis_roles(scienti_reg, entry["authors"], db)
     entry["author_count"] = len(entry["authors"])
 
     # Update date_published if oriented_thesis is available

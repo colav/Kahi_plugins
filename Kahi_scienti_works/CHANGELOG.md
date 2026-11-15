@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.11 - 2026-11-14
+
+- Directed works (theses): the advisors (`TPO_PARTICIPACION` TUT, ASE, COT) and
+  the student (ORI) of `re_author_others` are authors of the work with type
+  `advisor` / `author`, also when the work already exists. A thesis inserted
+  first by OpenAlex lists only the student, so the CvLAC owner matched no
+  author and the advisor was lost (19 % of a 4 000 sample, 6 % in September)
+- Updating a work keeps the author `type` instead of rebuilding the author
+  without it
+- A second CvLAC of a work already updated by ScienTI adds its owner as advisor
+
 ## 0.1.10 - 2026-11-13
 
 - Size the Mohan Elasticsearch connection pool to `es_max_concurrency`
