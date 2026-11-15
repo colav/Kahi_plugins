@@ -21,6 +21,8 @@
   disponible", a city of another country tagged as Colombian) is dropped when
   the group has a located address; a group with none keeps one address that
   says only Colombia, with the empty values of the schema.
+- Any affiliation with the misassigned country "Afganistán" and a city that is
+  a Colombian municipality becomes Colombian (e.g. "Armenia, Afganistán").
 
 ### Changed
 

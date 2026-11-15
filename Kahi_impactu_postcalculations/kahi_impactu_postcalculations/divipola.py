@@ -143,8 +143,9 @@ def normalize_colombian_addresses(addresses, divipola, is_group=False):
         address = dict(address)
         code = address.get("country_code") or ""
         found = None
-        if is_group and (not code or code in MISASSIGNED_COUNTRY_CODES):
-            # A group is Colombian: an address without a real country is in Colombia.
+        if code in MISASSIGNED_COUNTRY_CODES or (is_group and not code):
+            # The sources write that country on addresses that had none, and a group is
+            # Colombian: when the city is a Colombian municipality the address is in Colombia.
             found = divipola.find(address.get("city"), address.get("state"))
             if found:
                 address["country"], address["country_code"] = "Colombia", "CO"

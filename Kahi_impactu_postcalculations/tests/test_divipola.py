@@ -114,6 +114,17 @@ def test_group_without_any_located_address_only_says_colombia():
     assert normalize_colombian_addresses([], DIVIPOLA, is_group=True)[0] == []
 
 
+def test_institution_with_the_misassigned_country_and_a_colombian_city_is_colombian():
+    result, counts = normalize_colombian_addresses(
+        [address("Armenia", "", "Afganistán", "AF"), address("Kabul", "Kabul", "Afganistán", "AF"),
+         address("Medellín", "", "", "")], DIVIPOLA)
+    assert (result[0]["country"], result[0]["country_code"], result[0]["city_code"],
+            result[0]["state"]) == ("Colombia", "CO", "63001", "Quindío")
+    assert result[1] == address("Kabul", "Kabul", "Afganistán", "AF")
+    assert result[2] == address("Medellín", "", "", "")   # only groups assume Colombia
+    assert counts["country_fixed"] == 1
+
+
 def test_institutions_keep_foreign_and_repeated_addresses():
     addresses = [address("Madrid", "Madrid", "España", "ES"), address("Cali"), address("Cali")]
     result, counts = normalize_colombian_addresses(addresses, DIVIPOLA)
