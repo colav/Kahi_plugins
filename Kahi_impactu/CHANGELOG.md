@@ -13,6 +13,14 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.47] - 2026-11-15
+
+### Changed
+
+- Pinned Kahi 0.1.7, Kahi_impactu_postcalculations 0.1.12,
+  Kahi_siiu_projects 0.0.3-alpha and Kahi_minciencias_opendata_projects
+  0.1.3-beta (topics for projects).
+
 ## [0.0.46] - 2026-11-15
 
 ### Changed
