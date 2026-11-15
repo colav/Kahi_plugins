@@ -13,6 +13,40 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.42] - 2026-11-14
+
+### Changed
+
+- Pinned Kahi_post_identifier_disputes 0.0.4-alpha.
+
+## [0.0.41] - 2026-11-14
+
+### Changed
+
+- Pinned Kahi_post_identifier_disputes 0.0.3-alpha (`apply` also settles the
+  ORCID iDs shared by several people).
+
+## [0.0.40] - 2026-11-14
+
+### Changed
+
+- Pinned Kahi_lens_patents 0.0.2-alpha (merge of duplicated patents with
+  `merge_duplicates`, better number keys).
+
+## [0.0.39] - 2026-11-14
+
+### Added
+
+- Kahi_post_identifier_disputes 0.0.2-alpha (tasks `collect` and `apply` for
+  the DOIs shared by several works).
+
+## [0.0.38] - 2026-11-14
+
+### Changed
+
+- Pinned Kahi_minciencias_opendata_works 0.1.13 (the stage for works without a
+  DOI runs as `minciencias_opendata_works`, without `/nodoi`).
+
 ## [0.0.37] - 2026-11-14
 
 ### Changed
