@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.9 - 2026-11-14
+
+### Added
+
+- Person stage `set_person_age`, last of the person stages: `age` is the
+  completed years at the run date (`None` outside 15-100 years or when the
+  value is not a date) and `birthdate` is cleared to `-1`, so the published
+  profile carries the age but not the birth date. Requires Kahi 0.1.6.
+- Tests of the h-index, of the h5 window (the five complete years before the
+  run) and of the age calculation.
+
 ## 0.1.8 - 2026-11-14
 
 ### Added

@@ -102,6 +102,13 @@ Notes:
 - Use `geographic_normalization_dry_run: true` to audit changes without writing.
 - OpenAlex enrichment runs before IDs, types and topic inference. It restores
   missing abstracts and native topics by exact OpenAlex work identifier.
+- Person age: the last person stage sets `age` (completed years at the run date;
+  `None` outside 15-100 years or when the value is not a date) and clears
+  `birthdate` to `-1`. The published profile carries the age, never the birth
+  date. Person unicity still needs the birth date, so this runs after it.
+- `h_index` is computed over every work of a person or affiliation with the
+  OpenAlex citation count; `h5_index` only over works published in the five
+  complete years before the run (2021-2025 when run in 2026).
 - Abstract resolver enrichment selects DOI-bearing works without abstracts,
   looks up the DOI in `impactu_abstract_resolver.resolved`, requires a fuzzy
   title score at or above `abstracts_title_threshold`, and stores only
