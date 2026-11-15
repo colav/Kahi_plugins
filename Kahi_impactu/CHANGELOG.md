@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.44] - 2026-11-14
+
+### Changed
+
+- Pinned Kahi 0.1.6 (`age` in the person template) and
+  Kahi_impactu_postcalculations 0.1.9 (age published instead of birth date).
+
 ## [0.0.43] - 2026-11-14
 
 ### Changed
