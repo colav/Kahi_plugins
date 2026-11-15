@@ -78,7 +78,10 @@ the full works graph, and an explicit `collection_name` overrides the pointer.
 Source-only audit fields such as `type_audit` are discarded on import.
 
 Use `minciencias_opendata_works/doi` in the DOI stage and
-`minciencias_opendata_works/nodoi` after the other no-DOI importers. Both use:
+`minciencias_opendata_works` (no task) after the other no-DOI importers, as
+with the other works plugins. `minciencias_opendata_works/nodoi` is the former
+name of the no-DOI stage and is still accepted; `minciencias_opendata_works/all`
+imports both partitions in one pass. Both stages use:
 
 ```yaml
 database_url: localhost:27017
@@ -93,7 +96,7 @@ verbose: 1
 immutable `release_name` is also supported. The partitions use the shared DOI
 validator on the primary field and DOI external IDs. A malformed primary DOI
 with a valid external DOI belongs to the DOI phase. Missing or invalid DOI
-belongs to `nodoi`. Two conflicting external DOIs without a valid primary DOI
+belongs to the no-DOI stage. Two conflicting external DOIs without a valid primary DOI
 are rejected rather than guessed. Progress counters distinguish scanned
 (`processed`), selected and skipped rows. Checkpoints bind the collection,
 selection and identified audit evidence, so completing one partition cannot
@@ -106,14 +109,14 @@ authors prevent ISBN-only merging; ISSN never identifies a publication. It
 preserves an existing work's DOI when enriching it. Ambiguous matches or source
 id collisions are logged and counted as `identity_conflicts`, without inserting
 another duplicate or overwriting an unrelated document. Cross-process locks
-use the existing `_kahi_work_identity` technical collection. When Elasticsearch is configured for `nodoi`, a conservative similarity
+use the existing `_kahi_work_identity` technical collection. When Elasticsearch is configured for the no-DOI stage, a conservative similarity
 fallback can also recognize existing works with different identifiers.
 Equivalence is never established from a title score alone.
 
 ## Elasticsearch in the no-DOI snapshot stage
 
 Add `es_index`, `es_url`, and optionally both `es_user` / `es_password` to
-`minciencias_opendata_works/nodoi`. Use the index populated from the current
+`minciencias_opendata_works` (the no-DOI stage). Use the index populated from the current
 MongoDB works collection after the DOI stage and updated by the other no-DOI
 plugins. The enabled DOI block must not receive these parameters.
 

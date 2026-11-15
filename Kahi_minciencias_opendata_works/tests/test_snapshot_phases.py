@@ -282,3 +282,15 @@ def test_type_audit_is_discarded_on_import(monkeypatch):
     assert Plugin(config(task='doi')).run()['selected'] == 1
     stored = target.works.find_one()
     assert stored and 'type_audit' not in stored
+
+
+def test_no_task_is_the_no_doi_stage(monkeypatch):
+    identified(monkeypatch, [work_snapshot(), nodoi()])
+    Plugin(config(collection_name='filtered', task='doi')).run()
+    without_task = config(collection_name='filtered')
+    del without_task['minciencias_opendata_works']['task']
+    plugin = Plugin(without_task)
+    former = Plugin(config(collection_name='filtered', task='nodoi'))
+    assert plugin.selection == 'nodoi' and plugin.run_id == former.run_id
+    assert plugin.run()['selected'] == 1
+    assert Plugin(config(collection_name='filtered', task=None)).run_id == former.run_id

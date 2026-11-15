@@ -67,6 +67,7 @@ def config(**changes):
     source = {
         "database_url": "mongodb://source", "database_name": "dam",
         "release_name": "release_six", "batch_size": 10, "verbose": 0,
+        "task": "all",
     }
     source.update(changes)
     return {
@@ -256,7 +257,7 @@ def test_duplicate_cod_rh_uses_the_unique_name_compatible_person(monkeypatch):
 
 def test_rejects_legacy_options_current_and_four_entity_release(monkeypatch):
     prepare(monkeypatch)
-    assert Plugin(config(task=None)).run()["processed"] == 1
+    assert Plugin(config(task="all")).run()["processed"] == 1
     with pytest.raises(ValueError, match="legacy works options"):
         Plugin(config(person_related_works=True))
     with pytest.raises(ValueError, match="legacy works options"):

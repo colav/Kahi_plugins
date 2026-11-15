@@ -1,3 +1,12 @@
+## 0.1.13 - 2026-11-14
+
+* Snapshot mode follows the convention of the other works plugins:
+  `minciencias_opendata_works/doi` is the DOI stage and
+  `minciencias_opendata_works` (no task) is the stage for works without a
+  DOI. `/nodoi` remains accepted as the former name of that stage, with the
+  same checkpoint. **Behaviour change:** no task used to import both
+  partitions in one pass; that is now the explicit task `all`
+
 ## 0.1.12 - 2026-11-14
 
 * Book/chapter veto reads only the most specific type level per provenance:

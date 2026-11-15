@@ -160,9 +160,11 @@ class Kahi_minciencias_opendata_works(KahiBase):
         if self.source_mode != "snapshot":
             raise ValueError("source_mode must be 'snapshot' or 'legacy'")
         self.config = config
-        self.selection = source_config.get("task") or "all"
+        # Like the other works plugins: "/doi" is the DOI stage and no task is the
+        # stage for works without a DOI ("nodoi" is the former name of that stage).
+        self.selection = source_config.get("task") or "nodoi"
         if self.selection not in {"all", "doi", "nodoi"}:
-            raise ValueError("legacy works options: task must be doi, nodoi or all")
+            raise ValueError("legacy works options: task must be doi, all or empty (no-DOI stage)")
         self.client = MongoClient(config["database_url"])
         self.db = self.client[config["database_name"]]
         self.collection = self.db["works"]
@@ -201,7 +203,7 @@ class Kahi_minciencias_opendata_works(KahiBase):
         self.similarity_identity = {}
         if any(source_config.get(key) for key in ("es_index", "es_url", "es_user", "es_password")):
             if self.selection != "nodoi":
-                raise ValueError("snapshot Elasticsearch is supported only for task=nodoi")
+                raise ValueError("snapshot Elasticsearch is supported only for the no-DOI stage (no task)")
             if not source_config.get("es_index") or not source_config.get("es_url"):
                 raise ValueError("snapshot similarity requires es_index and es_url")
             if bool(source_config.get("es_user")) != bool(source_config.get("es_password")):
