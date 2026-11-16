@@ -88,7 +88,7 @@ def main():
             'Kahi_minciencias_opendata_affiliations==0.1.6',
             'Kahi_minciencias_opendata_person==0.1.7-beta',
             'Kahi_minciencias_opendata_works==0.1.13',
-            'Kahi_post_identifier_disputes==0.0.4-alpha',
+            'Kahi_post_identifier_disputes==0.0.5-alpha',
             'Kahi_minciencias_opendata_works_misc == 0.1.0-beta',
             'Kahi_minciencias_opendata_projects==0.1.3-beta',
             'Kahi_minciencias_opendata_patents==0.1.3-beta',
