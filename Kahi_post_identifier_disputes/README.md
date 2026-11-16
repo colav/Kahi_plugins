@@ -25,7 +25,11 @@ every works stage and only the new disputes are queued. Each execution leaves a
 summary in `identifier_disputes_runs`, with how many of the shared identifiers
 are `pending`, `ok`, `not_found` or `error` in the resolver.
 
-Kahi's log never skips this plugin: its result depends on the data loaded so far.
+Kahi's log skips `collect` and a real `apply` once they succeeded with the same
+configuration: they are due again only after restoring the database (the log is
+restored with it) or in a new release. To repeat them on purpose, for instance
+after importing works again, run the workflow with `--log no`. An `apply` with
+`dry_run` always runs.
 
 ## apply
 

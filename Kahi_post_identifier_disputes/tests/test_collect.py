@@ -109,8 +109,11 @@ def test_collect_queues_only_new_disputes(monkeypatch):
     assert resolver.orcid.count_documents({}) == 1
 
 
-def test_the_log_never_skips_the_plugin():
-    assert Plugin.manages_checkpoints({}) is True
+def test_only_a_trial_ignores_the_log():
+    assert Plugin.manages_checkpoints({"task": "apply", "dry_run": True}) is True
+    assert Plugin.manages_checkpoints({"task": "apply", "dry_run": False}) is False
+    assert Plugin.manages_checkpoints({"task": "apply"}) is False
+    assert Plugin.manages_checkpoints({"task": "collect"}) is False
 
 
 def test_unknown_task_is_rejected(monkeypatch):

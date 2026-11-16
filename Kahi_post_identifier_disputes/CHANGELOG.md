@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.5-alpha - 2026-11-15
+
+- Kahi's log now skips `collect` and a real `apply` once they succeeded with the
+  same configuration; they run again after restoring the database, in a new
+  release or with `--log no`. An `apply` with `dry_run` still always runs.
+
 ## 0.0.4-alpha - 2026-11-14
 
 - A person left without any ORCID iD also loses the `updated` entries with

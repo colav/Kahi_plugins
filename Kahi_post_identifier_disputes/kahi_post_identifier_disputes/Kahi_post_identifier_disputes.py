@@ -52,8 +52,15 @@ class Kahi_post_identifier_disputes(KahiBase):
 
     @staticmethod
     def manages_checkpoints(task_config):
-        """Always run: the result depends on the works and people loaded so far."""
-        return True
+        """Only a trial always runs; ``collect`` and a real ``apply`` follow Kahi's log.
+
+        Once they succeed they are skipped while the task keeps the same
+        configuration. They are due again only after restoring the database
+        (the log is restored with it) or in a new release (a new log). To
+        repeat them on purpose, for instance after importing works again, run
+        the workflow with ``--log no``.
+        """
+        return bool(task_config.get("dry_run"))
 
     def __init__(self, config):
         self.config = config
