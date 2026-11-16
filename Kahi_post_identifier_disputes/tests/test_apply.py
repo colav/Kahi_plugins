@@ -78,11 +78,31 @@ def test_article_doi_stays_with_the_matching_title_only():
         ("kept", "title_match"), ("removed", "other_work_doi")]
 
 
-def test_shared_author_with_another_title_is_left_untouched():
+def test_the_owner_of_the_title_takes_the_doi_from_a_work_with_a_shared_author():
     variant = work("variant", "Formación de cúmulos en el vapor producido por láser",
                    "Mario Moalem", source="scienti")
     assert actions(ARTICLE, [OWNER, variant]) == [
-        ("kept", "title_match"), ("ambiguous", "shared_author")]
+        ("kept", "title_match"), ("removed", "title_owner")]
+    # Without an owner nobody can be told apart: the work is left untouched.
+    assert actions(ARTICLE, [variant]) == [("ambiguous", "shared_author")]
+
+
+def test_the_owner_of_the_title_needs_no_author_evidence():
+    no_authors = {**ARTICLE, "authors": [], "author_count": 0}
+    anonymous = work("anonymous", "Otro título completamente distinto")
+    assert actions(no_authors, [OWNER, anonymous]) == [
+        ("kept", "title_match"), ("removed", "title_owner")]
+
+
+def test_a_similar_title_is_left_untouched_even_with_an_owner():
+    registry = {"status": "ok", "type": "journal-article", "author_count": 1,
+                "titles": ["Effect of Core Magnetization on Frequency Response Analysis "
+                           "(FRA) of Power Transformers"], "authors": ["N. Abeywickrama"]}
+    owner = work("owner", registry["titles"][0], "N Abeywickrama")
+    similar = work("similar", "The Core magnetization effect on the transformer frequency "
+                   "response analysis FRA", "Pedro Prieto")
+    assert actions(registry, [owner, similar]) == [
+        ("kept", "title_match"), ("ambiguous", "similar_title")]
 
 
 def test_journal_doi_is_removed_from_its_articles_but_not_from_the_journal_record():
@@ -129,10 +149,27 @@ def test_similar_title_without_common_author_is_left_untouched():
     assert actions(registry, [similar]) == [("ambiguous", "similar_title")]
 
 
-def test_two_works_with_the_registered_title_both_keep_the_doi():
-    twin = work("twin", ARTICLE["titles"][0].upper(), "Otra Persona", source="scienti")
-    assert actions(ARTICLE, [OWNER, twin]) == [
-        ("kept", "title_match"), ("kept", "title_match")]
+def twin(identifier, source, sources=None):
+    item = work(identifier, ARTICLE["titles"][0].upper(), "Otra Persona", source=source)
+    if sources:
+        item["updated"] = [{"source": name, "time": 1} for name in sources]
+    return item
+
+
+def test_two_works_with_the_registered_title_leave_the_doi_to_the_best_source():
+    assert actions(ARTICLE, [twin("a", "scholar"), twin("b", "openalex")]) == [
+        ("removed", "lower_priority_source"), ("kept", "title_match")]
+    order = ["openalex", "ciarp", "scienti", "minciencias", "scholar", "dspace"]
+    for better, worse in zip(order, order[1:]):
+        assert actions(ARTICLE, [twin("z", worse), twin("y", better)])[1] == (
+            "kept", "title_match")
+
+
+def test_a_tie_of_sources_goes_to_more_sources_then_to_the_older_id():
+    richer = twin("z", "scholar", sources=["scholar", "dspace"])
+    assert actions(ARTICLE, [twin("a", "scholar"), richer])[1] == ("kept", "title_match")
+    assert actions(ARTICLE, [twin("b", "dspace"), twin("a", "dspace")])[1] == (
+        "kept", "title_match")
 
 
 def prepare(monkeypatch, works, resolved, dry_run=False):

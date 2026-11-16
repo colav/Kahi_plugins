@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.0.6-alpha - 2026-11-16
+
+- The title decides who owns a shared DOI. When a work has the registered
+  title, a work with another title that was left untouched for lack of author
+  evidence (`shared_author`, `no_author_evidence`) now loses the DOI
+  (`title_owner`). Similar titles (70-89) and DOIs nobody owns stay untouched.
+- Several works with the registered title no longer all keep the DOI: the best
+  source keeps it (`openalex > ciarp > scienti > minciencias > scholar >
+  dspace`, then more sources, then the older id) and the others lose it
+  (`lower_priority_source`). Works are not merged.
+
 ## 0.0.5-alpha - 2026-11-15
 
 - Kahi's log now skips `collect` and a real `apply` once they succeeded with the

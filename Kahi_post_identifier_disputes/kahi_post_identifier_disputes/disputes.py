@@ -19,6 +19,10 @@ TITLE_SIMILAR = 70
 MIN_MAIN_TITLE_CHARS = 12
 MAX_NAMES = 60
 # The DOI identifies a container, never one of the works inside it.
+# The work that keeps a DOI several works own: best source first.
+SOURCE_PRIORITY = ("openalex", "ciarp", "scienti", "minciencias", "scholar", "dspace")
+# Reasons a work is left untouched that a single owner of the title settles.
+SETTLED_BY_OWNER = ("shared_author", "no_author_evidence")
 CONTAINER_TYPES = {
     "journal", "journal-issue", "journal-volume", "proceedings",
     "proceedings-series", "book-series", "book-set",
@@ -98,6 +102,42 @@ def work_authors(work):
             if author.get("full_name")]
 
 
+def work_sources(work):
+    return {item.get("source") for item in work.get("updated") or []} - {"disputes", None}
+
+
+def owner_rank(work):
+    """Sort key of the owners of a DOI: best source, then more sources, then older id."""
+    sources = work_sources(work)
+    best = min((SOURCE_PRIORITY.index(source) for source in sources
+                if source in SOURCE_PRIORITY), default=len(SOURCE_PRIORITY))
+    return best, -len(sources), str(work.get("_id"))
+
+
+def settle_owners(works, decisions):
+    """
+    Leave one owner per DOI once the title says who owns it.
+
+    The best owner (see ``owner_rank``) keeps the DOI; any other work with the
+    registered title loses it (works are never merged). A work with another
+    title that was left untouched for lack of author evidence loses the DOI
+    too: the title is enough. Similar titles (70-89) stay untouched.
+    """
+    owners = [index for index, decision in enumerate(decisions)
+              if decision["action"] == "kept"]
+    if not owners:
+        return decisions
+    winner = min(owners, key=lambda index: owner_rank(works[index]))
+    for index, decision in enumerate(decisions):
+        if index == winner:
+            continue
+        if decision["action"] == "kept":
+            decision.update(action="removed", reason="lower_priority_source")
+        elif decision["action"] == "ambiguous" and decision["reason"] in SETTLED_BY_OWNER:
+            decision.update(action="removed", reason="title_owner")
+    return decisions
+
+
 def registry_titles(registry):
     titles = [title for title in registry.get("titles") or [] if title]
     return titles + [f"{title}: {subtitle}" for title in titles
@@ -154,7 +194,7 @@ def decide(registry, works):
         else:
             action, reason = "removed", "other_work_doi"
         decisions.append({"action": action, "reason": reason, "title_score": score})
-    return decisions
+    return settle_owners(works, decisions)
 
 
 def _registry_names(registry):

@@ -41,8 +41,10 @@ Settles every shared DOI the resolver has already resolved, work by work:
 | the work title matches the registered one (markup ignored, subtitle tolerated) | kept | `title_match` |
 | the DOI is a journal, issue, proceedings, or a book registered without authors | removed | `container_doi` |
 | other title, similarity 70-89 | untouched | `similar_title` |
-| other title, an author in common with the registry | untouched | `shared_author` |
-| other title, no way to compare authors | untouched | `no_author_evidence` |
+| other title, an author in common with the registry, nobody has the registered title | untouched | `shared_author` |
+| other title, no way to compare authors, nobody has the registered title | untouched | `no_author_evidence` |
+| other title (similarity under 70) and another work has the registered title | removed | `title_owner` |
+| registered title, but another work with it comes from a better source | removed | `lower_priority_source` |
 | other title, no author in common | removed | `other_work_doi` |
 
 Authors are compared with the ones the registry lists (with the authors of the
@@ -52,8 +54,11 @@ A work that loses the DOI gets `doi: null`, loses the `external_ids` entry of
 that DOI and gains an `updated` entry with source `disputes`. Every
 decision is upserted in `identifier_disputes` (`_id: "<work>:doi:<doi>"`), with
 the removed values under `removed`, so it can be undone. DOIs still `pending` or
-`error` in the resolver are skipped and counted. Two works that both match the
-title keep the DOI: they are duplicates to merge, which this plugin does not do.
+`error` in the resolver are skipped and counted. When several works have the
+registered title, one keeps the DOI: the one from the best source (`openalex >
+ciarp > scienti > minciencias > scholar > dspace`), then the one with more
+sources, then the older id. The others lose it; they are duplicates this plugin
+does not merge, and the trace tells which work kept the DOI.
 
 A shared ORCID iD is settled with the public names of the record (given names,
 family name, credit name and other names):
