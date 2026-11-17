@@ -70,7 +70,8 @@ def test_colombian_address_gets_codes_names_and_missing_coordinates():
     assert (result[1]["lat"], result[1]["lng"], result[1]["city_code"]) == (6.25184, -75.56359, "05001")
     assert result[2] == address("San Pedro") and result[3] == address("Paris", "", "Francia", "FR")
     assert counts == {"mapped": 2, "unresolved": 1, "country_fixed": 0, "foreign_removed": 0,
-                      "duplicates_removed": 0, "unlocated_removed": 0, "groups_without_city": 0}
+                      "duplicates_removed": 0, "unlocated_removed": 0, "groups_without_city": 0,
+                      "foreign_place_cleared": 0}
 
 
 def test_group_keeps_only_colombian_addresses_once_per_city():
@@ -87,7 +88,8 @@ def test_group_keeps_only_colombian_addresses_once_per_city():
         ("Medellín", "CO", "05001"), ("Pereira", "CO", "66001"), ("Bogotá", "CO", "11001")]
     assert result[0]["lat"] == 6.25184
     assert counts == {"mapped": 4, "unresolved": 0, "country_fixed": 2, "foreign_removed": 1,
-                      "duplicates_removed": 1, "unlocated_removed": 1, "groups_without_city": 0}
+                      "duplicates_removed": 1, "unlocated_removed": 1, "groups_without_city": 0,
+                      "foreign_place_cleared": 0}
 
 
 def test_group_drops_addresses_that_cannot_be_placed_in_colombia():
@@ -123,6 +125,22 @@ def test_institution_with_the_misassigned_country_and_a_colombian_city_is_colomb
     assert result[1] == address("Kabul", "Kabul", "Afganistán", "AF")
     assert result[2] == address("Medellín", "", "", "")   # only groups assume Colombia
     assert counts["country_fixed"] == 1
+
+
+def test_a_foreign_place_under_a_colombian_address_keeps_only_the_country():
+    addresses, counts = normalize_colombian_addresses(
+        [address("Yawan", "Badahsan"),
+         address("Albacete", "Provincia de Albacete", lat=1, lng=2)],
+        DIVIPOLA)
+    assert addresses == [address(""), address("")]
+    assert counts["foreign_place_cleared"] == 2 and counts["unresolved"] == 0
+    # A Colombian department, or none, leaves an unknown city as it is.
+    addresses, counts = normalize_colombian_addresses(
+        [address("Saint Andrews", "San Andres y Providencia"), address("Vereda La Hoya")],
+        DIVIPOLA)
+    assert addresses == [address("Saint Andrews", "San Andres y Providencia"),
+                         address("Vereda La Hoya")]
+    assert counts["foreign_place_cleared"] == 0 and counts["unresolved"] == 2
 
 
 def test_institutions_keep_foreign_and_repeated_addresses():

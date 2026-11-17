@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.13 - 2026-11-16
+
+### Fixed
+
+- A Colombian address of an institution whose city is not a Colombian
+  municipality and whose department is not a Colombian department (places of
+  Afghanistan or Spain such as "Yawan, Badahsan" resolved from Colombian codes)
+  keeps only the country: city, department and coordinates are emptied
+  (`foreign_place_cleared`). Research groups already drop such addresses.
+
 ## 0.1.12 - 2026-11-15
 
 ### Added

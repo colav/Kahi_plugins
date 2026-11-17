@@ -11,6 +11,11 @@ up with foreign cities. A group keeps only Colombian addresses, and each city
 once. Addresses whose city cannot be placed in Colombia (empty, "No disponible",
 a city of another country tagged as Colombian) are dropped when the group has a
 located one; a group with none keeps a single address that says only Colombia.
+
+A Colombian address whose city is not a Colombian municipality and whose
+department is not a Colombian department ("Yawan, Badahsan, Colombia": a place
+of another country resolved from a Colombian code) of an institution keeps only
+the country: its city, department and coordinates are emptied.
 """
 
 import json
@@ -134,7 +139,8 @@ def normalize_colombian_addresses(addresses, divipola, is_group=False):
         ``foreign_removed`` and ``duplicates_removed``.
     """
     counts = {"mapped": 0, "unresolved": 0, "country_fixed": 0, "foreign_removed": 0,
-              "duplicates_removed": 0, "unlocated_removed": 0, "groups_without_city": 0}
+              "duplicates_removed": 0, "unlocated_removed": 0, "groups_without_city": 0,
+              "foreign_place_cleared": 0}
     result = []
     for address in addresses or []:
         if not isinstance(address, dict):
@@ -163,7 +169,14 @@ def normalize_colombian_addresses(addresses, divipola, is_group=False):
                     address["lat"], address["lng"] = found["lat"], found["lng"]
                 counts["mapped"] += 1
             elif not _empty(address.get("city")):
-                counts["unresolved"] += 1
+                state = address.get("state")
+                # Groups drop such addresses below; other affiliations keep the country.
+                if not is_group and not _empty(state) and divipola.state_code(state) is None:
+                    # A place of another country under a Colombian address: keep only the country.
+                    address.update(city="", state="", lat="", lng="")
+                    counts["foreign_place_cleared"] += 1
+                else:
+                    counts["unresolved"] += 1
         result.append(address)
     if is_group:
         unique, seen = [], {}
@@ -203,7 +216,8 @@ def map_affiliation_addresses(collection, dry_run=False, batch_size=1000, divipo
     divipola = divipola or Divipola()
     report = {"documents_scanned": 0, "documents_changed": 0, "mapped": 0, "unresolved": 0,
               "country_fixed": 0, "foreign_removed": 0, "duplicates_removed": 0,
-              "unlocated_removed": 0, "groups_without_city": 0, "unresolved_samples": []}
+              "unlocated_removed": 0, "groups_without_city": 0, "foreign_place_cleared": 0,
+              "unresolved_samples": []}
     operations = []
     cursor = collection.find({"addresses.0": {"$exists": True}},
                              {"addresses": 1, "types.type": 1}).batch_size(batch_size)
