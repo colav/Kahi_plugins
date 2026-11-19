@@ -1,5 +1,40 @@
 # Changelog
 
+## 0.1.14 - 2026-11-18
+
+### Added
+
+- `topic_inference_mode: hf_v2`: topics from the OpenAlex topic classifier v2
+  (Qwen3-8B, `topic-classifier-v2@98df3b9`) served by a Hugging Face Inference
+  Endpoint with a custom handler. The plugin builds the exact model text
+  (`Title / Abstract / Venue`, abstract cut at 4000 characters) and sends
+  `{"inputs": [{"key", "text"}]}` with `Authorization: Bearer` read from the
+  environment variable named by `inference_token_env` (never from the YAML).
+- Persistent prediction cache across releases (`topic_cache_database`,
+  `topic_cache_collection`, default `topics_inference.predictions_v2`): the key
+  is the sha256 of model version, text recipe and text, and the raw top-10 is
+  kept. A text already cached is never sent again (resumed run or next
+  release), texts without a topic included; the rule can change without new
+  inference.
+- Assignment rule `topic_top_k` (3) and `topic_min_score` (0.15): no topic when
+  NOT_CLASSIFIABLE ranks first; otherwise up to `topic_top_k` topics with
+  probability >= `topic_min_score`, the first one as `primary_topic`.
+- `topic_title_only_collections` (default `[projects, patents]`): those
+  collections are sent with the title alone when they have no abstract; works
+  still need one.
+- `topic_jobs` concurrent requests against the single endpoint,
+  `topic_batch_size` texts per request (<= 1024) and `topic_gpu_batch` texts
+  per forward pass. Pending ids are listed first, so no cursor stays open for
+  the whole run. Progress through `ProgressLogger`
+  (`[impactu_postcalculations:topics:<collection>]`) with outcomes
+  `actualizados`, `sin_tema`, `omitidos`, `errores`, `existentes`.
+- 401/403 stop at once, a wrong model version stops at once, 400/413/422 or a
+  repeated 500 split the batch down to the bad text, and network errors or
+  502/503/504 (an endpoint waking up) are retried `topic_request_retries`
+  times.
+
+The `local` and `remote` (BERT v1 service) modes are unchanged.
+
 ## 0.1.13 - 2026-11-16
 
 ### Fixed

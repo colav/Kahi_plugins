@@ -29,6 +29,7 @@ from kahi_impactu_postcalculations.topics import (
     process_topic_batches_pool,
     request_topic_inference_batch,
 )
+from kahi_impactu_postcalculations import topics_v2
 from kahi_impactu_postcalculations.person_persistent_ids import (
     process_person_id,
     recover_person_id_migration, finish_person_id_migration,
@@ -91,8 +92,8 @@ class Kahi_impactu_postcalculations(KahiBase):
         self.topic_inference_mode = topic_config.get(
             "topic_inference_mode", "local"
         )
-        if self.topic_inference_mode not in {"local", "remote"}:
-            raise ValueError("topic_inference_mode must be 'local' or 'remote'")
+        if self.topic_inference_mode not in {"local", "remote", "hf_v2"}:
+            raise ValueError("topic_inference_mode must be 'local', 'remote' or 'hf_v2'")
         self.inference_endpoint = topic_config["inference_endpoint"]
         configured_endpoints = topic_config.get("inference_endpoints")
         self.inference_endpoints = (
@@ -147,6 +148,9 @@ class Kahi_impactu_postcalculations(KahiBase):
         self.topic_abstract_langs = dict(
             topic_config.get("topic_abstract_langs") or {}
         )
+        self.topic_v2 = None
+        if self.topic_inference_mode == "hf_v2":
+            self.topic_v2 = self._topic_v2_config(topic_config)
         self.person_topics_enabled = topic_config.get(
             "person_topics_enabled", False
         )
@@ -351,6 +355,65 @@ class Kahi_impactu_postcalculations(KahiBase):
         subprocess.run(["python3", "-m", "spacy",
                        "download", "es_core_news_sm"])
 
+    def _topic_v2_config(self, topic_config):
+        """Settings of topic_inference_mode: hf_v2 (topic classifier v2 on a Hugging Face endpoint)."""
+        if len(self.inference_endpoints) != 1:
+            raise ValueError("hf_v2 uses one inference_endpoint; scale it with topic_jobs")
+        cfg = {
+            "token_env": topic_config.get("inference_token_env", "HF_TOKEN"),
+            "model_version": topic_config.get("topic_model_version", topics_v2.MODEL_VERSION),
+            "gpu_batch": int(topic_config.get("topic_gpu_batch", 16)),
+            "top_k": int(topic_config.get("topic_top_k", 3)),
+            "min_score": float(topic_config.get("topic_min_score", 0.15)),
+            "cache_database": topic_config.get("topic_cache_database", "topics_inference"),
+            "cache_collection": topic_config.get("topic_cache_collection", "predictions_v2"),
+            "title_only": list(topic_config.get(
+                "topic_title_only_collections", ["projects", "patents"])),
+        }
+        if not cfg["token_env"]:
+            raise ValueError("hf_v2 needs inference_token_env")
+        if not 1 <= cfg["top_k"] <= topics_v2.CACHE_TOP:
+            raise ValueError(f"topic_top_k must be between 1 and {topics_v2.CACHE_TOP}")
+        if not 0 <= cfg["min_score"] <= 1:
+            raise ValueError("topic_min_score must be between zero and one")
+        if cfg["gpu_batch"] < 1 or not 1 <= self.topic_batch_size <= 1024:
+            raise ValueError("hf_v2 needs topic_gpu_batch >= 1 and topic_batch_size in 1..1024")
+        if not set(cfg["title_only"]) <= {"works", "patents", "projects", "events"}:
+            raise ValueError("topic_title_only_collections must list works, patents, projects or events")
+        return cfg
+
+    def _topic_v2_client(self):
+        return topics_v2.EndpointClient(
+            self.inference_endpoint,
+            topics_v2.token_from_env(self.topic_v2["token_env"]),
+            model_version=self.topic_v2["model_version"],
+            gpu_batch=self.topic_v2["gpu_batch"],
+            timeout=self.topic_request_timeout,
+            retries=self.topic_request_retries,
+        )
+
+    def preflight_topics_v2(self, db, openalex_db):
+        """Token, OpenAlex catalog, cache database and one real request (a real pending work if any)."""
+        client = self._topic_v2_client()
+        if openalex_db["topics"].estimated_document_count() == 0:
+            raise RuntimeError("Preflight OpenAlex topic catalog is empty")
+        db.client[self.topic_v2["cache_database"]].command("ping")
+        text = None
+        for doc in db["works"].find(
+            topics_v2.topic_query("works", self.topic_v2["title_only"]), topics_v2.PROJECTION
+        ).limit(20):
+            text = topics_v2.document_text(doc, "works", title_only=self.topic_v2["title_only"])
+            if text:
+                break
+        text = text or topics_v2.work_text("Trampa para captura y monitoreo de Aedes aegypti", "", "")
+        top = client.infer([{"key": "preflight", "text": text}])[0]["top"]
+        if top[0][0] != topics_v2.NOT_CLASSIFIABLE:
+            topic_id = "https://openalex.org/" + top[0][0]
+            if openalex_db["topics"].count_documents({"id": topic_id}, limit=1) == 0:
+                raise RuntimeError(f"Preflight predicted topic is absent from OpenAlex: {topic_id}")
+        print(f"INFO: Preflight topic inference OK (hf_v2): {top[0][0]} p={top[0][1]} "
+              f"model={client.model_version} at {self.inference_endpoint}")
+
     def check_topic_inference_service(self):
         """Fail fast when any configured topic endpoint is unavailable."""
         for endpoint in self.inference_endpoints:
@@ -416,7 +479,9 @@ class Kahi_impactu_postcalculations(KahiBase):
             if not self.es_model("prueba") or not self.en_model("test"):
                 raise RuntimeError("Preflight spaCy models returned no tokens")
 
-        if self.topics_enabled:
+        if self.topics_enabled and getattr(self, "topic_inference_mode", "local") == "hf_v2":
+            self.preflight_topics_v2(db, openalex_db)
+        elif self.topics_enabled:
             self.check_topic_inference_service()
             if openalex_db["topics"].estimated_document_count() == 0:
                 raise RuntimeError("Preflight OpenAlex topic catalog is empty")
@@ -482,6 +547,22 @@ class Kahi_impactu_postcalculations(KahiBase):
         """Infer topics for every configured collection (works by default)."""
         topic_cache = load_openalex_topics(openalex_db["topics"])
         print(f"INFO: Cached {len(topic_cache)} OpenAlex topics")
+        if getattr(self, "topic_inference_mode", "local") == "hf_v2":
+            cfg = self.topic_v2
+            pipeline = topics_v2.TopicsV2(
+                db, db.client[cfg["cache_database"]][cfg["cache_collection"]], topic_cache,
+                self._topic_v2_client(), release=self.database_name,
+                top_k=cfg["top_k"], min_score=cfg["min_score"],
+                batch_size=self.topic_batch_size, jobs=max(1, int(self.topic_jobs)),
+                abstract_langs=self.topic_abstract_langs, title_only=cfg["title_only"],
+            )
+            print(f"INFO: Topic inference mode: hf_v2; endpoint={self.inference_endpoint}; "
+                  f"cache={cfg['cache_database']}.{cfg['cache_collection']}; "
+                  f"top_k={cfg['top_k']} min_score={cfg['min_score']}")
+            for collection_name in self.topic_collections:
+                report = pipeline.process_collection(collection_name)
+                print(f"INFO: Topic inference completed for {collection_name}: {report}")
+            return
         print(
             f"INFO: Topic inference mode: {self.topic_inference_mode}; "
             "endpoint pool: "
