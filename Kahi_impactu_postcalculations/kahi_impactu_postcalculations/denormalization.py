@@ -6,6 +6,43 @@ PARALLEL_SAFE_COLLECTIONS = {"sources", "person", "affiliations"}
 WORKS_DATES_CHUNK_BUCKETS = 16
 WORKS_DATES_CHUNK_WORKERS = 4
 WORKS_DATES_MIN_DOCS_TO_CHUNK = 100000
+# MongoDB rejects documents over 16 MiB. Copying affiliation data into every author can push
+# consortium papers with thousands of authors past it, so those works skip that copy (the data
+# stays in the affiliations collection). Estimate: current size plus bytes per author-affiliation.
+WORKS_MAX_DENORMALIZED_BYTES = 15_000_000
+AUTHOR_AFFILIATION_COPY_BYTES = 700
+
+
+def _estimated_size_after_affiliation_copy():
+    pairs = {
+        "$sum": {
+            "$map": {
+                "input": {"$ifNull": ["$authors", []]},
+                "as": "author",
+                "in": {"$size": {"$ifNull": ["$$author.affiliations", []]}},
+            }
+        }
+    }
+    return {
+        "$add": [
+            {"$bsonSize": "$$ROOT"},
+            {"$multiply": [pairs, AUTHOR_AFFILIATION_COPY_BYTES]},
+        ]
+    }
+
+
+def works_fitting_affiliation_copy(fits=True):
+    """Filter for works whose estimated size after the affiliation copy fits (or not)."""
+    operator = "$lte" if fits else "$gt"
+    return {
+        "authors.affiliations.id": {"$exists": True},
+        "$expr": {
+            operator: [
+                _estimated_size_after_affiliation_copy(),
+                WORKS_MAX_DENORMALIZED_BYTES,
+            ]
+        },
+    }
 
 
 def _build_objectid_ranges(collection, match_query, buckets):
@@ -1057,12 +1094,14 @@ def set_works_authors_affiliations_external_data(collection) -> None:
     collection : pymongo.collection.Collection
         Collection where the works are stored
     """
+    skipped = collection.count_documents(works_fitting_affiliation_copy(fits=False))
+    if skipped:
+        print(
+            "INFO: set_works_authors_affiliations_external_data omitidos="
+            f"{skipped} (documento estimado > {WORKS_MAX_DENORMALIZED_BYTES} bytes)"
+        )
     pipeline = [
-        {
-            "$match": {
-                "authors.affiliations.id": {"$exists": True}
-            }
-        },
+        {"$match": works_fitting_affiliation_copy()},
         {
             "$lookup": {
                 "from": "affiliations",

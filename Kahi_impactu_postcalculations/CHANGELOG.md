@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.15 - 2026-11-19
+
+### Fixed
+
+- Denormalization no longer fails on consortium papers whose author list would grow past
+  MongoDB's 16 MiB document limit when `set_works_authors_affiliations_external_data`
+  copies affiliation `external_ids` and addresses into every author. Works whose estimated
+  size (current size + 700 bytes per author-affiliation) exceeds 15 MB skip that copy and
+  are reported as `omitidos`; the data stays in `affiliations`. In the November 2026
+  release this is one work with 4 785 authors and 22 025 author-affiliation pairs.
+
 ## 0.1.14 - 2026-11-18
 
 ### Added
