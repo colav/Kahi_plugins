@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.51] - 2026-11-19
+
+### Changed
+
+- Pinned Kahi_impactu_postcalculations 0.1.14 (topic inference hf_v2: OpenAlex
+  topic classifier v2 on a Hugging Face endpoint with a cross-release cache).
+
 ## [0.0.50] - 2026-11-16
 
 ### Changed
