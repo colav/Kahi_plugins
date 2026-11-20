@@ -13,6 +13,13 @@ packages that make up the project. Each package has its own change log.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
  
+## [0.0.53] - 2026-11-20
+
+### Changed
+
+- Pinned Kahi_impactu_postcalculations 0.1.16 (news linking stage: news professors linked
+  to person without identity documents).
+
 ## [0.0.52] - 2026-11-19
 
 ### Changed
