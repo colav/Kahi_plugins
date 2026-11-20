@@ -13,6 +13,7 @@ from kahi_impactu_postcalculations.process_one import (
 from kahi_impactu_postcalculations.indexes import create_indexes
 from kahi_impactu_postcalculations.denormalization import denormalize
 from kahi_impactu_postcalculations.affiliation_names import normalize_affiliation_names
+from kahi_impactu_postcalculations.news_linking import NEWS_COLLECTIONS, link_news
 from kahi_impactu_postcalculations.divipola import map_affiliation_addresses
 from kahi_impactu_postcalculations.typing import (
     build_type_lookup,
@@ -202,6 +203,16 @@ class Kahi_impactu_postcalculations(KahiBase):
         )
         self.affiliation_names_enabled = self.config["impactu_postcalculations"].get(
             "affiliation_names_enabled", True
+        )
+        # News linking is opt-in: it must run before the identity documents leave person.
+        self.news_linking_enabled = self.config["impactu_postcalculations"].get(
+            "news_linking_enabled", False
+        )
+        self.news_database_url = self.config["impactu_postcalculations"].get(
+            "news_database_url", self.mongodb_url
+        )
+        self.news_database_name = self.config["impactu_postcalculations"].get(
+            "news_database_name", "impactu_news"
         )
         self.persistent_ids_enabled = self.config["impactu_postcalculations"].get(
             "persistent_ids_enabled", True
@@ -426,7 +437,7 @@ class Kahi_impactu_postcalculations(KahiBase):
                     f"Topic inference service is unavailable at {ping_endpoint}"
                 ) from error
 
-    def preflight(self, db, impactu_db, openalex_db, abstracts_db=None):
+    def preflight(self, db, impactu_db, openalex_db, abstracts_db=None, news_db=None):
         """Validate every enabled phase before the first database mutation."""
         for name, database in (
             (self.database_name, db),
@@ -463,6 +474,15 @@ class Kahi_impactu_postcalculations(KahiBase):
                     "Preflight abstract resolver collection is missing: "
                     f"{self.abstracts_collection_name}"
                 )
+
+        if getattr(self, "news_linking_enabled", False):
+            if news_db is None:
+                raise RuntimeError("Preflight news database is missing")
+            news_db.client.admin.command("ping")
+            missing = sorted(set(NEWS_COLLECTIONS) - set(news_db.list_collection_names()))
+            if missing:
+                raise RuntimeError(f"Preflight missing news collections: {missing}")
+            print(f"INFO: Preflight MongoDB OK: {self.news_database_name}")
 
         # Validate the MongoDB operator used by the type phase.
         list(db["works"].aggregate([
@@ -776,8 +796,12 @@ class Kahi_impactu_postcalculations(KahiBase):
             abstracts_client = MongoClient(self.abstracts_database_url)
             abstracts_db = abstracts_client[self.abstracts_database_name]
 
+        news_db = None
+        if self.news_linking_enabled:
+            news_db = MongoClient(self.news_database_url)[self.news_database_name]
+
         print("INFO: Running post-calculations preflight")
-        self.preflight(db, impactu_db, openalex_db, abstracts_db)
+        self.preflight(db, impactu_db, openalex_db, abstracts_db, news_db)
 
         if self.geographic_normalization_enabled:
             print("INFO: Normalizing affiliation geography to Spanish")
@@ -960,6 +984,16 @@ class Kahi_impactu_postcalculations(KahiBase):
             print("INFO: Denormalization disabled by workflow")
 
         self.maybe_process_networks(db, client, impactu_client)
+
+        if self.news_linking_enabled:
+            print(
+                f"INFO: Linking the news of {self.news_database_name} to person "
+                "without identity documents"
+            )
+            news_report = link_news(news_db, db)
+            print(f"INFO: News linked: {news_report}")
+        else:
+            print("INFO: News linking disabled by workflow")
 
         if not self.top_words_enabled:
             print("INFO: Top words disabled by workflow")

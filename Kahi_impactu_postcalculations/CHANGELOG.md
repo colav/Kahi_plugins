@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.16 - 2026-11-20
+
+### Added
+
+- `news_linking_enabled` (default `false`): copies the ImpactU news collections
+  (`news_media_collection`, `news_professors_collection`, `news_urls_collection`) from
+  `news_database_name` (default `impactu_news`, at `news_database_url`) into the release
+  database and replaces `professor_id`, an identity document number, with `person_id`: the
+  `_id` of the release person holding that document in `external_ids` (Cédula de
+  Ciudadanía, Cédula de Extranjería, Passport, Pasaporte). Professors without a person, or
+  whose document is held by people with different `_id`, keep their name and news with
+  `person_id: null`. The source is only read and the copies are rebuilt on each run. The
+  stage verifies counts, that no identity document is left and that every `person_id`
+  exists, and refuses to run once `person` has no identity documents.
+
 ## 0.1.15 - 2026-11-19
 
 ### Fixed
