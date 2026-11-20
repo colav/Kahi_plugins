@@ -1,4 +1,10 @@
-from kahi_impactu_utils.Utils import doi_processor
+from kahi_impactu_utils.Mongo import insert_only_update
+from kahi_impactu_utils.Work import (
+    work_titles_match,
+    AmbiguousWorkDOI, canonical_work_doi, claim_work_doi, find_work_by_doi,
+    insert_work_by_doi, merge_work_identifiers, prepare_work_doi, skip_work_doi_conflicts,
+)
+from kahi_impactu_utils.Utils import normalize_publication_year
 from time import time
 from kahi_scholar_works.parser import parse_scholar
 from bson import ObjectId
@@ -15,6 +21,10 @@ WORK_UPDATE_PROJECTION = {
     "bibliographic_info": 1,
     "external_urls": 1,
     "citations_count": 1,
+    "doi": 1,
+    "date_published": 1,
+    "year_published": 1,
+    "source": 1,
 }
 
 _DOI_LOCKS = tuple(Lock() for _ in range(1024))
@@ -25,6 +35,62 @@ def _normalized_title(title):
     if not isinstance(title, str):
         return ""
     return " ".join(unicodedata.normalize("NFKC", title).casefold().split())
+
+
+def _preferred_source_name(source):
+    names = source.get("names") or []
+    if not names:
+        return ""
+    name = names[0].get("name", "")
+    for language in ("es", "en"):
+        candidate = next((
+            item.get("name", "") for item in names
+            if item.get("lang") == language and item.get("name")
+        ), None)
+        if candidate:
+            return candidate
+    return name
+
+
+def _resolve_source(collection, source):
+    if not isinstance(source, dict):
+        return None
+    sources = collection.database["sources"]
+    for external_id in source.get("external_ids") or []:
+        identifier = external_id.get("id")
+        if identifier in (None, ""):
+            continue
+        source_db = sources.find_one({"external_ids.id": identifier})
+        if source_db:
+            return {
+                "id": source_db["_id"],
+                "name": _preferred_source_name(source_db),
+            }
+    return None
+
+
+def merge_missing_core_metadata(colav_reg, entry, collection):
+    """Fill publication metadata only when the stored value is empty."""
+    changed = {}
+    year = normalize_publication_year(colav_reg.get("year_published"))
+    if year is None:
+        year = normalize_publication_year(entry.get("year_published"))
+    if colav_reg.get("year_published") != year:
+        colav_reg["year_published"] = year
+        changed["year_published"] = year
+    for field in ("doi", "date_published"):
+        current = colav_reg.get(field)
+        incoming = entry.get(field)
+        if current in (None, "", 0) and incoming not in (None, "", 0):
+            colav_reg[field] = incoming
+            changed[field] = incoming
+    current_source = colav_reg.get("source") or {}
+    if not isinstance(current_source.get("id"), ObjectId):
+        source = _resolve_source(collection, entry.get("source"))
+        if source:
+            colav_reg["source"] = source
+            changed["source"] = source
+    return changed
 
 
 def _append_missing(target, values):
@@ -121,8 +187,6 @@ def process_one_update(scholar_reg, colav_reg, collection, empty_work, verbose=0
     needs_abstract = not abstracts and bool(scholar_reg.get("abstract"))
 
     if already_updated:
-        if not needs_abstract:
-            return None
         entry = parse_scholar(
             scholar_reg,
             empty_work.copy(),
@@ -131,10 +195,21 @@ def process_one_update(scholar_reg, colav_reg, collection, empty_work, verbose=0
             include_abstract=True,
             include_authors=False,
         )
+        doi = prepare_work_doi(entry, "scholar")
+        if doi:
+            claim_work_doi(collection, colav_reg, doi)
+        # Another Scholar record can contribute a different CID to this DOI.
+        merge_work_identifiers(collection, colav_reg, entry)
+        core_updates = merge_missing_core_metadata(
+            colav_reg, entry, collection)
         _append_missing(abstracts, entry["abstracts"])
-        collection.update_one(
-            {"_id": colav_reg["_id"]}, {"$set": {"abstracts": abstracts}}
-        )
+        fields = dict(core_updates)
+        if needs_abstract:
+            fields["abstracts"] = abstracts
+        if fields:
+            collection.update_one(
+                {"_id": colav_reg["_id"]}, {"$set": fields}
+            )
         return None
 
     existing_titles = {
@@ -150,6 +225,11 @@ def process_one_update(scholar_reg, colav_reg, collection, empty_work, verbose=0
         include_abstract=needs_abstract,
         include_authors=False,
     )
+    doi = prepare_work_doi(entry, "scholar")
+    if doi:
+        claim_work_doi(collection, colav_reg, doi)
+    core_updates = merge_missing_core_metadata(
+        colav_reg, entry, collection)
     updated.append({"source": "scholar", "time": int(time())})
     # titles
     _append_missing(colav_reg["titles"], entry["titles"])
@@ -205,23 +285,26 @@ def process_one_update(scholar_reg, colav_reg, collection, empty_work, verbose=0
     citations_count = colav_reg.setdefault("citations_count", [])
     _append_missing(citations_count, entry["citations_count"])
 
+    fields = {
+        "updated": updated,
+        "titles": colav_reg["titles"],
+        "abstracts": abstracts,
+        "external_ids": external_ids,
+        "types": types,
+        "bibliographic_info": bibliographic_info,
+        "external_urls": external_urls,
+        "citations_count": citations_count,
+    }
+    fields.update(core_updates)
+    additions = {field: {"$each": fields.pop(field)}
+                 for field in ("updated", "titles", "external_ids")}
     collection.update_one(
         {"_id": colav_reg["_id"]},
-        {
-            "$set": {
-                "updated": updated,
-                "titles": colav_reg["titles"],
-                "abstracts": abstracts,
-                "external_ids": external_ids,
-                "types": types,
-                "bibliographic_info": bibliographic_info,
-                "external_urls": external_urls,
-                "citations_count": citations_count,
-            }
-        },
+        {"$set": fields, "$addToSet": additions},
     )
 
 
+@skip_work_doi_conflicts
 def process_one_insert(scholar_reg, db, collection, empty_work, es_handler,
                        verbose=0, es_semaphore=None):
     """
@@ -251,7 +334,7 @@ def process_one_insert(scholar_reg, db, collection, empty_work, es_handler,
     """
     entry = parse_scholar(scholar_reg, empty_work.copy(), verbose=verbose)
     if not entry.get("titles") or not entry["titles"][0].get("title", "").strip():
-        return
+        return "omitidos"
     # link
     source_db = None
     if "external_ids" in entry["source"].keys():
@@ -370,22 +453,46 @@ def process_one_insert(scholar_reg, db, collection, empty_work, es_handler,
 
     entry["author_count"] = len(entry["authors"])
     cid = scholar_cid(entry)
-    if cid:
+    doi = prepare_work_doi(entry, "scholar")
+    outcome = "nuevos"
+    if doi:
+        existing = (collection.find_one(scholar_cid_query(cid))
+                    if cid else None)
+        if existing and not work_titles_match(entry.get("titles"), existing.get("titles")):
+            existing = None
+        owner = find_work_by_doi(collection, doi, titles=entry.get("titles"))
+        if existing and owner and existing["_id"] != owner["_id"]:
+            raise AmbiguousWorkDOI(
+                f"Scholar CID {cid} and DOI {doi} identify different works")
+        existing = existing or owner
+        if existing:
+            inserted_id = None
+        else:
+            inserted_id, existing = insert_work_by_doi(collection, entry)
+        if existing:
+            process_one_update(scholar_reg, existing, collection,
+                               empty_work, verbose)
+            inserted_id = existing["_id"]
+            outcome = "actualizados"
+    elif cid:
         with _cid_lock(cid):
             response = collection.update_one(
                 scholar_cid_query(cid),
-                {"$setOnInsert": entry},
+                insert_only_update(entry),
                 upsert=True)
             inserted_id = response.upserted_id
         if inserted_id is None:
+            outcome = "existentes"
             existing = collection.find_one(scholar_cid_query(cid), {"_id": 1})
             inserted_id = existing.get("_id") if existing else None
     else:
         response = collection.insert_one(entry)
         inserted_id = response.inserted_id
     ensure_es_work(entry, inserted_id, es_handler, es_semaphore)
+    return outcome
 
 
+@skip_work_doi_conflicts
 def process_one(
     scholar_reg, db, collection, empty_work, similarity, es_handler,
     verbose=0, es_semaphore=None
@@ -411,26 +518,30 @@ def process_one(
     """
     title = scholar_reg.get("title")
     if not isinstance(title, str) or not title.strip():
-        return
+        return "omitidos"
 
-    doi = None
-    # register has doi
-    if scholar_reg.get("doi"):
-        if isinstance(scholar_reg["doi"], str):
-            doi = doi_processor(scholar_reg["doi"])
+    doi = canonical_work_doi(scholar_reg.get("doi"))
     if doi:
-        # Records with the same DOI can be scheduled concurrently. Serialize
-        # each DOI so that the lookup/insert pair cannot create duplicates.
+        # The local lock reduces contention; the unique MongoDB DOI key
+        # provides protection across processes as well.
         with _doi_lock(doi):
-            colav_reg = collection.find_one(
-                {"external_ids.id": doi}, WORK_UPDATE_PROJECTION
-            )
+            colav_reg = find_work_by_doi(collection, doi, WORK_UPDATE_PROJECTION, titles=[{"title": title}])
+            cid = scholar_reg.get("cid")
+            by_cid = (collection.find_one(scholar_cid_query(cid), WORK_UPDATE_PROJECTION)
+                      if cid else None)
+            if by_cid and not work_titles_match([{"title": title}], by_cid.get("titles")):
+                by_cid = None
+            if colav_reg and by_cid and colav_reg["_id"] != by_cid["_id"]:
+                raise AmbiguousWorkDOI(
+                    f"Scholar CID {cid} and DOI {doi} identify different works")
+            colav_reg = colav_reg or by_cid
             if colav_reg:  # update
                 process_one_update(
                     scholar_reg, colav_reg, collection, empty_work, verbose=verbose
                 )
+                return "actualizados"
             else:  # insert a new register
-                process_one_insert(
+                return process_one_insert(
                     scholar_reg,
                     db,
                     collection,
@@ -445,10 +556,14 @@ def process_one(
                 scholar_reg, empty_work.copy(), verbose=verbose)
             cid = scholar_cid(entry)
             existing = (collection.find_one(
-                scholar_cid_query(cid), {"_id": 1}) if cid else None)
+                scholar_cid_query(cid), WORK_UPDATE_PROJECTION
+            ) if cid else None)
             if existing:
+                process_one_update(
+                    scholar_reg, existing, collection, empty_work,
+                    verbose=verbose)
                 ensure_es_work(entry, existing["_id"], es_handler, es_semaphore)
-                return
+                return "actualizados"
             work = build_es_work(entry)
             response = run_es_operation(
                 es_semaphore, es_handler.search_work,
@@ -470,6 +585,7 @@ def process_one(
                     process_one_update(
                         scholar_reg, colav_reg, collection, empty_work, verbose=0
                     )
+                    return "actualizados"
                 else:
                     if verbose > 4:
                         print(
@@ -481,10 +597,11 @@ def process_one(
             else:  # insert new register
                 if verbose > 4:
                     print("INFO: found no register in elasticsearch")
-                process_one_insert(
+                return process_one_insert(
                     scholar_reg, db, collection, empty_work, es_handler,
                     verbose=0, es_semaphore=es_semaphore,
                 )
         else:
             if verbose > 4:
                 print("No elasticsearch index provided")
+    return "omitidos"

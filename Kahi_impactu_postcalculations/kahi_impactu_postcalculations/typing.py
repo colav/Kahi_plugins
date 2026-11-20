@@ -1,4 +1,35 @@
 
+import re
+import unicodedata
+
+
+SNAPSHOT_TYPE_SOURCES = {"cvlac", "gruplac"}
+
+
+def _snapshot_key(value):
+    value = unicodedata.normalize("NFKD", str(value or ""))
+    value = value.encode("ascii", "ignore").decode().casefold()
+    return " ".join(re.findall(r"[a-z0-9]+", value))
+
+
+def _snapshot_aliases(value):
+    """Derive display/leaf aliases from catalog hierarchy labels."""
+    value = str(value or "").strip()
+    if not value:
+        return ()
+    aliases = {value}
+    parts = [
+        item.strip()
+        for item in re.split(r"(?:^|\s)(?:[0-9][0-9A-Z]*|[A-Z][0-9]+|A):\s*", value)
+        if item.strip()
+    ]
+    if len(parts) > 1:
+        aliases.update((" - ".join(parts), parts[-1]))
+    if ": " in value:
+        aliases.add(value.rsplit(": ", 1)[-1])
+    return aliases
+
+
 def get_scienti_string(work):
     """
     Get the scienti string of the work types
@@ -33,6 +64,29 @@ def build_type_lookup(types, source):
         records = types.to_dict("records")
     else:
         records = types
+
+    if source in SNAPSHOT_TYPE_SOURCES:
+        candidates = {}
+        for record in records:
+            if record.get("entity", record.get("Entidad", "works")) != "works":
+                continue
+            type_name = record.get("type", record.get("Tipo"))
+            impactu_type = record.get("type_impactu", record.get("Tipo ImpactU"))
+            if not isinstance(type_name, str) or not impactu_type:
+                continue
+            for alias in _snapshot_aliases(type_name):
+                candidates.setdefault(_snapshot_key(alias), set()).add(impactu_type)
+        return {
+            "by_type": {
+                alias: tuple(values)
+                for alias, values in candidates.items()
+                if len(values) == 1
+            },
+            "impactu_types": frozenset(
+                value for values in candidates.values() for value in values
+            ),
+            "normalized_keys": True,
+        }
 
     by_type = {}
     impactu_types = set()
@@ -216,9 +270,31 @@ def process_others(source):
     return process_source
 
 
+def process_snapshot_source(source):
+    """Classify audited CvLAC/GrupLAC labels only when the alias is unique."""
+    def process_source(work, types, verbose=False):
+        matches = set()
+        for item in work.get("types", []):
+            if item.get("source") != source or not item.get("type"):
+                continue
+            matches.update(types["by_type"].get(_snapshot_key(item["type"]), ()))
+        if len(matches) == 1:
+            return {
+                "provenance": "minciencias",
+                "source": "impactu",
+                "type": matches.pop(),
+            }
+        if len(matches) > 1 and verbose:
+            print(f"WARNING: ambiguous {source} ImpactU types: {sorted(matches)}")
+        return {}
+    return process_source
+
+
 functors = {}
 functors["minciencias"] = process_minciencias
 functors["scienti"] = process_scienti
+functors["cvlac"] = process_snapshot_source("cvlac")
+functors["gruplac"] = process_snapshot_source("gruplac")
 functors["ciarp"] = process_others("ciarp")
 functors["coar"] = process_others("coar")
 functors["redcol"] = process_others("redcol")
@@ -265,3 +341,11 @@ def process_type(db, work, source, types, verbose=False):
         )
     elif verbose:
         print(f"WARNING: impactu type not found for {work}")
+
+
+def clear_impactu_types(db):
+    """Remove computed ImpactU types before rebuilding them from the catalog."""
+    return db["works"].update_many(
+        {"types.source": "impactu"},
+        {"$pull": {"types": {"source": "impactu"}}},
+    )

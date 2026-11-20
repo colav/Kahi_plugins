@@ -6,6 +6,12 @@ Kahi will use this plugin to insert or update the affiliations information from 
 # Description
 Plugin that reads staff information from MongoDB to update or insert the faculties and departments in CoLav's database format.
 
+Academic-unit identities are deterministic and institution-scoped. Faculties
+use `institution_id + código_unidad_académica`; departments additionally use
+`código_subunidad_académica`. If a code is absent, a stable normalized-name
+fingerprint is used instead, preventing different unnamed-code units from
+colliding.
+
 # Installation
 You could download the repository from github. Go into the folder where the setup.py is located and run
 ```shell
@@ -42,4 +48,3 @@ BSD-3-Clause License
 
 # Links
 http://colav.udea.edu.co/
-

@@ -6,6 +6,17 @@ Kahi will use this plugin to insert or update the people information from instit
 # Description
 Plugin that reads staff and CIARP information from MongoDB to update or insert the information of the people around university production in CoLav's database format.
 
+The parent institution is always added from `institution_id`. Faculties and
+departments are resolved exclusively through the deterministic identifiers
+created by `staff_affiliations`, while also validating their type and direct
+relation to the parent institution; names are descriptive metadata, not
+identity keys.
+
+Unit and subunit names/codes are optional, including missing Excel columns.
+People without units still receive the parent institution. Every parent,
+faculty and department affiliation stores its actual covered `years` and
+date bounds; multiple source periods are aggregated without filling gaps.
+
 # Installation
 You could download the repository from github. Go into the folder where the setup.py is located and run
 ```shell
@@ -43,4 +54,3 @@ BSD-3-Clause License
 
 # Links
 http://colav.udea.edu.co/
-

@@ -1,4 +1,5 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from elasticsearch import Elasticsearch, VERSION as ES_VERSION
 from pymongo import MongoClient
 from math import isnan
@@ -55,6 +56,10 @@ class Kahi_elasticsearch_works(KahiBase):
         ) else 0
         self.bulk_size = config["elasticsearch_works"]["bulk_size"] if "bulk_size" in config["elasticsearch_works"].keys(
         ) else 100
+        # Sin progress_interval se usa el estandar de kahi.progress (5%, minimo 1000).
+        progress_interval = config["elasticsearch_works"].get("progress_interval")
+        self.progress_interval = (
+            max(1, int(progress_interval)) if progress_interval is not None else None)
 
         self.inserted_ids = []
 
@@ -63,6 +68,7 @@ class Kahi_elasticsearch_works(KahiBase):
         paper_list = self.collection.find(
             {}, {"titles": 1, "source": 1, "year_published": 1, "bibliographic_info": 1, "authors.full_name": 1})
         paper_list_count = self.collection.count_documents({})
+        progress = self._progress("bulk_insert", paper_list_count)
         for i, reg in enumerate(paper_list):
             work = {
                 "title": "",
@@ -77,8 +83,12 @@ class Kahi_elasticsearch_works(KahiBase):
 
             }
             if "titles" not in reg.keys():
+                if progress:
+                    progress.step("omitidos")
                 continue
             if not reg["titles"]:
+                if progress:
+                    progress.step("omitidos")
                 continue
             work["title"] = reg["titles"][0]["title"]
             source = reg.get("source") or {}
@@ -113,30 +123,54 @@ class Kahi_elasticsearch_works(KahiBase):
             }
             es_entries.append(entry)
             if len(es_entries) == self.bulk_size or paper_list_count <= self.bulk_size or i + 1 == paper_list_count:
-                try:
-                    self.es_client.insert_bulk(es_entries)
-                except Exception as e:
-                    print(e)
-                    print(es_entries)
-                    raise
+                self._send_bulk(es_entries, progress)
                 es_entries = []
                 if self.verbose > 4:
                     print(f"""{i + 1} entries inserted""")
+        # The last batch is pending when the final records have no title or the
+        # collection changed while iterating; send it instead of dropping it.
+        if es_entries:
+            self._send_bulk(es_entries, progress)
+        if progress:
+            progress.done()
+
+    def _send_bulk(self, es_entries, progress=None):
+        try:
+            self.es_client.insert_bulk(es_entries)
+        except Exception as e:
+            print(e)
+            print(es_entries)
+            raise
+        if progress:
+            progress.step("nuevos", n=len(es_entries))
+
+    def _progress(self, task, total=None):
+        """ProgressLogger de la tarea; con verbose 0 no se reporta avance.
+
+        En bulk_insert un registro cuenta como terminado al enviarse su lote a
+        Elasticsearch (nuevos) o al descartarse por no tener titulo (omitidos).
+        """
+        if self.verbose <= 0:
+            return None
+        return ProgressLogger(
+            "elasticsearch_works:{}".format(task),
+            total=total,
+            every=self.progress_interval,
+        ).start("index={}".format(self.index))
 
     def delete(self):
+        progress = self._progress("delete")
         self.es_client.indices.delete(
             index=self.index,
             ignore_unavailable=True
         )
+        if progress:
+            progress.done()
 
     def run(self):
         if self.task == "bulk_insert":
-            if self.verbose > 0:
-                print(f"""Bulk inserting index {self.index}""")
             self.bulk_insert()
         elif self.task == "delete":
-            if self.verbose > 0:
-                print(f"""Deleting index {self.index}""")
             self.delete()
         else:
             raise Exception("Please specify a task to execute")

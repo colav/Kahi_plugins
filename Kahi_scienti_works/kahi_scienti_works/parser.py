@@ -1,8 +1,8 @@
-from kahi_impactu_utils.Utils import lang_poll, doi_processor, check_date_format
+from kahi_impactu_utils.Utils import lang_poll, doi_processor, check_date_format, normalize_publication_year
 from time import time
 import re
 from copy import deepcopy
-from kahi_impactu_utils.String import text_to_inverted_index
+from kahi_impactu_utils.String import text_to_inverted_index, normalize_dashes
 
 
 def parse_scienti(reg, empty_work, doi=None, verbose=0):
@@ -77,10 +77,10 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
         month = reg["NRO_MES_PRESENTA"]
         if len(str(month)) == 1:
             month = f'0{month}'
-    if year and month:
+    entry["year_published"] = normalize_publication_year(year)
+    if entry["year_published"] is not None and month:
         entry["date_published"] = check_date_format(
-            f'{month}-{year}')
-        entry["year_published"] = int(year)
+            f'{month}-{entry["year_published"]}')
     if "SGL_CATEGORIA" in reg.keys() and reg["SGL_CATEGORIA"]:
         ranking_reg = {
             "provenance": "scienti",
@@ -195,10 +195,10 @@ def parse_scienti(reg, empty_work, doi=None, verbose=0):
     # external_ids are added to the author entry for searching purposes
     author = reg["author"][0]
     author_entry = {
-        "full_name": re.sub(
+        "full_name": normalize_dashes(re.sub(
             r'\s+',
             ' ',
-            author["TXT_TOTAL_NAMES"].strip()),
+            author["TXT_TOTAL_NAMES"].strip())) or "",
         "affiliations": affiliations,
         "external_ids": [
             {

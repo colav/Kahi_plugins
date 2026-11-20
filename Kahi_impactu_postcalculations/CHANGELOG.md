@@ -1,5 +1,200 @@
 # Changelog
 
+## 0.1.16 - 2026-11-20
+
+### Added
+
+- `news_linking_enabled` (default `false`): copies the ImpactU news collections
+  (`news_media_collection`, `news_professors_collection`, `news_urls_collection`) from
+  `news_database_name` (default `impactu_news`, at `news_database_url`) into the release
+  database and replaces `professor_id`, an identity document number, with `person_id`: the
+  `_id` of the release person holding that document in `external_ids` (Cédula de
+  Ciudadanía, Cédula de Extranjería, Passport, Pasaporte). Professors without a person, or
+  whose document is held by people with different `_id`, keep their name and news with
+  `person_id: null`. The source is only read and the copies are rebuilt on each run. The
+  stage verifies counts, that no identity document is left and that every `person_id`
+  exists, and refuses to run once `person` has no identity documents.
+
+## 0.1.15 - 2026-11-19
+
+### Fixed
+
+- Denormalization no longer fails on consortium papers whose author list would grow past
+  MongoDB's 16 MiB document limit when `set_works_authors_affiliations_external_data`
+  copies affiliation `external_ids` and addresses into every author. Works whose estimated
+  size (current size + 700 bytes per author-affiliation) exceeds 15 MB skip that copy and
+  are reported as `omitidos`; the data stays in `affiliations`. In the November 2026
+  release this is one work with 4 785 authors and 22 025 author-affiliation pairs.
+
+## 0.1.14 - 2026-11-18
+
+### Added
+
+- `topic_inference_mode: hf_v2`: topics from the OpenAlex topic classifier v2
+  (Qwen3-8B, `topic-classifier-v2@98df3b9`) served by a Hugging Face Inference
+  Endpoint with a custom handler. The plugin builds the exact model text
+  (`Title / Abstract / Venue`, abstract cut at 4000 characters) and sends
+  `{"inputs": [{"key", "text"}]}` with `Authorization: Bearer` read from the
+  environment variable named by `inference_token_env` (never from the YAML).
+- Persistent prediction cache across releases (`topic_cache_database`,
+  `topic_cache_collection`, default `topics_inference.predictions_v2`): the key
+  is the sha256 of model version, text recipe and text, and the raw top-10 is
+  kept. A text already cached is never sent again (resumed run or next
+  release), texts without a topic included; the rule can change without new
+  inference.
+- Assignment rule `topic_top_k` (3) and `topic_min_score` (0.15): no topic when
+  NOT_CLASSIFIABLE ranks first; otherwise up to `topic_top_k` topics with
+  probability >= `topic_min_score`, the first one as `primary_topic`.
+- `topic_title_only_collections` (default `[projects, patents]`): those
+  collections are sent with the title alone when they have no abstract; works
+  still need one.
+- `topic_jobs` concurrent requests against the single endpoint,
+  `topic_batch_size` texts per request (<= 1024) and `topic_gpu_batch` texts
+  per forward pass. Pending ids are listed first, so no cursor stays open for
+  the whole run. Progress through `ProgressLogger`
+  (`[impactu_postcalculations:topics:<collection>]`) with outcomes
+  `actualizados`, `sin_tema`, `omitidos`, `errores`, `existentes`.
+- 401/403 stop at once, a wrong model version stops at once, 400/413/422 or a
+  repeated 500 split the batch down to the bad text, and network errors or
+  502/503/504 (an endpoint waking up) are retried `topic_request_retries`
+  times.
+
+The `local` and `remote` (BERT v1 service) modes are unchanged.
+
+## 0.1.13 - 2026-11-16
+
+### Fixed
+
+- A Colombian address of an institution whose city is not a Colombian
+  municipality and whose department is not a Colombian department (places of
+  Afghanistan or Spain such as "Yawan, Badahsan" resolved from Colombian codes)
+  keeps only the country: city, department and coordinates are emptied
+  (`foreign_place_cleared`). Research groups already drop such addresses.
+
+## 0.1.12 - 2026-11-15
+
+### Added
+
+- Topics for projects (`topic_collections: [works, patents, projects]`). A
+  project carries its abstract as plain text, so the payload is built from the
+  title plus the `abstract`, else `topic_text`, else nothing: every project
+  with a title is sent, whatever the length of its text. Works and patents
+  still need an abstract. Requires Kahi 0.1.7 for the project template.
+
+## 0.1.11 - 2026-11-15
+
+### Added
+
+- Colombian addresses are mapped to DIVIPOLA (DANE, 1 122 municipalities,
+  packaged in `data/divipola_municipios.json`) right after the geographic
+  normalization and under its switches: `city` gets the common name ("Cali",
+  "Bogotá", "Cartagena", "Cúcuta"; the official name otherwise), `state` the
+  department, plus the new `city_code` and `state_code`; empty `lat`/`lng` take
+  the coordinates of the municipality. A department that contradicts a
+  municipality with a unique name is corrected; "Armenia", "Rionegro" and "Florencia"
+  without a matching department are Armenia (Quindío), Rionegro (Antioquia) and
+  Florencia (Caquetá); other ambiguous names are left and reported.
+- Research groups keep only Colombian addresses, one per city: foreign
+  addresses inherited from related institutions are removed, and an address
+  without a real country (empty, or the misassigned "Afganistán") whose city is
+  a Colombian municipality becomes Colombian.
+- A group address whose city cannot be placed in Colombia (empty, "No
+  disponible", a city of another country tagged as Colombian) is dropped when
+  the group has a located address; a group with none keeps one address that
+  says only Colombia, with the empty values of the schema.
+- Any affiliation with the misassigned country "Afganistán" and a city that is
+  a Colombian municipality becomes Colombian (e.g. "Armenia, Afganistán").
+
+### Changed
+
+- The city alias `Cartagena -> Cartagena de Indias` is gone: the common name is
+  kept.
+
+## 0.1.10 - 2026-11-15
+
+### Added
+
+- Stage `normalize_affiliation_names` (before denormalization, switch
+  `affiliation_names_enabled`, default true): the affiliation name copied in
+  `affiliations.relations`, `person.affiliations` and the author affiliations
+  of works, patents, projects and events becomes the Spanish name of the
+  affiliation: ROR `es`, else SNIES `es`, else MinCiencias or staff `es` for
+  institutions. Wikidata and ScienTI names are not used; groups, departments
+  and faculties keep their names; with no Spanish name the copy is left as it
+  is (colav/impactu#706).
+
+## 0.1.9 - 2026-11-14
+
+### Added
+
+- Person stage `set_person_age`, last of the person stages: `age` is the
+  completed years at the run date (`None` outside 15-100 years or when the
+  value is not a date) and `birthdate` is cleared to `-1`, so the published
+  profile carries the age but not the birth date. Requires Kahi 0.1.6.
+- Tests of the h-index, of the h5 window (the five complete years before the
+  run) and of the age calculation.
+
+## 0.1.8 - 2026-11-14
+
+### Added
+
+- Tests that fail if a denormalization stage rebuilds `authors` without the
+  original author fields, or if author reconciliation drops the `type`
+  (advisor, author) of thesis authors. No behaviour change.
+
+## 0.1.7 - 2026-11-14
+
+### Added
+
+- Topic inference for other collections: `topic_collections` (default
+  `[works]`, e.g. `[works, patents]`) and `topic_abstract_langs` (preferred
+  abstract languages per collection, applied in memory). Person topics keep
+  using works only.
+
+### Changed
+
+- Topic inference moved to `process_topics(db, openalex_db)`.
+
+## 0.1.6 - 2026-11-12
+
+### Changed
+
+- Remove the `_id_migration_complete` flag (and its index) from `person` once
+  every persistent id migration is complete; `_id_old` is kept.
+
+## 0.1.5 - 2026-11-06
+
+### Added
+
+- Enrich DOI-bearing works without abstracts from the local abstract resolver,
+  requiring a fuzzy title match and storing only the inverted-index abstract.
+- Record query, matching, rejection and extraction totals for every abstract
+  enrichment execution in a dedicated resolver audit collection.
+- Normalize affiliation country, Colombian department and curated city names
+  to Spanish using CLDR and a bundled, versioned alias catalog.
+- Support audit-only geographic normalization and report unresolved values.
+- Add a fail-fast preflight for every enabled post-calculation phase, including
+  a real topic-model inference validated against the OpenAlex topic catalog.
+- Include works whose `primary_topic` is `null` in topic inference.
+- Recover missing OpenAlex abstracts and native topics before inference.
+- Allow resumed runs to skip completed persistent-ID and type phases.
+- Distribute topic batches across isolated model endpoints with one exclusive
+  sequential worker per endpoint.
+- Recursively split failed topic batches, isolate irrecoverable works and keep
+  processing healthy records.
+- Abort safely on remote endpoint/network failures instead of treating them as
+  invalid works; expose local/remote inference mode in workflow configuration.
+- Aggregate up to five work topics for people identified by `COD_RH`, ORCID or
+  a typed identity document, prioritizing repeated topics and using
+  high-confidence single-work topics to fill remaining slots. The phase has
+  auditable staging, dry-run support, parallel batches and idempotent
+  application to `person.primary_topic` and `person.topics`.
+
+- Refuse persistent-id migration from empty ids; add a repair script for
+  affected migrations and an optional blank-id author reconciliation phase.
+- Classify CvLAC/GrupLAC snapshot types through unique ImpactU catalog aliases.
+- Add a targeted works denormalization script.
+
 ## 0.1.4 - 2026-09-09
 
 ### Added

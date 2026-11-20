@@ -1,12 +1,15 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import MongoClient, TEXT
 from time import time
 from joblib import Parallel, delayed
 from pandas import DataFrame, read_excel
 from kahi_ciarp_works.process_one import process_one
 from kahi_impactu_utils.Utils import doi_processor
-from kahi_impactu_utils.Mapping import ciarp_mapping
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
+from kahi_impactu_utils.Mapping import canonical_ror_url, ciarp_mapping
 from mohan.Similarity import Similarity
+from kahi_impactu_utils.Elastic import size_similarity_pool
 from pathlib import Path
 from threading import BoundedSemaphore
 
@@ -46,6 +49,7 @@ class Kahi_ciarp_works(KahiBase):
 
         self.db = self.client[config["database_name"]]
         self.collection = self.db["works"]
+        ensure_work_doi_indexes(self.collection)
 
         self.collection.create_index("external_ids.id")
         self.collection.create_index("year_published")
@@ -107,6 +111,9 @@ class Kahi_ciarp_works(KahiBase):
                 raise ValueError(
                     "ciarp_works.es_max_concurrency must be greater than zero")
             self.es_semaphore = BoundedSemaphore(es_max_concurrency)
+            # Mohan's client pools 10 connections; match it to the semaphore so
+            # concurrent searches never fail with EmptyPoolError.
+            size_similarity_pool(self.es_handler, es_url, es_auth, es_max_concurrency)
 
     def _source_collection(self, database):
         source_url = database.get("database_url", self.mongodb_url)
@@ -197,7 +204,7 @@ class Kahi_ciarp_works(KahiBase):
         """
         for source_institution_id in self._institution_ids():
             database = self._config_for_institution(source_institution_id)
-            institution_id = f"https: //ror.org/{source_institution_id}"
+            institution_id = canonical_ror_url(source_institution_id)
             self.aff_reg = self.db["affiliations"].find_one(
                 {"external_ids.id": institution_id})
             if not self.aff_reg:
@@ -262,13 +269,19 @@ class Kahi_ciarp_works(KahiBase):
                         papers.append(par)
                 self.filtered_ciarp = papers
 
+            progress = ProgressLogger(
+                "ciarp_works:{}/{}".format(
+                    "doi" if self.task == "doi" else "sin_doi",
+                    institution_id.rstrip("/").rsplit("/", 1)[-1]),
+                total=len(self.filtered_ciarp),
+            ).start("institution={} num_jobs={}".format(institution_id, self.n_jobs))
             with MongoClient(self.mongodb_url) as client:
                 db = client[self.config["database_name"]]
                 collection = db["works"]
 
                 results = Parallel(
                     n_jobs=self.n_jobs,
-                    verbose=self.verbose,
+                    verbose=0,
                     backend="threading",
                     return_as="generator_unordered")(
                     delayed(process_one)(
@@ -283,8 +296,9 @@ class Kahi_ciarp_works(KahiBase):
                         es_semaphore=self.es_semaphore,
                     ) for paper in self.filtered_ciarp
                 )
-                for _ in results:
-                    pass
+                for outcome in results:
+                    progress.step(outcome or "omitidos")
+            progress.done()
 
     def run(self):
         """

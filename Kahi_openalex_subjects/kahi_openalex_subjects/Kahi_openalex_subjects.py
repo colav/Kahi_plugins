@@ -1,7 +1,9 @@
 from kahi.KahiBase import KahiBase
 from pymongo import MongoClient, TEXT
+from threading import Lock
 from time import time
 from joblib import Parallel, delayed
+from kahi.progress import ProgressLogger
 
 
 def process_relation(sub, client, db_name):
@@ -9,6 +11,7 @@ def process_relation(sub, client, db_name):
     collection = db["subjects"]
     relations = []
     relation_ids = set()
+    missing = 0
     for rel in (sub.get("related_concepts") or []) + (sub.get("ancestors") or []):
         if not rel or not rel.get("id"):
             continue
@@ -30,10 +33,11 @@ def process_relation(sub, client, db_name):
             }
             relations.append(rel_entry)
         else:
-            print("Could not find related concept in colombia db")
+            missing += 1
     if len(relations) > 0:
         collection.update_one({"external_ids.id": sub["id"]}, {
             "$set": {"relations": relations}})
+    return missing
 
 
 class Kahi_openalex_subjects(KahiBase):
@@ -89,8 +93,11 @@ class Kahi_openalex_subjects(KahiBase):
     def process_openalex(self):
         openalex_subjects = list(self.openalex_collection.find(
             {"id": {"$nin": self.inserted_concepts}}))
+        progress = ProgressLogger(
+            "openalex_subjects:conceptos", total=len(openalex_subjects)).start()
         for sub in openalex_subjects:
             if sub["id"] in self.inserted_concepts:
+                progress.step("existentes")
                 continue
             db_reg = self.collection.find_one(
                 {"external_ids.id": sub["id"]})
@@ -98,6 +105,7 @@ class Kahi_openalex_subjects(KahiBase):
                 self.inserted_concepts.append(sub["id"])
                 self.inserted_concepts_ids_tuples.append(
                     (db_reg["_id"], sub["id"]))
+                progress.step("existentes")
                 continue
             entry = self.empty_subjects()
             entry["updated"] = [
@@ -138,21 +146,36 @@ class Kahi_openalex_subjects(KahiBase):
             self.inserted_concepts.append(sub["id"])
             self.inserted_concepts_ids_tuples.append(
                 (response.inserted_id, sub["id"]))
+            progress.step("nuevos")
+        progress.done()
 
     def process_relations(self):
         openalex_data = list(self.openalex_collection.find(
             {"id": {"$nin": self.relations_inserted_ids}}, {"id": 1, "ancestors": 1, "related_concepts": 1}))
+        progress = ProgressLogger(
+            "openalex_subjects:relaciones", total=len(openalex_data)).start()
+        missing = {"total": 0}
+        missing_lock = Lock()
+
+        def tracked(sub, client, db_name):
+            missing_relations = process_relation(sub, client, db_name)
+            progress.step()
+            if missing_relations:
+                with missing_lock:
+                    missing["total"] += missing_relations
+
         client = MongoClient(self.config["database_url"])
-        Parallel(
-            n_jobs=self.n_jobs,
-            backend="threading",
-            verbose=10
-        )(delayed(process_relation)(sub, client, self.config["database_name"]) for sub in openalex_data)
-        client.close()
+        try:
+            Parallel(
+                n_jobs=self.n_jobs,
+                backend="threading",
+                verbose=0
+            )(delayed(tracked)(sub, client, self.config["database_name"]) for sub in openalex_data)
+        finally:
+            client.close()
+        progress.done(relaciones_no_encontradas=missing["total"])
 
     def run(self):
-        print("Inserting the subjects")
         self.process_openalex()
-        print("Creating relations")
         self.process_relations()
         return 0

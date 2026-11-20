@@ -74,3 +74,15 @@ def test_singleton_dim_field_is_supported():
 
 def test_malformed_metadata_returns_no_fields():
     assert get_dim_fields({"OAI-PMH": {}}) == []
+
+
+def test_author_dashes_become_spaces():
+    reg = record([
+        {"@element": "title", "#text": "Título"},
+        {"@element": "contributor", "@qualifier": "author", "#text": "Alonso‐Herrero, Almudena"},
+        {"@element": "contributor", "@qualifier": "author", "#text": "Sáenz-Ludlow, Adalira"},
+    ])
+    parsed = parse_dspace(reg, empty_work(), "https://example.edu")
+    names = [a["full_name"] for a in parsed["authors"]]
+    assert names == ["Almudena Alonso Herrero", "Adalira Sáenz Ludlow"]
+    assert all("-" not in n and "‐" not in n for n in names)

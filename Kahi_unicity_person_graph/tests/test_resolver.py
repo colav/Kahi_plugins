@@ -122,6 +122,51 @@ def test_strong_transitive_chain_does_not_require_direct_target_evidence():
     assert plan.confidence == "high"
 
 
+def test_merge_preserves_distinct_affiliations_from_absorbed_person():
+    shared_id = {"COD_RH": "0000000678"}
+    snapshot = {
+        "target": person(
+            "target", "Freddy Hernandez Barajas", "staff",
+            external_ids=[{"source": "scienti", "id": shared_id}],
+            affiliations=[{"id": "univalle", "name": "Universidad del Valle"}],
+        ),
+        "absorbed": person(
+            "absorbed", "Freddy Hernández Barajas", "scienti",
+            external_ids=[{"source": "scienti", "id": shared_id}],
+            affiliations=[{"id": "unal", "name": "Universidad Nacional"}],
+        ),
+    }
+
+    _, results = build([
+        CandidateGroup("scienti", shared_id, ("target", "absorbed"), 0)
+    ], snapshot)
+
+    affiliations = results[0].plans[0].merged_document["affiliations"]
+    assert [value["id"] for value in affiliations] == ["univalle", "unal"]
+
+
+def test_merge_combines_complementary_affiliation_metadata_by_id():
+    target = {"affiliations": [{
+        "id": "unal", "name": "Universidad Nacional", "types": [],
+    }]}
+    source = {"affiliations": [{
+        "id": "unal", "name": "Universidad Nacional de Colombia",
+        "types": [{"source": "ror", "type": "education"}],
+        "start_date": 1,
+    }]}
+
+    ComponentResolver(compare_author, timestamp=10)._merge_affiliations(
+        target, source)
+
+    assert len(target["affiliations"]) == 1
+    assert target["affiliations"][0] == {
+        "id": "unal",
+        "name": "Universidad Nacional",
+        "types": [{"source": "ror", "type": "education"}],
+        "start_date": 1,
+    }
+
+
 def test_cluster_rejects_a_strong_bridge_with_cross_member_name_conflict():
     groups = [
         CandidateGroup("orcid", ORCID_1, ("a", "b"), 0),
@@ -468,6 +513,84 @@ def test_alias_match_with_four_dois_is_high_confidence():
     assert len(results[0].plans) == 1
 
 
+def test_reordered_three_token_name_is_a_safe_abbreviation():
+    groups = [CandidateGroup("doi", DOI_1, ("a", "b"), 0, 4)]
+    snapshot = {
+        "a": person(
+            "a", "John Willmer Escobar", "staff",
+            aliases=["Escobar John Willmer"],
+            first_names=["John", "Willmer"], last_names=["Escobar"],
+        ),
+        "b": person(
+            "b", "Escobar John Willmer", "scholar",
+            first_names=["John", "Willmer"], last_names=["Escobar"],
+        ),
+    }
+
+    discovery, results = build(
+        groups, snapshot, compare=lambda left, right, count: False)
+
+    assert discovery.edges[0].confidence == "high"
+    assert discovery.edges[0].match_details[0]["safe_abbreviation_match"] is True
+    assert len(results[0].plans) == 1
+
+
+def test_initials_with_surname_and_corrobated_alias_are_safe():
+    groups = [
+        CandidateGroup("doi", DOI_1, ("a", "b"), 0),
+        CandidateGroup("doi", DOI_2, ("a", "b"), 1),
+        CandidateGroup("doi", "https://doi.org/10.1000/third", ("a", "b"), 2),
+        CandidateGroup("doi", "https://doi.org/10.1000/fourth", ("a", "b"), 3),
+    ]
+    snapshot = {
+        "a": person(
+            "a", "H D Colorado", "scholar",
+            aliases=["Hernan Dario Colorado"],
+            first_names=["H", "D"], last_names=["Colorado"],
+        ),
+        "b": person(
+            "b", "Hernan Dario Colorado", "staff",
+            first_names=["Hernan", "Dario"], last_names=["Colorado"],
+        ),
+    }
+
+    discovery, results = build(
+        groups, snapshot, compare=lambda left, right, count: False)
+
+    assert discovery.edges[0].confidence == "high"
+    assert discovery.edges[0].match_details[0]["safe_abbreviation_match"] is True
+    assert len(results[0].plans) == 1
+
+
+def test_shared_alias_does_not_promote_divergent_complete_names():
+    groups = [
+        CandidateGroup("doi", DOI_1, ("a", "b"), 0),
+        CandidateGroup("doi", DOI_2, ("a", "b"), 1),
+        CandidateGroup("doi", "https://doi.org/10.1000/third", ("a", "b"), 2),
+        CandidateGroup("doi", "https://doi.org/10.1000/fourth", ("a", "b"), 3),
+    ]
+    snapshot = {
+        "a": person(
+            "a", "Maria Elena Torres", "staff",
+            aliases=["Maria Elena Torres Ruiz"],
+            first_names=["Maria", "Elena"], last_names=["Torres"],
+        ),
+        "b": person(
+            "b", "Maria Elena Lucia Ruiz", "scholar",
+            aliases=["Maria Elena Torres Ruiz"],
+            first_names=["Maria", "Elena", "Lucia"], last_names=["Ruiz"],
+        ),
+    }
+
+    discovery, results = build(
+        groups, snapshot, compare=lambda left, right, count: False)
+
+    assert discovery.edges[0].confidence == "medium"
+    assert discovery.edges[0].match_details[0]["safe_abbreviation_match"] is False
+    assert results[0].plans == ()
+    assert len(results[0].review_plans) == 1
+
+
 def test_partial_alias_cannot_override_divergent_complete_names():
     groups = [CandidateGroup("doi", DOI_1, ("a", "b"), 0)]
     snapshot = {
@@ -606,6 +729,26 @@ def test_doi_discovery_uses_embedded_author_count_conservatively():
     assert "embedded_author_count" in group_stage
 
 
+@pytest.mark.parametrize("embedded,expected", [(35, 61), (200, 200), (None, 61)])
+def test_openalex_counts_keep_largest_available_count(embedded, expected):
+    class Works:
+        full_name = "openalexco.works"
+
+        def find(self, query, projection):
+            return [
+                {"doi": DOI_1, "authors_count": 35, "authorships": [{}] * 61},
+                {"doi": DOI_1, "authors_count": 12, "authorships": []},
+            ]
+
+    plugin = object.__new__(Kahi_unicity_person_graph)
+    plugin.openalex_works = Works()
+    groups = [CandidateGroup("doi", DOI_1, ("a", "b"), 0, embedded)]
+    result = plugin._enrich_openalex_counts(groups)
+    assert result[0].work_author_count == expected
+    assert result[0].work_author_count_source == "openalexco.works"
+    assert groups[0].work_author_count == embedded
+
+
 def test_high_subcluster_is_preserved_when_another_edge_is_medium():
     groups = [
         CandidateGroup("doi", DOI_1, ("a", "b"), 0, 20),
@@ -725,6 +868,50 @@ def test_pair_conflicting_orcids_are_rejected_before_graph_construction():
     assert discovery.rejected_orcid_conflicts == 1
     assert discovery.rejected_identity_conflicts == 1
     assert results == ()
+
+
+def test_shared_scienti_id_does_not_override_incompatible_names():
+    cod_rh = {"COD_RH": "0000085979"}
+    snapshot = {
+        "german": person(
+            "german", "German Sierra Gallego", "scienti",
+            external_ids=[{"source": "scienti", "id": cod_rh}],
+        ),
+        "ludovic": person(
+            "ludovic", "Ludovic Dorkis", "staff",
+            external_ids=[{"source": "scienti", "id": cod_rh}],
+        ),
+    }
+
+    discovery, results = build([
+        CandidateGroup("scienti", cod_rh, ("german", "ludovic"), 0)
+    ], snapshot)
+
+    assert discovery.edges == ()
+    assert discovery.rejected_given_name_conflicts == 1
+    assert results == ()
+
+
+def test_shared_scienti_id_merges_compatible_names():
+    cod_rh = {"COD_RH": "0000000678"}
+    snapshot = {
+        "staff": person(
+            "staff", "Freddy Hernandez Barajas", "staff",
+            external_ids=[{"source": "scienti", "id": cod_rh}],
+        ),
+        "scienti": person(
+            "scienti", "Freddy Hernández Barajas", "scienti",
+            external_ids=[{"source": "scienti", "id": cod_rh}],
+        ),
+    }
+
+    discovery, results = build([
+        CandidateGroup("scienti", cod_rh, ("staff", "scienti"), 0)
+    ], snapshot)
+
+    assert len(discovery.edges) == 1
+    assert discovery.edges[0].confidence == "high"
+    assert len(results[0].plans) == 1
 
 
 def test_pair_with_different_cedulas_is_rejected_without_rewriting_source():

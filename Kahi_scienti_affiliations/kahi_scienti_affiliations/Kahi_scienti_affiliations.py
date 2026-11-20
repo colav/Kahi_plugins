@@ -1,18 +1,22 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger, format_duration
 from copy import deepcopy
 from datetime import datetime
 from pymongo import MongoClient, ASCENDING, TEXT
 from pymongo.errors import DuplicateKeyError
 import re
-from time import time
+from time import time, monotonic
 from thefuzz import fuzz
 from unicodedata import normalize as unicode_normalize
 from urllib.parse import urlparse
 from kahi_impactu_utils.Utils import check_date_format
+from kahi_impactu_utils.Mongo import order_document
 
 
 SOURCE = "scienti"
 MINCIENCIAS_SOURCE = "minciencias"
+COD_INST_SOURCE = "COD_INST"
+ID_INSTITUCION_SOURCE = "ID_INSTITUCION"
 INVALID_TEXT_VALUES = {
     "",
     "-",
@@ -36,6 +40,14 @@ INVALID_NITS = {
     "123456789",
     "999999999",
 }
+GENERIC_INSTITUTION_TOKENS = {
+    "asociacion", "centro", "colegio", "corporacion", "educacion", "escuela",
+    "fundacion", "institucion", "instituto", "superior", "universidad",
+    "universitaria", "universitario",
+}
+NAME_STOPWORDS = {
+    "a", "de", "del", "e", "el", "en", "la", "las", "los", "para", "por", "y",
+}
 
 
 def clean_text(value):
@@ -52,6 +64,12 @@ def normalize_institution_name(value):
         "ascii", "ignore").decode("ascii").lower()
     value = re.sub(r"[^\w\s]", " ", value)
     return " ".join(value.split())
+
+
+def distinctive_institution_tokens(value):
+    """Exclude legal-form words that cannot identify an institution alone."""
+    return set(normalize_institution_name(value).split()) - (
+        GENERIC_INSTITUTION_TOKENS | NAME_STOPWORDS)
 
 
 def append_unique(items, item):
@@ -200,26 +218,35 @@ def scienti_year_established(reg):
     return None
 
 
+def scienti_group_year_established(reg):
+    """Read the formation year without requiring or inventing a month/day."""
+    value = clean_text(reg.get("ANO_FORMACAO"))
+    if not re.fullmatch(r"[0-9]{4}", value):
+        return None
+    year = int(value)
+    return year if 1500 <= year <= datetime.now().year else None
+
+
 def scienti_updated_time(reg):
     date = parse_scienti_datetime(reg.get("DTA_ACTUALIZACION"))
     return int(date.timestamp()) if date else int(time())
 
 
-def scienti_external_ids(reg):
+def scienti_external_ids(reg, include_snies_id=True):
     """Map stable identifiers into the existing affiliation schema."""
     identifiers = []
     cod_inst = clean_text(reg.get("COD_INST"))
     if cod_inst and cod_inst != "000000000000":
         identifiers.append({
             "provenance": SOURCE,
-            "source": MINCIENCIAS_SOURCE,
+            "source": COD_INST_SOURCE,
             "id": cod_inst,
         })
     internal_id = clean_text(reg.get("ID_INSTITUCION"))
     if internal_id:
         identifiers.append({
             "provenance": SOURCE,
-            "source": SOURCE,
+            "source": ID_INSTITUCION_SOURCE,
             "id": internal_id,
         })
     nit = normalize_nit(reg)
@@ -230,7 +257,7 @@ def scienti_external_ids(reg):
             "id": nit,
         })
     cod_ies = clean_text(reg.get("COD_IES"))
-    if cod_ies and cod_ies.isdigit():
+    if include_snies_id and cod_ies and cod_ies.isdigit():
         identifiers.append({
             "provenance": SOURCE,
             "source": "snies",
@@ -267,7 +294,7 @@ def merge_scienti_address(entry, address):
             current[field] = address[field]
 
 
-def apply_scienti_institution_data(entry, reg):
+def apply_scienti_institution_data(entry, reg, include_snies_id=True):
     """Enrich an affiliation using only fields in the current entity schema."""
     for field in [
             "updated", "names", "aliases", "abbreviations", "types", "status",
@@ -284,7 +311,18 @@ def apply_scienti_institution_data(entry, reg):
     if abbreviation and normalize_institution_name(abbreviation) != normalize_institution_name(name):
         append_unique(entry["abbreviations"], abbreviation)
 
-    for external_id in scienti_external_ids(reg):
+    cod_ies = clean_text(reg.get("COD_IES"))
+    if not include_snies_id and cod_ies:
+        entry["external_ids"] = [
+            item for item in entry["external_ids"]
+            if not (
+                item.get("source") == "snies"
+                and str(item.get("id")) == cod_ies
+                and item.get("provenance") == SOURCE
+            )
+        ]
+    for external_id in scienti_external_ids(
+            reg, include_snies_id=include_snies_id):
         append_unique_external_id(entry["external_ids"], external_id)
 
     inferred_type = "education" if clean_text(reg.get("COD_IES")) else "other"
@@ -344,17 +382,22 @@ def candidate_names(affiliation):
 def institution_name_match(affiliation, source_names):
     """Return the strongest strict name match for an affiliation."""
     best = None
-    stopwords = {"de", "del", "la", "las", "los", "el", "y", "e", "en", "para", "por", "a"}
     for source_name in source_names:
         source_name = normalize_institution_name(source_name)
         if not source_name:
             continue
-        source_tokens = set(source_name.split()) - stopwords
+        source_tokens = set(source_name.split()) - NAME_STOPWORDS
+        source_distinctive = distinctive_institution_tokens(source_name)
         for name in candidate_names(affiliation):
             normalized_name = normalize_institution_name(name)
             if not normalized_name:
                 continue
-            name_tokens = set(normalized_name.split()) - stopwords
+            name_tokens = set(normalized_name.split()) - NAME_STOPWORDS
+            name_distinctive = distinctive_institution_tokens(normalized_name)
+            same_distinctive_terms = (
+                bool(source_distinctive)
+                and source_distinctive == name_distinctive
+            )
             overlap = len(source_tokens & name_tokens) / max(
                 1, min(len(source_tokens), len(name_tokens)))
             scores = {
@@ -363,8 +406,8 @@ def institution_name_match(affiliation, source_names):
                 "token_set_ratio": fuzz.token_set_ratio(normalized_name, source_name),
                 "wratio": fuzz.WRatio(normalized_name, source_name),
             }
-            exact = normalized_name == source_name
-            strict = any([
+            exact = normalized_name == source_name and bool(source_distinctive)
+            strict = same_distinctive_terms and any([
                 scores["ratio"] >= 94,
                 scores["token_sort_ratio"] >= 96,
                 scores["token_set_ratio"] >= 98 and overlap >= 0.80 and min(
@@ -382,6 +425,15 @@ def institution_name_match(affiliation, source_names):
                     best["exact"], best["score"], best["overlap"]):
                 best = current
     return best
+
+
+def canonical_names_compatible(canonical_names, source_name):
+    """Match canonical and Scienti names after removing only legal-form words."""
+    source_tokens = distinctive_institution_tokens(source_name)
+    return bool(source_tokens) and any(
+        source_tokens == distinctive_institution_tokens(name)
+        for name in canonical_names
+    )
 
 
 class Kahi_scienti_affiliations(KahiBase):
@@ -405,6 +457,13 @@ class Kahi_scienti_affiliations(KahiBase):
 
         self.verbose = config["scienti_affiliations"]["verbose"] if "verbose" in config["scienti_affiliations"].keys(
         ) else 0
+        # Sin progress_interval se usa el estandar de kahi.progress (5%, minimo 1000).
+        progress_interval = config["scienti_affiliations"].get("progress_interval")
+        self.progress_interval = int(progress_interval) if progress_interval is not None else None
+        self.progress_seconds = float(
+            config["scienti_affiliations"].get("progress_seconds", 60))
+        if (self.progress_interval is not None and self.progress_interval < 1) or self.progress_seconds <= 0:
+            raise ValueError("progress_interval and progress_seconds must be positive")
 
         name_index = False
         for key, val in self.collection.index_information().items():
@@ -416,9 +475,31 @@ class Kahi_scienti_affiliations(KahiBase):
             print("Text index created on names.name field")
 
         # checking if the databases and collections are available
+        self._progress_log("validating source databases and collections")
         self.check_databases_and_collections()
         # creating indexes for the scienti sources
         self.create_source_indexes()
+
+    def _progress_log(self, message, verbose=None):
+        if (getattr(self, "verbose", 0) if verbose is None else verbose) > 0:
+            print("[scienti_affiliations] {}".format(message), flush=True)
+
+    def _progress(self, records, label, total=None, verbose=None):
+        """Report completed records, including iterations that use continue."""
+        verbosity = getattr(self, "verbose", 0) if verbose is None else verbose
+        if verbosity < 1:
+            yield from records
+            return
+        progress = ProgressLogger(
+            "scienti_affiliations:{}".format(label),
+            total=total,
+            every=getattr(self, "progress_interval", None),
+            seconds=getattr(self, "progress_seconds", 60),
+        ).start()
+        for record in records:
+            yield record
+            progress.step()
+        progress.done()
 
     def check_databases_and_collections(self):
         for db_info in self.config["scienti_affiliations"]["databases"]:
@@ -450,6 +531,8 @@ class Kahi_scienti_affiliations(KahiBase):
                 "institution_collection_name", "institution")
 
             if database_url and database_name and collection_name:
+                self._progress_log("preparing indexes: {}.{} and {}".format(
+                    database_name, collection_name, institution_collection_name))
                 client = MongoClient(database_url)
                 try:
                     db = client[database_name]
@@ -473,7 +556,12 @@ class Kahi_scienti_affiliations(KahiBase):
                 collection_name = config.get(
                     "institution_collection_name", "institution")
                 institutions = client[config["database_name"]][collection_name]
-                for reg in institutions.find({}, {"_id": 0}):
+                records = self._progress(
+                    institutions.find({}, {"_id": 0}),
+                    "catalog {}.{}".format(config["database_name"], collection_name),
+                    total=institutions.count_documents({}),
+                )
+                for reg in records:
                     cod_inst = clean_text(reg.get("COD_INST"))
                     name = clean_text(reg.get("NME_INST"))
                     if not cod_inst or cod_inst == "000000000000" or not name:
@@ -506,6 +594,64 @@ class Kahi_scienti_affiliations(KahiBase):
             "external_ids": {"$elemMatch": {"source": source, "id": value}},
             "types.type": {"$ne": "group"},
         })
+
+    def find_snies_canonical(self, code):
+        """Return the principal affiliation for a SNIES institution or campus."""
+        if not code:
+            return None
+        canonical = self.collection.find_one({
+            "external_ids": {"$elemMatch": {
+                "source": "snies", "id": code, "provenance": "snies",
+            }},
+            "types.type": {"$ne": "group"},
+        })
+        if canonical:
+            return canonical
+        canonical = self.collection.find_one({
+            "campuses.external_ids": {"$elemMatch": {
+                "source": "snies", "id": code, "provenance": "snies",
+            }},
+            "types.type": {"$ne": "group"},
+        })
+        if canonical:
+            return canonical
+        return self.collection.find_one({
+            "_id": "snies_{}".format(code),
+            "types.type": {"$ne": "group"},
+        })
+
+    @staticmethod
+    def is_embedded_snies_campus(affiliation, code):
+        return any(
+            item.get("source") == "snies"
+            and item.get("provenance") == "snies"
+            and str(item.get("id")) == str(code)
+            for campus in (affiliation or {}).get("campuses", [])
+            for item in campus.get("external_ids", [])
+        )
+
+    @staticmethod
+    def add_parent_relation(entry, parent):
+        """Link a Scienti unit or campus to its canonical SNIES institution."""
+        if not parent or entry.get("_id") == parent.get("_id"):
+            return
+        name = next((
+            item.get("name") for item in parent.get("names", [])
+            if item.get("name") and item.get("lang") == "es"
+        ), "") or next(iter(candidate_names(parent)), "")
+        relation = {
+            "id": parent["_id"],
+            "name": name,
+            "types": parent.get("types", []),
+        }
+        current = next((
+            item for item in entry["relations"]
+            if item.get("id") == parent["_id"]
+        ), None)
+        if current:
+            current.update(relation)
+        else:
+            entry["relations"].append(relation)
 
     def institution_candidates(self, reg):
         source_names = [reg.get("NME_INST"), reg.get("NME_INST_FILTRO")]
@@ -551,7 +697,7 @@ class Kahi_scienti_affiliations(KahiBase):
         codes = {
             ext.get("id")
             for ext in affiliation.get("external_ids", [])
-            if ext.get("source") == MINCIENCIAS_SOURCE
+            if ext.get("source") == COD_INST_SOURCE
             and re.fullmatch(r"\d{12}", str(ext.get("id", "")))
         }
         return bool(codes and cod_inst not in codes)
@@ -591,12 +737,12 @@ class Kahi_scienti_affiliations(KahiBase):
     def find_scienti_institution(self, reg, unique_nits, unique_cod_ies):
         """Match by stable identifiers first, then by an unambiguous strict name."""
         cod_inst = clean_text(reg.get("COD_INST"))
-        institution = self.find_by_external_id(MINCIENCIAS_SOURCE, cod_inst)
+        institution = self.find_by_external_id(COD_INST_SOURCE, cod_inst)
         if institution:
             return institution
 
         internal_id = clean_text(reg.get("ID_INSTITUCION"))
-        institution = self.find_by_external_id(SOURCE, internal_id)
+        institution = self.find_by_external_id(ID_INSTITUCION_SOURCE, internal_id)
         if institution:
             return institution
 
@@ -608,14 +754,25 @@ class Kahi_scienti_affiliations(KahiBase):
 
         cod_ies = clean_text(reg.get("COD_IES"))
         if cod_ies in unique_cod_ies:
-            institution = self.find_by_external_id("snies", cod_ies)
+            institution = self.find_snies_canonical(cod_ies)
             if institution:
                 return institution
         return self.match_institution_by_name(reg)
 
     def save_scienti_institution(self, institution, reg):
+        cod_ies = clean_text(reg.get("COD_IES"))
+        canonical = self.find_snies_canonical(cod_ies)
+        if canonical and self.is_embedded_snies_campus(canonical, cod_ies):
+            # Campus-level Scienti evidence resolves to the principal.  Do not
+            # copy campus names, geography or identifiers onto the parent.
+            return canonical["_id"], False
+        include_snies_id = not canonical or (
+            institution and institution.get("_id") == canonical.get("_id"))
         if institution:
-            entry = apply_scienti_institution_data(institution, reg)
+            entry = apply_scienti_institution_data(
+                institution, reg, include_snies_id=include_snies_id)
+            if canonical and entry["_id"] != canonical["_id"]:
+                self.add_parent_relation(entry, canonical)
             self.collection.update_one(
                 {"_id": entry["_id"]},
                 {"$set": {
@@ -627,23 +784,145 @@ class Kahi_scienti_affiliations(KahiBase):
                     "addresses": entry["addresses"],
                     "external_urls": entry["external_urls"],
                     "external_ids": entry["external_ids"],
+                    "relations": entry["relations"],
                 }},
             )
             return entry["_id"], False
 
         cod_inst = clean_text(reg.get("COD_INST"))
-        entry = apply_scienti_institution_data(self.empty_affiliation(), reg)
-        entry["_id"] = "scienti_{}".format(cod_inst)
+        entry = apply_scienti_institution_data(
+            self.empty_affiliation(), reg,
+            include_snies_id=include_snies_id)
+        # COD_INST is already a persistent source identifier. Keeping it as
+        # the document id avoids a second plugin-specific identity namespace.
+        entry["_id"] = cod_inst
+        self.add_parent_relation(entry, canonical)
         try:
-            self.collection.insert_one(entry)
+            self.collection.insert_one(order_document(entry, self.empty_affiliation()))
             return entry["_id"], True
         except DuplicateKeyError:
             current = self.collection.find_one({"_id": entry["_id"]})
             return self.save_scienti_institution(current, reg)[0], False
 
+    def compatible_scienti_codes(self, affiliation, codes, catalog):
+        """Keep canonical matches and their explicit Scienti hierarchy together."""
+        canonical_names = []
+        for source in ["ror", "wikidata", "openalex"]:
+            canonical_names = [
+                item.get("name")
+                for item in affiliation.get("names", [])
+                if item.get("source") == source and item.get("name")
+            ]
+            if canonical_names:
+                break
+        if not canonical_names:
+            return set(codes)
+
+        compatible = {
+            code for code in codes
+            if canonical_names_compatible(
+                canonical_names, catalog[code].get("NME_INST"))
+        }
+        if not compatible:
+            return set(codes)
+
+        owners = {}
+        for code in codes:
+            owner = clean_text(catalog[code].get("ID_INSTITUCION"))
+            if owner:
+                owners.setdefault(owner, set()).add(code)
+        changed = True
+        while changed:
+            changed = False
+            for code in codes - compatible:
+                reg = catalog[code]
+                macro = clean_text(reg.get("COD_INST_MACRO"))
+                same_owner = owners.get(
+                    clean_text(reg.get("ID_INSTITUCION")), set())
+                related = macro in compatible or any(
+                    clean_text(catalog[item].get("COD_INST_MACRO")) == code
+                    for item in compatible
+                ) or bool(same_owner & compatible)
+                if related:
+                    compatible.add(code)
+                    changed = True
+        return compatible
+
+    def rebuild_scienti_metadata(self, affiliation, retained_codes, all_codes, catalog):
+        """Remove contaminated Scienti metadata and replay only retained records."""
+        entry = deepcopy(affiliation)
+        entry["names"] = [
+            item for item in entry.get("names", [])
+            if item.get("source") != SOURCE
+        ]
+        source_abbreviations = {
+            clean_text(catalog[code].get("SGL_INST"))
+            for code in all_codes
+            if clean_text(catalog[code].get("SGL_INST"))
+        }
+        entry["abbreviations"] = [
+            item for item in entry.get("abbreviations", [])
+            if item not in source_abbreviations
+        ]
+        for field in ["external_ids", "external_urls", "types"]:
+            entry[field] = [
+                item for item in entry.get(field, [])
+                if item.get("provenance") != SOURCE
+            ]
+        entry["updated"] = [
+            item for item in entry.get("updated", [])
+            if item.get("source") != SOURCE
+        ]
+        for code in sorted(retained_codes):
+            apply_scienti_institution_data(entry, catalog[code])
+        return entry
+
+    def repair_scienti_code_fusions(self, catalog):
+        """Split unrelated COD_INST values previously merged by generic names."""
+        repaired_ids = set()
+        separated_codes = set()
+        query = {
+            "external_ids": {"$elemMatch": {"source": COD_INST_SOURCE}},
+            "types.type": {"$ne": "group"},
+        }
+        for affiliation in self.collection.find(query):
+            codes = {
+                str(item.get("id"))
+                for item in affiliation.get("external_ids", [])
+                if item.get("source") == COD_INST_SOURCE
+                and str(item.get("id")) in catalog
+            }
+            if len(codes) < 2:
+                continue
+            retained = self.compatible_scienti_codes(
+                affiliation, codes, catalog)
+            if retained == codes:
+                continue
+            entry = self.rebuild_scienti_metadata(
+                affiliation, retained, codes, catalog)
+            self.collection.update_one(
+                {"_id": affiliation["_id"]},
+                {"$set": {
+                    "updated": entry["updated"],
+                    "names": entry["names"],
+                    "abbreviations": entry["abbreviations"],
+                    "types": entry["types"],
+                    "external_urls": entry["external_urls"],
+                    "external_ids": entry["external_ids"],
+                }},
+            )
+            repaired_ids.add(affiliation["_id"])
+            separated_codes.update(codes - retained)
+            self._progress_log(
+                "repaired {}: retained {} COD_INST; separated {}".format(
+                    affiliation["_id"], len(retained), len(codes - retained)))
+        self.last_separated_scienti_codes = separated_codes
+        return repaired_ids
+
     def add_catalog_relations(self, catalog, cod_to_affiliation):
         changed = 0
-        for cod_inst, reg in catalog.items():
+        for cod_inst, reg in self._progress(
+                catalog.items(), "hierarchy relations", total=len(catalog)):
             macro = clean_text(reg.get("COD_INST_MACRO"))
             child_id = cod_to_affiliation.get(cod_inst)
             parent_id = cod_to_affiliation.get(macro)
@@ -674,36 +953,58 @@ class Kahi_scienti_affiliations(KahiBase):
         return changed
 
     def process_scienti_institutions(self, configs, verbose=0):
-        """Consolidate and ingest the root institution catalogs before groups."""
+        """Prepare the Scienti catalog without materializing it wholesale."""
         if isinstance(configs, dict):
             configs = [configs]
         catalog = self.load_institution_catalog(configs)
-        unique_nits = self.catalog_unique_values(catalog, "TXT_NIT")
-        unique_cod_ies = self.catalog_unique_values(catalog, "COD_IES")
-        cod_to_affiliation = {}
-        inserted = 0
-
-        records = sorted(
-            catalog.items(),
-            key=lambda item: (
-                clean_text(item[1].get("COD_INST_MACRO")) != item[0], item[0]),
-        )
-        for cod_inst, reg in records:
-            institution = self.find_scienti_institution(
-                reg, unique_nits, unique_cod_ies)
-            affiliation_id, was_inserted = self.save_scienti_institution(
-                institution, reg)
-            cod_to_affiliation[cod_inst] = affiliation_id
-            inserted += int(was_inserted)
-
-        relations = self.add_catalog_relations(catalog, cod_to_affiliation)
+        self.institution_catalog = catalog
+        self.unique_scienti_nits = self.catalog_unique_values(catalog, "TXT_NIT")
+        self.unique_scienti_cod_ies = self.catalog_unique_values(catalog, "COD_IES")
+        self.materialized_scienti_codes = {}
+        self.repaired_affiliation_ids = set()
         if verbose > 0:
             print(
-                "Processed {} Scienti institutions: {} inserted, {} enriched, "
-                "{} hierarchy relations".format(
-                    len(catalog), inserted, len(catalog) - inserted, relations)
+                "Prepared {} Scienti institutions as an on-demand lookup catalog; "
+                "none were inserted wholesale".format(len(catalog)),
+                flush=True,
             )
-        return cod_to_affiliation
+        return {}
+
+    def materialize_scienti_institution(self, cod_inst, stack=None):
+        """Insert or enrich only a catalog institution referenced by a group."""
+        cod_inst = clean_text(cod_inst)
+        catalog = getattr(self, "institution_catalog", {})
+        reg = catalog.get(cod_inst)
+        if not reg:
+            return None
+        cached_id = getattr(self, "materialized_scienti_codes", {}).get(cod_inst)
+        if cached_id:
+            return self.collection.find_one({"_id": cached_id})
+
+        stack = set(stack or ())
+        if cod_inst in stack:
+            raise RuntimeError("cycle in Scienti institution hierarchy: {}".format(cod_inst))
+        stack.add(cod_inst)
+        macro = clean_text(reg.get("COD_INST_MACRO"))
+        parent = None
+        if macro and macro != cod_inst and macro in catalog:
+            parent = self.materialize_scienti_institution(macro, stack)
+
+        institution = self.find_by_external_id(COD_INST_SOURCE, cod_inst)
+        if not institution and not parent:
+            institution = self.find_scienti_institution(
+                reg,
+                getattr(self, "unique_scienti_nits", set()),
+                getattr(self, "unique_scienti_cod_ies", set()),
+            )
+        affiliation_id, _ = self.save_scienti_institution(institution, reg)
+        if parent and affiliation_id != parent["_id"]:
+            entry = self.collection.find_one({"_id": affiliation_id})
+            self.add_parent_relation(entry, parent)
+            self.collection.update_one(
+                {"_id": affiliation_id}, {"$set": {"relations": entry["relations"]}})
+        self.materialized_scienti_codes[cod_inst] = affiliation_id
+        return self.collection.find_one({"_id": affiliation_id})
 
     def extract_subject(self, subjects, data):
         subjects.append({
@@ -719,12 +1020,14 @@ class Kahi_scienti_affiliations(KahiBase):
     def embedded_parent_institution(self, inst):
         """Resolve an embedded group institution using catalog identifiers first."""
         cod_inst = clean_text(inst.get("COD_INST"))
-        institution = self.find_by_external_id(MINCIENCIAS_SOURCE, cod_inst)
+        institution = self.find_by_external_id(COD_INST_SOURCE, cod_inst)
         if institution:
             return institution
+        if cod_inst in getattr(self, "institution_catalog", {}):
+            return self.materialize_scienti_institution(cod_inst)
 
         internal_id = clean_text(inst.get("ID_INSTITUCION"))
-        institution = self.find_by_external_id(SOURCE, internal_id)
+        institution = self.find_by_external_id(ID_INSTITUCION_SOURCE, internal_id)
         if institution:
             return institution
 
@@ -738,6 +1041,32 @@ class Kahi_scienti_affiliations(KahiBase):
         legacy_nit = "{}-{}".format(nit, verification_digit) if verification_digit else ""
         return self.find_by_external_id("nit", legacy_nit)
 
+    def canonical_group_institutions(self, institution):
+        """Resolve a group institution to authoritative principal parents."""
+        queue = [institution]
+        seen = set()
+        authoritative = []
+        while queue:
+            current = queue.pop(0)
+            if not current or current.get("_id") in seen:
+                continue
+            seen.add(current.get("_id"))
+            is_authoritative = any(
+                item.get("source") == "ror" or
+                (item.get("source") == "snies"
+                 and item.get("provenance") == "snies")
+                for item in current.get("external_ids", []))
+            if is_authoritative:
+                authoritative.append(current)
+            for relation in current.get("relations", []):
+                parent = self.collection.find_one({
+                    "_id": relation.get("id"),
+                    "types.type": {"$ne": "group"},
+                })
+                if parent:
+                    queue.append(parent)
+        return authoritative or [institution]
+
     def group_parent_institutions(self, scienti, group_id):
         parents = []
         seen = set()
@@ -747,13 +1076,27 @@ class Kahi_scienti_affiliations(KahiBase):
                     continue
                 for inst in group.get("institution", []):
                     parent = self.embedded_parent_institution(inst)
-                    if parent and parent["_id"] not in seen:
-                        parents.append(parent)
-                        seen.add(parent["_id"])
+                    for canonical in (
+                            self.canonical_group_institutions(parent)
+                            if parent else []):
+                        if canonical["_id"] not in seen:
+                            parents.append(canonical)
+                            seen.add(canonical["_id"])
         return parents
 
     def enrich_group_parents(self, entry, parents):
         changed = False
+        parent_ids = {parent["_id"] for parent in parents}
+        repaired_ids = getattr(self, "repaired_affiliation_ids", set())
+        relations = entry.get("relations", [])
+        clean_relations = [
+            relation for relation in relations
+            if relation.get("id") not in repaired_ids
+            or relation.get("id") in parent_ids
+        ]
+        if clean_relations != relations:
+            entry["relations"] = clean_relations
+            changed = True
         for parent in parents:
             name = ""
             for item in parent.get("names", []):
@@ -782,36 +1125,50 @@ class Kahi_scienti_affiliations(KahiBase):
         client = MongoClient(config["database_url"])
         db = client[config["database_name"]]
         scienti = db[config["collection_name"]]
-        for group_id in scienti.distinct("group.COD_ID_GRUPO", {"group.COD_ID_GRUPO": {"$ne": None}}):
+        label = "groups {}.{}".format(config["database_name"], config["collection_name"])
+        self._progress_log("{}: listing unique group IDs".format(label), verbose)
+        group_ids = scienti.distinct(
+            "group.COD_ID_GRUPO", {"group.COD_ID_GRUPO": {"$ne": None}})
+        for group_id in self._progress(
+                group_ids, label, total=len(group_ids), verbose=verbose):
             db_reg = self.collection.find_one({"external_ids.id": group_id})
             parent_institutions = self.group_parent_institutions(
                 scienti, group_id)
+            group = {}
+            if not db_reg or db_reg.get("year_established") in {None, "", -1}:
+                source = scienti.find_one(
+                    {"group.COD_ID_GRUPO": group_id},
+                    {"group": {"$elemMatch": {"COD_ID_GRUPO": group_id}}},
+                )
+                group = ((source or {}).get("group") or [{}])[0]
             if db_reg:
+                updates = {}
                 if self.enrich_group_parents(db_reg, parent_institutions):
+                    updates.update(
+                        addresses=db_reg["addresses"],
+                        relations=db_reg["relations"],
+                    )
+                year = scienti_group_year_established(group)
+                if year is not None and db_reg.get("year_established") in {None, "", -1}:
+                    updates["year_established"] = year
+                if updates:
                     self.collection.update_one(
                         {"_id": db_reg["_id"]},
-                        {"$set": {
-                            "addresses": db_reg["addresses"],
-                            "relations": db_reg["relations"],
-                        }},
+                        {"$set": updates},
                     )
                 continue
             entry = self.empty_affiliation()
-            entry["updated"].append({"time": int(time()), "source": "scienti"})
+            entry["updated"].append({"source": "scienti", "time": int(time())})
             entry["external_ids"].append(
                 {"source": "minciencias", "id": group_id})
             entry["types"].append({"source": "scienti", "type": "group"})
-
-            group = scienti.find_one({"group.COD_ID_GRUPO": group_id})
-            group = group["group"][0]
 
             if group:
                 entry["external_ids"].append(
                     {"source": "scienti", "id": group["NRO_ID_GRUPO"]})
                 entry["names"].append(
                     {"name": group["NME_GRUPO"], "lang": "es", "source": "scienti"})
-                entry["birthdate"] = check_date_format(
-                    str(group["ANO_FORMACAO"]) + "-" + str(group["MES_FORMACAO"]))
+                entry["year_established"] = scienti_group_year_established(group)
                 if group["STA_ELIMINADO"] == "F":
                     entry["status"].append(
                         {"source": "minciencias", "status": "activo"})
@@ -848,20 +1205,14 @@ class Kahi_scienti_affiliations(KahiBase):
 
                 self.enrich_group_parents(entry, parent_institutions)
                 entry["_id"] = group_id
-                self.collection.insert_one(entry)
+                self.collection.insert_one(order_document(entry, self.empty_affiliation()))
         client.close()
 
     def run(self):
-        if self.verbose > 4:
-            start_time = time()
+        start_time = monotonic()
         configs = self.config["scienti_affiliations"]["databases"]
         self.process_scienti_institutions(configs, verbose=self.verbose)
         for config in configs:
-            if self.verbose > 0:
-                print("Processing {}.{} database".format(
-                    config["database_name"], config["collection_name"]))
             self.process_scienti_groups(config, verbose=self.verbose)
-        if self.verbose > 4:
-            print("Execution time: {} minutes".format(
-                round((time() - start_time) / 60, 2)))
+        self._progress_log("DONE en {}".format(format_duration(monotonic() - start_time)))
         return 0

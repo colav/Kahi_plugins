@@ -24,9 +24,14 @@ The graph is used only for isolation. Name compatibility is always decided by
   three normalized tokens and one DOI, or when the same alias has at least
   three tokens and is corroborated by four independent DOIs. Other alias-only
   and initials-only matches remain `medium` review records.
-- A shared affiliation only supports a review score and never promotes it by
-  itself to an automatic merge. The affiliation must resolve to an existing
-  document; dangling references are ignored and counted in the run audit.
+- A shared affiliation never promotes an edge by itself. For one DOI above the
+  exact-name author limit, an identical normalized full name with at least
+  three complete words can be `high` when supported by a valid shared
+  affiliation or a validated common ORCID, national ID, or Scienti identifier.
+  Name particles and initials, including dotted initials, do not count as
+  complete words. Alias matches and unknown author counts do not activate this
+  exception. All identity and transitive-cluster guards still apply. Dangling
+  affiliation references are ignored and counted in the run audit.
 - DOI evidence records the effective `author_count` and where that count came
   from. The embedded value in `person.related_works` is available before works
   ingestion; when both sources exist, the largest count is used conservatively.
@@ -40,6 +45,12 @@ The graph is used only for isolation. Name compatibility is always decided by
 - Different valid ORCID or Scienti identifiers block a merge.
 - DOI, Scholar, Scopus, and other evidence cannot rely on one shared token when
   both records contain contradictory compound given names or surnames.
+- Explicit conflicting complete given names are checked before alias support:
+  `Rigoberto Gomez Gutierrez` and `Roald Gomez` cannot merge through `R. Gomez`,
+  initials, or a shared identifier. Only complete given-name tokens present in
+  the main full name are used; particles and dotted initials are excluded.
+  Compatible abbreviations, missing secondary names and full-name reorderings
+  retain their existing treatment. The same guard applies within clusters.
 - Audit records include the compared document IDs, direct DOI status, the
   `compare_author` result, and shared or conflicting external identifiers.
 - Run summaries count rejected ORCID conflicts, name mismatches, conflicting
@@ -70,6 +81,9 @@ workflow:
     collection_name: person
     affiliations_collection_name: affiliations
     works_collection_name: works
+    # Optional: supplement author counts from OpenAlex on the same MongoDB server.
+    openalex_database_name: openalexco
+    openalex_collection_name: works
     max_authors_threshold: 10
     single_doi_exact_name_max_authors: 50
     max_profiles_per_doi: 100
@@ -92,7 +106,11 @@ authors that allows a compatible abbreviated name to be high confidence. The
 count is read first from `person.related_works.author_count`, with the works
 collection used as complementary evidence.
 `single_doi_exact_name_max_authors` sets the corresponding limit for an exact
-normalized name. A missing work count is kept for review. DOI values are
+normalized name. A missing work count is kept for review.
+The exact-name exception described above bypasses this limit only for a known
+count above it; the audit reason is `author_count_limit_exception`. Its name
+word count and shared personal-identity support are recorded only in audit
+evidence, without adding fields to entity documents. DOI values are
 canonicalized before candidate grouping. `max_profiles_per_doi` is a separate
 technical guard against pathological candidate groups; `0` disables only that
 guard. The supported ID tasks are `scienti`, `linkedin`, `orcid`, `publons`,

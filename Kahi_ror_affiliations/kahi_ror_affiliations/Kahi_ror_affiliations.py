@@ -2,6 +2,7 @@ from kahi.KahiBase import KahiBase
 from pymongo import MongoClient, TEXT
 from time import time
 from joblib import Parallel, delayed
+from kahi.progress import ProgressLogger
 
 
 def append_unique(items, item):
@@ -57,11 +58,11 @@ def add_ror_external_ids(inst, entry):
 def process_one(inst, collection, empty_affiliations):
     found_entry = collection.find_one({"external_ids.id": inst["id"]})
     if found_entry:
-        return
+        return "existentes"
         # may be updatable, check accordingly
     else:
         entry = empty_affiliations.copy()
-        entry["updated"].append({"time": int(time()), "source": "ror"})
+        entry["updated"].append({"source": "ror", "time": int(time())})
         add_ror_names(inst, entry)
         entry["year_established"] = int(
             inst["established"]) if inst["established"] else -1
@@ -82,6 +83,7 @@ def process_one(inst, collection, empty_affiliations):
         append_unique(entry["external_ids"], {"provenance": "ror", "id": inst["id"], "source": "ror"})
         entry["_id"] = inst["id"].split("/")[-1]
         collection.insert_one(entry)
+        return "nuevos"
 
 
 class Kahi_ror_affiliations(KahiBase):
@@ -119,24 +121,33 @@ class Kahi_ror_affiliations(KahiBase):
         self.config = config
 
     def process_ror(self):
-        inst_cursor = self.ror_collection.find(no_cursor_timeout=True)
-        print(
-            f"Processing {self.config['ror_affiliations']['database_name']}.{self.config['ror_affiliations']['collection_name']}...")
-        with MongoClient(self.mongodb_url) as client:
-            db = client[self.config["database_name"]]
-            collection = db["affiliations"]
+        progress = ProgressLogger(
+            "ror_affiliations", total=self.ror_collection.estimated_document_count()).start(
+            f"origen={self.config['ror_affiliations']['database_name']}."
+            f"{self.config['ror_affiliations']['collection_name']} num_jobs={self.n_jobs}")
 
-            Parallel(
-                n_jobs=self.n_jobs,
-                verbose=5,
-                backend="threading")(
-                delayed(process_one)(
-                    inst,
-                    collection,
-                    self.empty_affiliation()
-                ) for inst in inst_cursor
-            )
-            client.close()
+        def tracked(inst, collection, empty_affiliation):
+            progress.step(process_one(inst, collection, empty_affiliation))
+
+        inst_cursor = self.ror_collection.find(no_cursor_timeout=True)
+        try:
+            with MongoClient(self.mongodb_url) as client:
+                db = client[self.config["database_name"]]
+                collection = db["affiliations"]
+
+                Parallel(
+                    n_jobs=self.n_jobs,
+                    verbose=0,
+                    backend="threading")(
+                    delayed(tracked)(
+                        inst,
+                        collection,
+                        self.empty_affiliation()
+                    ) for inst in inst_cursor
+                )
+        finally:
+            inst_cursor.close()
+        progress.done()
 
     def run(self):
         self.process_ror()

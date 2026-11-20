@@ -12,14 +12,43 @@ from kahi_impactu_postcalculations.process_one import (
 )
 from kahi_impactu_postcalculations.indexes import create_indexes
 from kahi_impactu_postcalculations.denormalization import denormalize
-from kahi_impactu_postcalculations.typing import build_type_lookup, process_type
-from kahi_impactu_postcalculations.topics import (
-    load_openalex_topics,
-    process_topic_batch,
+from kahi_impactu_postcalculations.affiliation_names import normalize_affiliation_names
+from kahi_impactu_postcalculations.news_linking import NEWS_COLLECTIONS, link_news
+from kahi_impactu_postcalculations.divipola import map_affiliation_addresses
+from kahi_impactu_postcalculations.typing import (
+    build_type_lookup,
+    clear_impactu_types,
+    process_type,
 )
+from kahi_impactu_postcalculations.topics import (
+    _topic_payload,
+    load_openalex_topics,
+    prefer_abstract_langs,
+    topic_projection,
+    topic_query,
+    process_topic_batches_pool,
+    request_topic_inference_batch,
+)
+from kahi_impactu_postcalculations import topics_v2
 from kahi_impactu_postcalculations.person_persistent_ids import (
     process_person_id,
-    recover_person_id_migration,
+    recover_person_id_migration, finish_person_id_migration,
+)
+from kahi_impactu_postcalculations.geographic_normalization import (
+    SpanishGeographicNormalizer,
+    normalize_affiliation_addresses,
+)
+from kahi_impactu_postcalculations.openalex_enrichment import (
+    enrich_works_from_openalex,
+)
+from kahi_impactu_postcalculations.author_reconciliation import (
+    reconcile_collection_authors,
+)
+from kahi_impactu_postcalculations.abstract_enrichment import (
+    enrich_missing_abstracts,
+)
+from kahi_impactu_postcalculations.person_topics import (
+    aggregate_person_topics,
 )
 from kahi_impactu_type_catalog import get_impactu_catalog
 import requests
@@ -59,7 +88,25 @@ class Kahi_impactu_postcalculations(KahiBase):
         self.n_jobs = self.config["impactu_postcalculations"]["n_jobs"]
         self.openalex_database_url = self.config["impactu_postcalculations"]["openalex_database_url"]
         self.openalex_database_name = self.config["impactu_postcalculations"]["openalex_database_name"]
-        self.inference_endpoint = self.config["impactu_postcalculations"]["inference_endpoint"]
+        topic_config = self.config["impactu_postcalculations"]
+        self.topic_inference_mode = topic_config.get(
+            "topic_inference_mode", "local"
+        )
+        if self.topic_inference_mode not in {"local", "remote", "hf_v2"}:
+            raise ValueError("topic_inference_mode must be 'local', 'remote' or 'hf_v2'")
+        self.inference_endpoint = topic_config["inference_endpoint"]
+        configured_endpoints = topic_config.get("inference_endpoints")
+        self.inference_endpoints = (
+            list(configured_endpoints)
+            if configured_endpoints
+            else [self.inference_endpoint]
+        )
+        if not all(
+            isinstance(endpoint, str) and endpoint.strip()
+            for endpoint in self.inference_endpoints
+        ):
+            raise ValueError("inference_endpoints must contain non-empty URLs")
+        self.inference_endpoints = list(dict.fromkeys(self.inference_endpoints))
         self.force_recalculate = self.config["impactu_postcalculations"].get(
             "force_recalculate", False
         )
@@ -85,11 +132,175 @@ class Kahi_impactu_postcalculations(KahiBase):
         )
         if self.topic_request_retries < 1:
             raise ValueError("topic_request_retries must be greater than zero")
+        self.topic_progress_interval = topic_config.get(
+            "topic_progress_interval", 100
+        )
+        # Collections whose documents get topics (same model and payload as
+        # works) and, per collection, the preferred abstract languages.
+        self.topic_collections = list(
+            topic_config.get("topic_collections", ["works"])
+        )
+        unknown = set(self.topic_collections) - {"works", "patents", "projects", "events"}
+        if not self.topic_collections or unknown:
+            raise ValueError(
+                "topic_collections must list works, patents, projects or events"
+            )
+        self.topic_abstract_langs = dict(
+            topic_config.get("topic_abstract_langs") or {}
+        )
+        self.topic_v2 = None
+        if self.topic_inference_mode == "hf_v2":
+            self.topic_v2 = self._topic_v2_config(topic_config)
+        self.person_topics_enabled = topic_config.get(
+            "person_topics_enabled", False
+        )
+        self.person_topics_dry_run = topic_config.get(
+            "person_topics_dry_run", True
+        )
+        self.person_topics_jobs = topic_config.get(
+            "person_topics_jobs", self.n_jobs
+        )
+        self.person_topics_batch_size = topic_config.get(
+            "person_topics_batch_size", 1000
+        )
+        self.person_topics_min_works = topic_config.get(
+            "person_topics_min_works", 2
+        )
+        self.person_topics_limit = topic_config.get(
+            "person_topics_limit", 5
+        )
+        self.person_topics_singleton_min_score = topic_config.get(
+            "person_topics_singleton_min_score", 0.9
+        )
+        self.person_topics_progress_interval = topic_config.get(
+            "person_topics_progress_interval", 10000
+        )
+        self.person_topics_staging_collection = topic_config.get(
+            "person_topics_staging_collection", "person_topics_tmp"
+        )
+        self.person_topics_runs_collection = topic_config.get(
+            "person_topics_runs_collection", "person_topics_runs"
+        )
+        for name, value in (
+            ("person_topics_jobs", self.person_topics_jobs),
+            ("person_topics_batch_size", self.person_topics_batch_size),
+            ("person_topics_min_works", self.person_topics_min_works),
+            ("person_topics_limit", self.person_topics_limit),
+            (
+                "person_topics_progress_interval",
+                self.person_topics_progress_interval,
+            ),
+        ):
+            if value < 1:
+                raise ValueError(f"{name} must be greater than zero")
+        if not 0 <= self.person_topics_singleton_min_score <= 1:
+            raise ValueError(
+                "person_topics_singleton_min_score must be between zero and one"
+            )
         self.denormalization_enabled = self.config["impactu_postcalculations"].get(
             "denormalization_enabled", True
         )
+        self.affiliation_names_enabled = self.config["impactu_postcalculations"].get(
+            "affiliation_names_enabled", True
+        )
+        # News linking is opt-in: it must run before the identity documents leave person.
+        self.news_linking_enabled = self.config["impactu_postcalculations"].get(
+            "news_linking_enabled", False
+        )
+        self.news_database_url = self.config["impactu_postcalculations"].get(
+            "news_database_url", self.mongodb_url
+        )
+        self.news_database_name = self.config["impactu_postcalculations"].get(
+            "news_database_name", "impactu_news"
+        )
+        self.persistent_ids_enabled = self.config["impactu_postcalculations"].get(
+            "persistent_ids_enabled", True
+        )
+        self.author_reconciliation_enabled = self.config[
+            "impactu_postcalculations"
+        ].get("author_reconciliation_enabled", False)
+        self.author_reconciliation_dry_run = self.config[
+            "impactu_postcalculations"
+        ].get("author_reconciliation_dry_run", True)
+        self.author_reconciliation_collections = self.config[
+            "impactu_postcalculations"
+        ].get("author_reconciliation_collections", ["works", "events"])
+        self.author_reconciliation_batch_size = self.config[
+            "impactu_postcalculations"
+        ].get("author_reconciliation_batch_size", 1000)
+        self.author_reconciliation_progress_interval = self.config[
+            "impactu_postcalculations"
+        ].get("author_reconciliation_progress_interval", 10000)
+        self.author_reconciliation_skip_affiliation_conflicts = self.config[
+            "impactu_postcalculations"
+        ].get("author_reconciliation_skip_affiliation_conflicts", True)
+        if self.author_reconciliation_batch_size < 1:
+            raise ValueError(
+                "author_reconciliation_batch_size must be greater than zero"
+            )
+        self.types_enabled = self.config["impactu_postcalculations"].get(
+            "types_enabled", True
+        )
+        self.geographic_normalization_enabled = self.config[
+            "impactu_postcalculations"
+        ].get("geographic_normalization_enabled", True)
+        self.geographic_normalization_dry_run = self.config[
+            "impactu_postcalculations"
+        ].get("geographic_normalization_dry_run", False)
+        self.geographic_batch_size = self.config["impactu_postcalculations"].get(
+            "geographic_batch_size", 1000
+        )
+        self.openalex_enrichment_enabled = self.config[
+            "impactu_postcalculations"
+        ].get("openalex_enrichment_enabled", True)
+        self.openalex_enrichment_dry_run = self.config[
+            "impactu_postcalculations"
+        ].get("openalex_enrichment_dry_run", False)
+        self.openalex_enrichment_batch_size = self.config[
+            "impactu_postcalculations"
+        ].get("openalex_enrichment_batch_size", 1000)
+        if self.openalex_enrichment_batch_size < 1:
+            raise ValueError(
+                "openalex_enrichment_batch_size must be greater than zero"
+            )
+        self.abstracts_enabled = self.config["impactu_postcalculations"].get(
+            "abstracts_enrichment_enabled",
+            self.config["impactu_postcalculations"].get(
+                "abstracts_enabled", False
+            ),
+        )
+        self.abstracts_dry_run = self.config["impactu_postcalculations"].get(
+            "abstracts_dry_run", True
+        )
+        self.abstracts_database_url = self.config["impactu_postcalculations"].get(
+            "abstracts_database_url", self.mongodb_url
+        )
+        self.abstracts_database_name = self.config["impactu_postcalculations"].get(
+            "abstracts_database_name", "impactu_abstract_resolver"
+        )
+        self.abstracts_collection_name = self.config[
+            "impactu_postcalculations"
+        ].get("abstracts_collection_name", "resolved")
+        self.abstracts_runs_collection_name = self.config[
+            "impactu_postcalculations"
+        ].get("abstracts_runs_collection_name", "kahi_enrichment_runs")
+        self.abstracts_batch_size = self.config["impactu_postcalculations"].get(
+            "abstracts_batch_size", 1000
+        )
+        self.abstracts_title_threshold = self.config[
+            "impactu_postcalculations"
+        ].get("abstracts_title_threshold", 90.0)
+        if self.abstracts_batch_size < 1:
+            raise ValueError("abstracts_batch_size must be greater than zero")
+        if not 0 <= self.abstracts_title_threshold <= 100:
+            raise ValueError(
+                "abstracts_title_threshold must be between 0 and 100"
+            )
         self.top_words_backend = self.config["impactu_postcalculations"].get(
             "top_words_backend", "threading"
+        )
+        self.top_words_enabled = self.config["impactu_postcalculations"].get(
+            "top_words_enabled", True
         )
         if self.top_words_backend not in ["threading", "multiprocessing"]:
             raise ValueError("top_words_backend must be 'threading' or 'multiprocessing'")
@@ -114,7 +325,7 @@ class Kahi_impactu_postcalculations(KahiBase):
         self.author_count = self.config["impactu_postcalculations"][
             "author_count"] if "author_count" in self.config["impactu_postcalculations"] else 6
         self._check_and_install_spacy_models()
-        self.types_priority = ["minciencias", "scienti", "ciarp",
+        self.types_priority = ["minciencias", "scienti", "ciarp", "cvlac", "gruplac",
                                "coar", "redcol", "eu-repo", "openalex", "scholar", "crossref"]
         self.person_priority = ["scienti", "orcid",
                                 "scholar", "openalex", "mongodb_id"]
@@ -154,19 +365,260 @@ class Kahi_impactu_postcalculations(KahiBase):
         subprocess.run(["python3", "-m", "spacy",
                        "download", "es_core_news_sm"])
 
+    def _topic_v2_config(self, topic_config):
+        """Settings of topic_inference_mode: hf_v2 (topic classifier v2 on a Hugging Face endpoint)."""
+        if len(self.inference_endpoints) != 1:
+            raise ValueError("hf_v2 uses one inference_endpoint; scale it with topic_jobs")
+        cfg = {
+            "token_env": topic_config.get("inference_token_env", "HF_TOKEN"),
+            "model_version": topic_config.get("topic_model_version", topics_v2.MODEL_VERSION),
+            "gpu_batch": int(topic_config.get("topic_gpu_batch", 16)),
+            "top_k": int(topic_config.get("topic_top_k", 3)),
+            "min_score": float(topic_config.get("topic_min_score", 0.15)),
+            "cache_database": topic_config.get("topic_cache_database", "topics_inference"),
+            "cache_collection": topic_config.get("topic_cache_collection", "predictions_v2"),
+            "title_only": list(topic_config.get(
+                "topic_title_only_collections", ["projects", "patents"])),
+        }
+        if not cfg["token_env"]:
+            raise ValueError("hf_v2 needs inference_token_env")
+        if not 1 <= cfg["top_k"] <= topics_v2.CACHE_TOP:
+            raise ValueError(f"topic_top_k must be between 1 and {topics_v2.CACHE_TOP}")
+        if not 0 <= cfg["min_score"] <= 1:
+            raise ValueError("topic_min_score must be between zero and one")
+        if cfg["gpu_batch"] < 1 or not 1 <= self.topic_batch_size <= 1024:
+            raise ValueError("hf_v2 needs topic_gpu_batch >= 1 and topic_batch_size in 1..1024")
+        if not set(cfg["title_only"]) <= {"works", "patents", "projects", "events"}:
+            raise ValueError("topic_title_only_collections must list works, patents, projects or events")
+        return cfg
+
+    def _topic_v2_client(self):
+        return topics_v2.EndpointClient(
+            self.inference_endpoint,
+            topics_v2.token_from_env(self.topic_v2["token_env"]),
+            model_version=self.topic_v2["model_version"],
+            gpu_batch=self.topic_v2["gpu_batch"],
+            timeout=self.topic_request_timeout,
+            retries=self.topic_request_retries,
+        )
+
+    def preflight_topics_v2(self, db, openalex_db):
+        """Token, OpenAlex catalog, cache database and one real request (a real pending work if any)."""
+        client = self._topic_v2_client()
+        if openalex_db["topics"].estimated_document_count() == 0:
+            raise RuntimeError("Preflight OpenAlex topic catalog is empty")
+        db.client[self.topic_v2["cache_database"]].command("ping")
+        text = None
+        for doc in db["works"].find(
+            topics_v2.topic_query("works", self.topic_v2["title_only"]), topics_v2.PROJECTION
+        ).limit(20):
+            text = topics_v2.document_text(doc, "works", title_only=self.topic_v2["title_only"])
+            if text:
+                break
+        text = text or topics_v2.work_text("Trampa para captura y monitoreo de Aedes aegypti", "", "")
+        top = client.infer([{"key": "preflight", "text": text}])[0]["top"]
+        if top[0][0] != topics_v2.NOT_CLASSIFIABLE:
+            topic_id = "https://openalex.org/" + top[0][0]
+            if openalex_db["topics"].count_documents({"id": topic_id}, limit=1) == 0:
+                raise RuntimeError(f"Preflight predicted topic is absent from OpenAlex: {topic_id}")
+        print(f"INFO: Preflight topic inference OK (hf_v2): {top[0][0]} p={top[0][1]} "
+              f"model={client.model_version} at {self.inference_endpoint}")
+
     def check_topic_inference_service(self):
-        """Fail fast when topic inference is enabled but unavailable."""
-        ping_endpoint = self.inference_endpoint.rsplit("/", 1)[0] + "/ping"
-        try:
-            response = requests.get(ping_endpoint, timeout=10)
-            response.raise_for_status()
-        except requests.RequestException as error:
+        """Fail fast when any configured topic endpoint is unavailable."""
+        for endpoint in self.inference_endpoints:
+            ping_endpoint = endpoint.rsplit("/", 1)[0] + "/ping"
+            try:
+                response = requests.get(ping_endpoint, timeout=10)
+                response.raise_for_status()
+            except requests.RequestException as error:
+                raise RuntimeError(
+                    f"Topic inference service is unavailable at {ping_endpoint}"
+                ) from error
+
+    def preflight(self, db, impactu_db, openalex_db, abstracts_db=None, news_db=None):
+        """Validate every enabled phase before the first database mutation."""
+        for name, database in (
+            (self.database_name, db),
+            (self.impactu_database_name, impactu_db),
+            (self.openalex_database_name, openalex_db),
+        ):
+            database.client.admin.command("ping")
+            print(f"INFO: Preflight MongoDB OK: {name}")
+
+        required = {"works", "person", "affiliations"}
+        missing = required.difference(db.list_collection_names())
+        if missing:
             raise RuntimeError(
-                f"Topic inference service is unavailable at {ping_endpoint}"
-            ) from error
+                f"Preflight missing required collections: {sorted(missing)}"
+            )
+        if not self.type_catalog.payload.get("mappings"):
+            raise RuntimeError("Preflight ImpactU type catalog is empty")
+        SpanishGeographicNormalizer()
+        if (
+            self.openalex_enrichment_enabled
+            and "works" not in openalex_db.list_collection_names()
+        ):
+            raise RuntimeError("Preflight OpenAlex works collection is missing")
+        if getattr(self, "abstracts_enabled", False):
+            if abstracts_db is None:
+                raise RuntimeError("Preflight abstract resolver database is missing")
+            abstracts_db.client.admin.command("ping")
+            print(
+                "INFO: Preflight MongoDB OK: "
+                f"{self.abstracts_database_name}"
+            )
+            if self.abstracts_collection_name not in abstracts_db.list_collection_names():
+                raise RuntimeError(
+                    "Preflight abstract resolver collection is missing: "
+                    f"{self.abstracts_collection_name}"
+                )
+
+        if getattr(self, "news_linking_enabled", False):
+            if news_db is None:
+                raise RuntimeError("Preflight news database is missing")
+            news_db.client.admin.command("ping")
+            missing = sorted(set(NEWS_COLLECTIONS) - set(news_db.list_collection_names()))
+            if missing:
+                raise RuntimeError(f"Preflight missing news collections: {missing}")
+            print(f"INFO: Preflight MongoDB OK: {self.news_database_name}")
+
+        # Validate the MongoDB operator used by the type phase.
+        list(db["works"].aggregate([
+            {"$limit": 1},
+            {"$project": {
+                "preflight_sort": {
+                    "$sortArray": {"input": [2, 1], "sortBy": 1}
+                }
+            }},
+        ]))
+
+        # Exercise both language models used by works-scan top words.
+        if self.top_words_enabled and self.top_words_strategy == "works_scan":
+            if not self.es_model("prueba") or not self.en_model("test"):
+                raise RuntimeError("Preflight spaCy models returned no tokens")
+
+        if self.topics_enabled and getattr(self, "topic_inference_mode", "local") == "hf_v2":
+            self.preflight_topics_v2(db, openalex_db)
+        elif self.topics_enabled:
+            self.check_topic_inference_service()
+            if openalex_db["topics"].estimated_document_count() == 0:
+                raise RuntimeError("Preflight OpenAlex topic catalog is empty")
+            sample = None
+            for work in db["works"].find(
+                {
+                    "primary_topic": {"$in": [{}, None]},
+                    "abstracts.0": {"$exists": True},
+                    "titles.0.title": {"$type": "string"},
+                },
+                {"titles": 1, "abstracts": 1, "source": 1},
+            ).limit(20):
+                sample = _topic_payload(work)
+                if sample is not None:
+                    break
+            if sample is not None:
+                for endpoint in self.inference_endpoints:
+                    response = request_topic_inference_batch(
+                        [sample], endpoint,
+                        min(self.topic_request_timeout, 120),
+                    )
+                    response.raise_for_status()
+                    predictions = response.json()
+                    if (
+                        not isinstance(predictions, list)
+                        or len(predictions) != 1
+                        or not isinstance(predictions[0], list)
+                    ):
+                        raise RuntimeError(
+                            "Preflight topic inference returned an invalid response shape"
+                        )
+                    valid = [
+                        prediction for prediction in predictions[0]
+                        if isinstance(prediction, dict)
+                        and prediction.get("topic_id") not in (None, -1)
+                        and "topic_score" in prediction
+                    ]
+                    if not valid:
+                        print(
+                            "INFO: Preflight topic inference OK: model returned "
+                            f"the valid no-classification marker (-1) at {endpoint}"
+                        )
+                    else:
+                        topic_id = "https://openalex.org/T" + str(
+                            valid[0]["topic_id"]
+                        )
+                        if openalex_db["topics"].count_documents(
+                            {"id": topic_id}, limit=1
+                        ) == 0:
+                            raise RuntimeError(
+                                "Preflight predicted topic is absent from OpenAlex: "
+                                f"{topic_id}"
+                            )
+                        print(
+                            "INFO: Preflight topic inference OK: "
+                            f"{topic_id} at {endpoint}"
+                        )
+            else:
+                print("INFO: Preflight topics OK: no pending eligible works")
+        print("INFO: Preflight completed successfully")
+
+    def process_topics(self, db, openalex_db):
+        """Infer topics for every configured collection (works by default)."""
+        topic_cache = load_openalex_topics(openalex_db["topics"])
+        print(f"INFO: Cached {len(topic_cache)} OpenAlex topics")
+        if getattr(self, "topic_inference_mode", "local") == "hf_v2":
+            cfg = self.topic_v2
+            pipeline = topics_v2.TopicsV2(
+                db, db.client[cfg["cache_database"]][cfg["cache_collection"]], topic_cache,
+                self._topic_v2_client(), release=self.database_name,
+                top_k=cfg["top_k"], min_score=cfg["min_score"],
+                batch_size=self.topic_batch_size, jobs=max(1, int(self.topic_jobs)),
+                abstract_langs=self.topic_abstract_langs, title_only=cfg["title_only"],
+            )
+            print(f"INFO: Topic inference mode: hf_v2; endpoint={self.inference_endpoint}; "
+                  f"cache={cfg['cache_database']}.{cfg['cache_collection']}; "
+                  f"top_k={cfg['top_k']} min_score={cfg['min_score']}")
+            for collection_name in self.topic_collections:
+                report = pipeline.process_collection(collection_name)
+                print(f"INFO: Topic inference completed for {collection_name}: {report}")
+            return
+        print(
+            f"INFO: Topic inference mode: {self.topic_inference_mode}; "
+            "endpoint pool: "
+            f"{len(self.inference_endpoints)} isolated workers"
+        )
+        for collection_name in self.topic_collections:
+            langs = self.topic_abstract_langs.get(collection_name) or []
+            print(
+                f"INFO: Setting up topics for {collection_name}"
+                + (f" (abstract languages: {', '.join(langs)})" if langs else "")
+            )
+            cursor = db[collection_name].find(
+                topic_query(collection_name), topic_projection(collection_name)
+            )
+            topic_batches = batched(
+                prefer_abstract_langs(cursor, langs), self.topic_batch_size
+            )
+            progress = process_topic_batches_pool(
+                db[collection_name], topic_cache, topic_batches,
+                self.inference_endpoints,
+                self.topic_request_timeout,
+                self.topic_request_retries,
+                self.topic_progress_interval,
+            )
+            print(
+                f"INFO: Topic inference completed for {collection_name}: "
+                f"{progress['works']} documents; {progress['modified']} updated; "
+                f"{progress['failed']} failed"
+            )
 
     def process_types(self, db):
         warnings_enabled = self.verbose >= 4
+        result = clear_impactu_types(db)
+        print(
+            "INFO: removed previous ImpactU types from "
+            f"{result.modified_count} works"
+        )
         for source in self.types_priority:
             print(f"INFO: processing types for {source}")
             type_lookup = build_type_lookup(self.types, source)
@@ -245,6 +697,8 @@ class Kahi_impactu_postcalculations(KahiBase):
             Parallel(n_jobs=self.n_jobs, backend="threading", verbose=10)(
                 delayed(process_person_id)(client, db["person"], product_cols, person, source) for person in cursor
             )
+
+        finish_person_id_migration(db["person"])
 
     def process_networks(self, db, client, impactu_client):
         """Build co-authorship networks for affiliations and people."""
@@ -335,15 +789,189 @@ class Kahi_impactu_postcalculations(KahiBase):
         openalex_client = MongoClient(self.openalex_database_url)
         openalex_db = openalex_client[self.openalex_database_name]
 
+        abstracts_client = None
+        abstracts_db = None
+        if self.abstracts_enabled:
+            abstracts_client = MongoClient(self.abstracts_database_url)
+            abstracts_db = abstracts_client[self.abstracts_database_name]
+
+        news_db = None
+        if self.news_linking_enabled:
+            news_db = MongoClient(self.news_database_url)[self.news_database_name]
+
+        print("INFO: Running post-calculations preflight")
+        self.preflight(db, impactu_db, openalex_db, abstracts_db, news_db)
+
+        if self.geographic_normalization_enabled:
+            print("INFO: Normalizing affiliation geography to Spanish")
+            geographic_report = normalize_affiliation_addresses(
+                db["affiliations"],
+                dry_run=self.geographic_normalization_dry_run,
+                batch_size=self.geographic_batch_size,
+                verbose=self.verbose,
+            )
+            action = "Would change" if self.geographic_normalization_dry_run else "Changed"
+            print(
+                f"INFO: {action} {geographic_report['documents_changed']} affiliations "
+                f"and {geographic_report['addresses_changed']} addresses; "
+                f"unresolved countries={geographic_report['unresolved_countries']}; "
+                "unrecognized Colombian states="
+                f"{geographic_report['unrecognized_colombian_states']}"
+            )
+            if self.verbose >= 2 and geographic_report["issue_samples"]:
+                print(
+                    "WARNING: Geographic normalization unresolved samples: "
+                    f"{geographic_report['issue_samples']}"
+                )
+            divipola_report = map_affiliation_addresses(
+                db["affiliations"],
+                dry_run=self.geographic_normalization_dry_run,
+                batch_size=self.geographic_batch_size,
+            )
+            samples = divipola_report.pop("unresolved_samples")
+            print(f"INFO: {action} Colombian addresses with DIVIPOLA: {divipola_report}")
+            if self.verbose >= 2 and samples:
+                print(f"WARNING: Colombian cities not found in DIVIPOLA: {samples}")
+        else:
+            print("INFO: Geographic normalization disabled by workflow")
+
+        if self.openalex_enrichment_enabled:
+            print("INFO: Recovering missing OpenAlex abstracts and topics")
+            enrichment_report = enrich_works_from_openalex(
+                db["works"],
+                openalex_db["works"],
+                batch_size=self.openalex_enrichment_batch_size,
+                dry_run=self.openalex_enrichment_dry_run,
+                verbose=self.verbose,
+            )
+            action = (
+                "Would enrich" if self.openalex_enrichment_dry_run else "Enriched"
+            )
+            print(
+                f"INFO: {action} {enrichment_report['works_changed']} works; "
+                f"abstracts={enrichment_report['abstracts_recovered']}; "
+                f"primary_topics={enrichment_report['primary_topics_recovered']}"
+            )
+        else:
+            print("INFO: OpenAlex work enrichment disabled by workflow")
+
+        if self.persistent_ids_enabled:
+            print("INFO: Setting up persistent ids for authors")
+            self.process_person_ids(client)
+        else:
+            print("INFO: Persistent person IDs disabled by workflow")
+
+        if self.author_reconciliation_enabled:
+            for collection_name in self.author_reconciliation_collections:
+                if collection_name not in db.list_collection_names():
+                    print(
+                        "WARNING: Author reconciliation collection missing: "
+                        f"{collection_name}"
+                    )
+                    continue
+                report = reconcile_collection_authors(
+                    db[collection_name],
+                    dry_run=self.author_reconciliation_dry_run,
+                    batch_size=self.author_reconciliation_batch_size,
+                    progress_interval=self.author_reconciliation_progress_interval,
+                    skip_affiliation_conflicts=(
+                        self.author_reconciliation_skip_affiliation_conflicts
+                    ),
+                )
+                action = (
+                    "Would reconcile"
+                    if self.author_reconciliation_dry_run
+                    else "Reconciled"
+                )
+                print(
+                    f"INFO: {action} {report['authors_resolved']} authors in "
+                    f"{report['documents_changed']} {collection_name} documents; "
+                    f"ambiguous={report['ambiguous_authors']}; "
+                    f"affiliation_conflicts={report['affiliation_conflicts']}"
+                )
+        else:
+            print("INFO: Author reconciliation disabled by workflow")
+
+        if self.types_enabled:
+            print("INFO: Setting up impactu types for works")
+            self.process_types(db)
+        else:
+            print("INFO: ImpactU type processing disabled by workflow")
+        print(f"INFO: Creating indexes in db {self.database_name} for backend")
+        db["works"].create_index("authors.id")
+        db["patents"].create_index("authors.id")
+        db["events"].create_index("authors.id")
+        db["projects"].create_index("authors.id")
+        create_indexes(db)
+
+        if self.abstracts_enabled:
+            print("INFO: Recovering DOI abstracts from impactu_abstract_resolver")
+            abstract_report = enrich_missing_abstracts(
+                db["works"],
+                abstracts_db[self.abstracts_collection_name],
+                abstracts_db[self.abstracts_runs_collection_name],
+                dry_run=self.abstracts_dry_run,
+                batch_size=self.abstracts_batch_size,
+                title_threshold=self.abstracts_title_threshold,
+                verbose=self.verbose,
+            )
+            action = "Would enrich" if self.abstracts_dry_run else "Enriched"
+            print(
+                f"INFO: {action} {abstract_report['works_changed']} works with "
+                "resolver abstracts; "
+                f"scanned={abstract_report['works_scanned']}; "
+                f"doi_matches={abstract_report['doi_matches']}; "
+                f"title_rejections={abstract_report['title_rejections']}; "
+                f"run_id={abstract_report['run_id']}"
+            )
+        else:
+            print("INFO: Abstract resolver enrichment disabled by workflow")
+
         if self.topics_enabled:
-            print("INFO: Checking topic inference service")
-            self.check_topic_inference_service()
+            self.process_topics(db, openalex_db)
+        else:
+            print("INFO: Topic inference disabled by workflow")
 
-        print("INFO: Setting up persistent ids for authors")
-        self.process_person_ids(client)
+        if self.person_topics_enabled:
+            print("INFO: Aggregating work topics for identified persons")
+            person_topic_report = aggregate_person_topics(
+                db["person"],
+                db["works"],
+                impactu_db[self.person_topics_staging_collection],
+                impactu_db[self.person_topics_runs_collection],
+                dry_run=self.person_topics_dry_run,
+                jobs=self.person_topics_jobs,
+                batch_size=self.person_topics_batch_size,
+                min_works=self.person_topics_min_works,
+                limit=self.person_topics_limit,
+                singleton_min_score=self.person_topics_singleton_min_score,
+                progress_interval=self.person_topics_progress_interval,
+                verbose=self.verbose,
+            )
+            action = (
+                "Would update"
+                if self.person_topics_dry_run
+                else "Updated"
+            )
+            print(
+                f"INFO: {action} "
+                f"{person_topic_report['persons_with_topics']} persons with "
+                "aggregated topics; "
+                f"eligible={person_topic_report['eligible_persons']}; "
+                f"without_topics={person_topic_report['persons_without_topics']}; "
+                f"modified={person_topic_report['persons_modified']}; "
+                f"run_id={person_topic_report['run_id']}"
+            )
+        else:
+            print("INFO: Person topic aggregation disabled by workflow")
 
-        print("INFO: Setting up impactu types for works")
-        self.process_types(db)
+        if self.affiliation_names_enabled:
+            print("INFO: Setting the Spanish name of affiliations wherever it is copied")
+            names_report = normalize_affiliation_names(db)
+            print(f"INFO: Affiliation names in Spanish: {names_report}")
+        else:
+            print("INFO: Spanish affiliation names disabled by workflow")
+
         if self.denormalization_enabled:
             print(f"INFO: Denormalizing data in {self.database_name}")
             denormalize(
@@ -354,58 +982,21 @@ class Kahi_impactu_postcalculations(KahiBase):
         else:
             print("INFO: Denormalization disabled by workflow")
 
-        print(f"INFO: Creating indexes in db {self.database_name} for backend")
-        db["works"].create_index("authors.id")
-        db["patents"].create_index("authors.id")
-        db["events"].create_index("authors.id")
-        db["projects"].create_index("authors.id")
-        create_indexes(db)
-
-        if self.topics_enabled:
-            print("INFO: Setting up topics for works")
-            topic_cache = load_openalex_topics(openalex_db["topics"])
-            print(f"INFO: Cached {len(topic_cache)} OpenAlex topics")
-            works_cursor = db["works"].find(
-                {"primary_topic": {}, "abstracts.0": {"$exists": True}},
-                {
-                    "titles": 1,
-                    "abstracts": 1,
-                    "source": 1,
-                    "primary_topic": 1,
-                    "topics": 1,
-                },
-            )
-            topic_batches = batched(works_cursor, self.topic_batch_size)
-            first_batch = next(topic_batches, None)
-            if first_batch is not None:
-                print("INFO: Warming up topic inference before parallel requests")
-                process_topic_batch(
-                    db["works"],
-                    topic_cache,
-                    first_batch,
-                    self.inference_endpoint,
-                    self.topic_request_timeout,
-                    self.topic_request_retries,
-                )
-            Parallel(
-                n_jobs=self.topic_jobs,
-                verbose=10,
-                backend="threading",
-            )(
-                delayed(process_topic_batch)(
-                    db["works"],
-                    topic_cache,
-                    batch,
-                    self.inference_endpoint,
-                    self.topic_request_timeout,
-                    self.topic_request_retries,
-                )
-                for batch in topic_batches
-            )
-        else:
-            print("INFO: Topic inference disabled by workflow")
-
         self.maybe_process_networks(db, client, impactu_client)
+
+        if self.news_linking_enabled:
+            print(
+                f"INFO: Linking the news of {self.news_database_name} to person "
+                "without identity documents"
+            )
+            news_report = link_news(news_db, db)
+            print(f"INFO: News linked: {news_report}")
+        else:
+            print("INFO: News linking disabled by workflow")
+
+        if not self.top_words_enabled:
+            print("INFO: Top words disabled by workflow")
+            return 0
 
         if self.top_words_strategy == "works_scan":
             print("INFO: Creating top words with works-scan strategy")

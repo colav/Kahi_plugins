@@ -1,4 +1,28 @@
 # Changelog
+## 0.1.7-beta - 2026-11-07
+- Normalize every hyphen and dash variant in snapshot full_name, first_names and last_names (split into tokens, initials recomputed); keep the dashed full name as an alias; add tests
+- Require kahi_impactu_utils>=0.1.6
+
+## 0.1.6-beta - 2026-10-18
+
+- Create MongoDB ObjectIds and match people by COD_RH before using a validated
+  ORCID and compatible names. Never use the snapshot COD_RH as the MongoDB id.
+- Skip and report snapshot records without a name.
+- Add missing principal institutions from imported group relations, with
+  unknown dates and empty years; preserve all existing institutional history.
+- Cache group/institution lookups and combine updates to the same person within
+  a batch. Preserve all COD_RH and their metadata when ORCID links profiles.
+- Version the snapshot checkpoint policy independently from the source release.
+
+- Add explicit `snapshot`/`legacy` selection. Legacy mode reads `cvlac_data`,
+  `gruplac_production_data` and immutable raw CvLAC HTML, ignores employment
+  experiences and retains only DOI-related works.
+
+- Add the `clean_cvlac_experience_affiliations.py` maintenance script.
+- Report standard START/progress/DONE lines with `kahi.progress.ProgressLogger`;
+  joblib progress output disabled (`verbose=0`).
+- Require `kahi>=0.1.3`; declare `joblib`, `beautifulsoup4` and
+  `kahi_impactu_utils`.
 
 ## 0.1.5-beta - 2026-09-09
 

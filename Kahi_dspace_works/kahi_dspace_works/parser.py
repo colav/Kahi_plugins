@@ -1,6 +1,6 @@
 from time import time
-from kahi_impactu_utils.Utils import lang_poll, get_name_connector, doi_processor
-from kahi_impactu_utils.String import parse_mathml, parse_html
+from kahi_impactu_utils.Utils import lang_poll, get_name_connector, doi_processor, normalize_publication_year
+from kahi_impactu_utils.String import parse_mathml, parse_html, normalize_dashes
 from kahi_impactu_utils.String import text_to_inverted_index
 from kahi_dspace_works.utils import get_dim_fields, get_oai_pmh_url, is_thesis
 import unicodedata
@@ -173,8 +173,26 @@ def get_type_dspace(text: str) -> dict:
     return rec
 
 
+def repository_source_ref(repository):
+    """source_ref of an external_urls entry: the repository that serves the page."""
+    if not repository:
+        return None
+    ref = {
+        "id": repository.get("source_id"),
+        "provenance": "dspace",
+        "name": repository.get("name", ""),
+        "types": [{"source": "dspace", "type": "repository"}],
+        "url": repository.get("url", ""),
+    }
+    affiliation = repository.get("affiliation") or {}
+    ref["affiliation"] = ({"id": affiliation.get("id"), "name": affiliation.get("name", "")}
+                          if affiliation.get("id") else {})
+    return ref
+
+
 def parse_dspace(
-    reg: dict, empty_work: dict, base_url: str, verbose: int = 0
+    reg: dict, empty_work: dict, base_url: str, verbose: int = 0,
+    repository: dict = None
 ) -> dict:
     """
     Parse a dspace record into a work entry.
@@ -190,10 +208,11 @@ def parse_dspace(
         An empty work entry to populate.
     base_url: str
         The base URL of the DSpace instance (ex: https://bibliotecadigital.univalle.edu.co).
-    affiliation: dict
-        The affiliation of the repository. (found in the affiliations collection).
     verbose: int
         A flag to print messages.
+    repository: dict
+        Repository metadata (name, url, affiliation, source_id) used to
+        describe the handle entry of external_urls in source_ref.
 
     Returns:
     -------
@@ -201,6 +220,7 @@ def parse_dspace(
     """
     entry = empty_work.copy()
     entry["updated"] = [{"source": "dspace", "time": int(time())}]
+    entry["year_published"] = None
     thesis = False
     for field in get_dim_fields(reg):
 
@@ -226,11 +246,10 @@ def parse_dspace(
             if "#text" in field and field["#text"] and len(
                     field["#text"]) >= 4:
                 if field["#text"][:4].isdigit():
-                    if entry["year_published"]:
-                        if entry["year_published"] >= int(field["#text"][:4]):
-                            entry["year_published"] = int(field["#text"][:4])
-                    else:
-                        entry["year_published"] = int(field["#text"][:4])
+                    year = normalize_publication_year(field["#text"][:4])
+                    if year is not None:
+                        previous = normalize_publication_year(entry.get("year_published"))
+                        entry["year_published"] = min(previous, year) if previous is not None else year
         # Abstract
         if (field["@element"] ==
                 "description" and "@qualifier" in field and field["@qualifier"] == "abstract"):
@@ -255,7 +274,7 @@ def parse_dspace(
             if len(field["#text"].split(",")) != 2:
                 continue
             author = split_names_dspace(
-                field["#text"].replace(".", "").replace("-", " "))
+                normalize_dashes(field["#text"].replace(".", "")) or "")
             if author:
                 author["id"] = ""
                 author["affiliations"] = []
@@ -348,9 +367,11 @@ def parse_dspace(
     )
     public_url = get_dspace_url(reg, base_url)
     if public_url:
-        entry["external_urls"].append(
-            {"provenance": "dspace", "source": "dspace", "url": public_url}
-        )
+        handle_entry = {"provenance": "dspace", "source": "handle", "url": public_url}
+        source_ref = repository_source_ref(repository)
+        if source_ref:
+            handle_entry["source_ref"] = source_ref
+        entry["external_urls"].append(handle_entry)
     oai_pmh_url = get_oai_pmh_url(reg)
     if oai_pmh_url:
         entry["external_urls"].append(

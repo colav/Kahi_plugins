@@ -5,6 +5,7 @@ from time import time
 from pandas import read_csv
 import iso3166
 import re
+from kahi.progress import ProgressLogger
 
 
 class Kahi_scimago_sources(KahiBase):
@@ -309,6 +310,7 @@ class Kahi_scimago_sources(KahiBase):
             if db_reg:
                 self.already_in_db.append(found_issn)
                 self.update_scimago(sjr, db_reg)
+                self.progress.step("actualizados")
             else:
                 entry = self.empty_source()
                 entry["updated"] = [{"source": "scimago", "time": int(time())}]
@@ -414,9 +416,12 @@ class Kahi_scimago_sources(KahiBase):
                     "subjects": scimago_subjects
                 })
                 self.collection.insert_one(entry)
+                self.progress.step("nuevos")
 
     def run(self):
         if self.scimago_file_paths:
+            self.progress = ProgressLogger("scimago_sources").start(
+                f"archivos={len(self.scimago_file_paths)}")
             for filename in self.scimago_file_paths:
                 self.scimago_year = int(
                     filename.replace(".csv", "").split(" ")[-1])
@@ -427,10 +432,14 @@ class Kahi_scimago_sources(KahiBase):
                 self.scimago = read_csv(filename,
                                         sep=";", dtype={"Sourceid": str}).to_dict("records")
                 self.process_scimago()
+            self.progress.done()
             return 0
 
-        years = self.scimago_collection.distinct("year")
-        for year in sorted(years):
+        years = sorted(int(year) for year in self.scimago_collection.distinct("year"))
+        total = self.scimago_collection.count_documents({"year": {"$in": years}})
+        self.progress = ProgressLogger("scimago_sources", total=total).start(
+            f"anios={years[0]}-{years[-1]}" if years else "")
+        for year in years:
             self.scimago_year = int(year)
             self.scimago_start_ts = dt.strptime(
                 "01 01 " + str(self.scimago_year), "%d %m %Y").timestamp()
@@ -440,4 +449,5 @@ class Kahi_scimago_sources(KahiBase):
                 {"year": self.scimago_year}, sort=[("Sourceid", 1)]
             )
             self.process_scimago()
+        self.progress.done()
         return 0

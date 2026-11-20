@@ -2,6 +2,7 @@ from kahi.KahiBase import KahiBase
 from pymongo import MongoClient, TEXT
 from time import time
 from joblib import Parallel, delayed
+from kahi.progress import ProgressLogger
 
 
 def openalex_address(oa_aff):
@@ -18,27 +19,35 @@ def openalex_address(oa_aff):
     }
 
 
+def openalex_ids(oa_aff):
+    """Yield (source, value) from OpenAlex ``ids`` skipping empty values (None, '')."""
+    for source, value in (oa_aff.get("ids") or {}).items():
+        if value is None or value == "":
+            continue
+        yield source, value
+
+
 def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
 
     db_reg = None
-    for source, idx in oa_aff["ids"].items():
+    for source, idx in openalex_ids(oa_aff):
         db_reg = collection.find_one({"external_ids.id": idx})
         if db_reg:
             break
     if db_reg:
         for upd in db_reg["updated"]:
             if upd["source"] == "openalex":
-                return  # Should it be update-able?
-        db_reg["updated"].append({"time": int(time()), "source": "openalex"})
+                return "existentes"  # Should it be update-able?
+        db_reg["updated"].append({"source": "openalex", "time": int(time())})
         id_sources = [ext["id"] for ext in db_reg["external_ids"]]
-        for source, idx in oa_aff["ids"].items():
+        for source, idx in openalex_ids(oa_aff):
             if isinstance(idx, str):
                 if "http" in idx and "openalex" not in idx:
                     continue
             if idx not in id_sources:
                 db_reg["external_ids"].append({"source": source, "id": idx})
         url_sources = [ext["url"] for ext in db_reg["external_urls"]]
-        for source, url in oa_aff["ids"].items():
+        for source, url in openalex_ids(oa_aff):
             if url not in url_sources:
                 db_reg["external_urls"].append({"source": source, "url": url})
 
@@ -79,9 +88,10 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
                 "abbreviations": db_reg["abbreviations"]
             }}
         )
+        return "actualizados"
     else:
         entry = empty_affiliations.copy()
-        entry["updated"].append({"time": int(time()), "source": "openalex"})
+        entry["updated"].append({"source": "openalex", "time": int(time())})
         # names
         international = oa_aff.get("international")
         if international:
@@ -92,13 +102,13 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
             entry["names"].append(
                 {"source": "openalex", "lang": "", "name": oa_aff.get("display_name")})
         # external_ids
-        for source, idx in oa_aff["ids"].items():
+        for source, idx in openalex_ids(oa_aff):
             if isinstance(idx, str):
                 if "http" in idx and "openalex" not in idx:
                     continue
             entry["external_ids"].append({"source": source, "id": idx})
         # external_urls
-        for source, url in oa_aff["ids"].items():
+        for source, url in openalex_ids(oa_aff):
             entry["external_urls"].append({"source": source, "url": url})
         if oa_aff["homepage_url"]:
             entry["external_urls"].append(
@@ -118,6 +128,7 @@ def process_one(oa_aff, collection, empty_affiliations, max_tries=10):
         else:
             entry["_id"] = oa_aff["id"].split("/")[-1]
         collection.insert_one(entry)
+        return "nuevos"
 
 
 class Kahi_openalex_affiliations(KahiBase):
@@ -162,24 +173,34 @@ class Kahi_openalex_affiliations(KahiBase):
         self.client.close()
 
     def process_openalex(self):
+        progress = ProgressLogger(
+            "openalex_affiliations",
+            total=self.openalex_collection.estimated_document_count()).start(
+            f"num_jobs={self.n_jobs}")
+
+        def tracked(aff, collection, empty_affiliation):
+            progress.step(process_one(aff, collection, empty_affiliation))
+
         affiliation_cursor = self.openalex_collection.find(
             no_cursor_timeout=True)
+        try:
+            with MongoClient(self.mongodb_url) as client:
+                db = client[self.config["database_name"]]
+                collection = db["affiliations"]
 
-        with MongoClient(self.mongodb_url) as client:
-            db = client[self.config["database_name"]]
-            collection = db["affiliations"]
-
-            Parallel(
-                n_jobs=self.n_jobs,
-                verbose=self.verbose,
-                backend="threading")(
-                delayed(process_one)(
-                    aff,
-                    collection,
-                    self.empty_affiliation()
-                ) for aff in affiliation_cursor
-            )
-            client.close()
+                Parallel(
+                    n_jobs=self.n_jobs,
+                    verbose=0,
+                    backend="threading")(
+                    delayed(tracked)(
+                        aff,
+                        collection,
+                        self.empty_affiliation()
+                    ) for aff in affiliation_cursor
+                )
+        finally:
+            affiliation_cursor.close()
+        progress.done()
 
     def run(self):
         self.process_openalex()

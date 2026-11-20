@@ -1,8 +1,11 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import MongoClient, TEXT
 from joblib import Parallel, delayed
 from kahi_scienti_works.process_one import process_one
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
 from mohan.Similarity import Similarity
+from kahi_impactu_utils.Elastic import size_similarity_pool
 from kahi_impactu_utils.Utils import doi_processor
 import re
 from threading import BoundedSemaphore
@@ -44,12 +47,18 @@ class Kahi_scienti_works(KahiBase):
 
         self.db = self.client[config["database_name"]]
         self.collection = self.db["works"]
+        ensure_work_doi_indexes(self.collection)
 
         self.collection.create_index("year_published")
         self.collection.create_index("authors.affiliations.id")
         self.collection.create_index("authors.id")
         self.collection.create_index([("titles.title", TEXT)])
         self.collection.create_index("external_ids.id")
+        self.collection.create_index([
+            ("external_ids.source", 1),
+            ("external_ids.id.COD_RH", 1),
+            ("external_ids.id.COD_PRODUCTO", 1),
+        ], name="scienti_work_identity")
         self.db["person"].create_index("external_ids.id")
         self.db["person"].create_index("external_ids.id.COD_RH")
         self.db["person"].create_index("full_name")
@@ -87,6 +96,9 @@ class Kahi_scienti_works(KahiBase):
                 raise ValueError(
                     "scienti_works.es_max_concurrency must be greater than zero")
             self.es_semaphore = BoundedSemaphore(es_max_concurrency)
+            # Mohan's client pools 10 connections; match it to the semaphore so
+            # concurrent searches never fail with EmptyPoolError.
+            size_similarity_pool(self.es_handler, es_url, es_auth, es_max_concurrency)
 
         # checking if the databases and collections are available
         self.check_databases_and_collections()
@@ -132,12 +144,19 @@ class Kahi_scienti_works(KahiBase):
             A flag to indicate if similarity checks should be performed if doi is not available.
         verbose : int
             The verbosity level. Default is 0.
+
+        Returns
+        -------
+        list
+            The outcome of process_one for each document of the group.
         """
+        outcomes = []
         for i in group["ids"]:
             reg = collection_scienti.find_one({"_id": i})
-            process_one(reg, db, collection, empty_work,
-                        es_handler, similarity, verbose,
-                        es_semaphore=es_semaphore)
+            outcomes.append(process_one(reg, db, collection, empty_work,
+                                        es_handler, similarity, verbose,
+                                        es_semaphore=es_semaphore))
+        return outcomes
 
     def process_scienti(self, db, collection, config):
         """
@@ -186,9 +205,14 @@ class Kahi_scienti_works(KahiBase):
             ]
             paper_groups = list(scienti.aggregate(
                 pipeline, allowDiskUse=True))
+            progress = ProgressLogger(
+                "scienti_works:doi/{}".format(config["database_name"]),
+                total=sum(len(group["ids"]) for group in paper_groups),
+            ).start("collection={} doi_groups={} num_jobs={}".format(
+                config["collection_name"], len(paper_groups), self.n_jobs))
             results = Parallel(
                 n_jobs=self.n_jobs,
-                verbose=self.verbose,
+                verbose=0,
                 backend="threading",
                 return_as="generator_unordered")(
                 delayed(self.process_doi_group)(
@@ -203,8 +227,10 @@ class Kahi_scienti_works(KahiBase):
                     es_semaphore=self.es_semaphore,
                 ) for doi_group in paper_groups
             )
-            for _ in results:
-                pass
+            for outcomes in results:
+                for outcome in outcomes:
+                    progress.step(outcome or "omitidos")
+            progress.done()
         else:
             # correr doi processor para TXT_DOI y TXT_WEBSITE*
             # saco los dois malos y luego hago un find $in sobre esos COD_RH /COD_PRODUCTO y paso el cursor a parallel
@@ -244,12 +270,17 @@ class Kahi_scienti_works(KahiBase):
                                         f'/{keyword}')[0] if keyword in doi else doi
                 if not doi:
                     works_nodoi.extend(scienti_reg["ids"])
-            print(f"INFO: processing {len(works_nodoi)} records with bad dois")
+            # The find below repeats the pipeline filters on works_nodoi ids.
+            progress = ProgressLogger(
+                "scienti_works:doi_invalido/{}".format(config["database_name"]),
+                total=len(works_nodoi),
+            ).start("collection={} num_jobs={}".format(
+                config["collection_name"], self.n_jobs))
             paper_cursor = scienti.find(
                 {"_id": {"$in": works_nodoi}, "TXT_NME_PROD_FILTRO": {"$ne": None}, "TXT_NME_PROD": {"$ne": ' '}, "product_type.COD_TIPO_PRODUCTO": {"$in": types_level0}})
             results = Parallel(
                 n_jobs=self.n_jobs,
-                verbose=self.verbose,
+                verbose=0,
                 backend="threading",
                 return_as="generator_unordered")(
                 delayed(process_one)(
@@ -263,18 +294,23 @@ class Kahi_scienti_works(KahiBase):
                     es_semaphore=self.es_semaphore,
                 ) for work in paper_cursor
             )
-            for _ in results:
-                pass
+            for outcome in results:
+                progress.step(outcome or "omitidos")
+            progress.done()
 
             paper_cursor = scienti.find(
                 {"$or": [{"doi": {"$eq": ""}}, {"doi": {"$eq": None}}], "TXT_NME_PROD_FILTRO": {"$ne": None}, "TXT_NME_PROD": {"$ne": ' '}, "product_type.COD_TIPO_PRODUCTO": {"$in": types_level0}})
             paper_cursor_count = scienti.count_documents(
                 {"$or": [{"doi": {"$eq": ""}}, {"doi": {"$eq": None}}], "TXT_NME_PROD_FILTRO": {"$ne": None}, "TXT_NME_PROD": {"$ne": ' '}, "product_type.COD_TIPO_PRODUCTO": {"$in": types_level0}})
-            print(f"INFO: processing {paper_cursor_count} records without doi")
+            progress = ProgressLogger(
+                "scienti_works:sin_doi/{}".format(config["database_name"]),
+                total=paper_cursor_count,
+            ).start("collection={} num_jobs={}".format(
+                config["collection_name"], self.n_jobs))
 
             results = Parallel(
                 n_jobs=self.n_jobs,
-                verbose=self.verbose,
+                verbose=0,
                 backend="threading",
                 return_as="generator_unordered")(
                 delayed(process_one)(
@@ -288,8 +324,9 @@ class Kahi_scienti_works(KahiBase):
                     es_semaphore=self.es_semaphore,
                 ) for work in paper_cursor
             )
-            for _ in results:
-                pass
+            for outcome in results:
+                progress.step(outcome or "omitidos")
+            progress.done()
         client.close()
 
     def run(self):

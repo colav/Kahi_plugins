@@ -1,10 +1,59 @@
+from time import time
+from urllib.parse import quote
+
+from joblib import Parallel, delayed
+from kahi.progress import ProgressLogger
 from kahi.KahiBase import KahiBase
 from pymongo import MongoClient
-from time import time
-from joblib import Parallel, delayed
 
 
-def process_one(kahi_col, wikid_col, inst, verbose):
+def commons_file_url(filename):
+    """Build a valid Wikimedia Commons redirect URL for a file claim."""
+    normalized = str(filename).strip().replace(" ", "_")
+    return (
+        "https://commons.wikimedia.org/w/index.php?title="
+        f"Special:Redirect/file/{quote(normalized, safe='')}&width=300"
+    )
+
+
+def claim_file(claims, property_id):
+    """Return the first non-empty file value for a Wikidata claim."""
+    for claim in claims.get(property_id, []):
+        value = claim.get("mainsnak", {}).get("datavalue", {}).get("value")
+        if value:
+            return value
+    return None
+
+
+RECORD_PROJECTION = {"labels": 1,
+                     "claims.P154.mainsnak.datavalue.value": 1,
+                     "claims.P18.mainsnak.datavalue.value": 1}
+
+
+def find_record(wikid_col, wikidata_id, redirects_col=None):
+    """
+    Find a wikidata entity by QID, following the redirect recorded by the
+    wikidata_capture DAG when Wikidata merged that item into another one.
+
+    Parameters:
+    ----------
+    wikid_col: pymongo.collection.Collection
+        collection of wikidata records
+    wikidata_id: str
+        QID reported by ROR
+    redirects_col: pymongo.collection.Collection or None
+        collection of {"id": QID, "redirect": target QID}
+    """
+    rec = wikid_col.find_one({"id": wikidata_id}, RECORD_PROJECTION)
+    if rec or redirects_col is None:
+        return rec
+    redirect = redirects_col.find_one({"id": wikidata_id}, {"redirect": 1})
+    if not redirect or not redirect.get("redirect"):
+        return None
+    return wikid_col.find_one({"id": redirect["redirect"]}, RECORD_PROJECTION)
+
+
+def process_one(kahi_col, wikid_col, inst, verbose, redirects_col=None):
     """
     This function processes one institution, and seve the the titles and images from wikidata.
     Images are taken from P154 (logo) or P18 (image) if P154 is not present then P18 is used.
@@ -18,45 +67,62 @@ def process_one(kahi_col, wikid_col, inst, verbose):
     inst: dict
         institution record
     verbose: int
+    redirects_col: pymongo.collection.Collection or None
+        collection of wikidata redirects (merged items), followed when the QID is not found
     """
-    for name in inst["names"]:
-        if name["source"] == "wikidata":
-            return
     wikidata_id = None
     for j in inst["external_ids"]:
         if j["source"] == "wikidata":
             wikidata_id = j["id"]
             break
-    rec = wikid_col.find_one({"id": wikidata_id},
-                             {"labels": 1,
-                              "claims.P154.mainsnak.datavalue.value": 1,
-                              "claims.P18.mainsnak.datavalue.value": 1})
+    rec = find_record(wikid_col, wikidata_id, redirects_col)
 
     if not rec:
         if verbose > 4:
             print(f"WARNING: record with id {wikidata_id} not found")
-        return
-    for lang in rec["labels"].keys():
-        name = {"name": rec["labels"][lang]["value"], "lang": lang,
-                "source": "wikidata", "provenance": "wikidata"}
-        inst["names"].append(name)
-    if "P154" in rec["claims"].keys() and len(rec["claims"]["P154"]) > 0:
-        if "datavalue" in rec["claims"]["P154"][0]["mainsnak"].keys():
-            img = rec["claims"]["P154"][0]["mainsnak"]["datavalue"]["value"]
-            url_img = f"https: //commons.wikimedia.org/w/index.php?title=Special: Redirect/file/{img}&width=300"
-            inst["external_urls"].append(
-                {"provenance": "wikidata", "source": "logo", "url": url_img})
-    elif "P18" in rec["claims"].keys() and len(rec["claims"]["P18"]) > 0:
-        if "datavalue" in rec["claims"]["P18"][0]["mainsnak"].keys():
-            img = rec["claims"]["P18"][0]["mainsnak"]["datavalue"]["value"]
-            url_img = f"https: //commons.wikimedia.org/w/index.php?title=Special: Redirect/file/{img}&width=300"
-            inst["external_urls"].append(
-                {"provenance": "wikidata", "source": "logo", "url": url_img})
-    inst["updated"].append({"source": "wikidata", "time": int(time())})
+        return "sin_registro_wikidata"
+    names = inst.setdefault("names", [])
+    known_names = {
+        (name.get("source"), name.get("lang"), name.get("name")) for name in names
+    }
+    for lang, label in rec.get("labels", {}).items():
+        key = ("wikidata", lang, label["value"])
+        if key not in known_names:
+            names.append({"name": label["value"], "lang": lang,
+                          "source": "wikidata", "provenance": "wikidata"})
+            known_names.add(key)
+
+    claims = rec.get("claims", {})
+    img = claim_file(claims, "P154") or claim_file(claims, "P18")
+    if img:
+        external_urls = inst.setdefault("external_urls", [])
+        external_urls[:] = [
+            item for item in external_urls
+            if not (
+                item.get("provenance") == "wikidata"
+                and item.get("source") == "logo"
+            )
+        ]
+        external_urls.append({
+            "provenance": "wikidata",
+            "source": "logo",
+            "url": commons_file_url(img),
+        })
+
+    now = int(time())
+    updated = inst.setdefault("updated", [])
+    wikidata_update = next(
+        (item for item in updated if item.get("source") == "wikidata"), None
+    )
+    if wikidata_update:
+        wikidata_update["time"] = now
+    else:
+        updated.append({"source": "wikidata", "time": now})
     kahi_col.update_one({"_id": inst["_id"]},
-                        {"$set": {"names": inst["names"],
-                                  "external_urls": inst["external_urls"],
-                                  "updated": inst["updated"]}})
+                        {"$set": {"names": names,
+                                  "external_urls": inst.get("external_urls", []),
+                                  "updated": updated}})
+    return "actualizados"
 
 
 class Kahi_wikidata_affiliations(KahiBase):
@@ -76,6 +142,7 @@ class Kahi_wikidata_affiliations(KahiBase):
         wikidata_affiliations:
             database_name: wikidata
             collection_name: data
+            redirects_collection_name: redirects  # optional, default redirects
             num_jobs: 5
             verbose: 5
 
@@ -94,6 +161,8 @@ class Kahi_wikidata_affiliations(KahiBase):
                                        ["database_name"]]
         self.wikidata_col = self.wikidata_db[config["wikidata_affiliations"]
                                              ["collection_name"]]
+        self.wikidata_redirects = self.wikidata_db[
+            config["wikidata_affiliations"].get("redirects_collection_name", "redirects")]
 
         self.n_jobs = config["wikidata_affiliations"]["num_jobs"]
 
@@ -108,13 +177,22 @@ class Kahi_wikidata_affiliations(KahiBase):
         institutions = list(self.collection.find(
             {"external_ids.source": "wikidata"}))
 
+        progress = ProgressLogger(
+            "wikidata_affiliations", total=len(institutions)).start(
+            f"num_jobs={self.n_jobs}")
+
+        def tracked(kahi_col, wikid_col, inst, verbose):
+            progress.step(process_one(kahi_col, wikid_col, inst, verbose,
+                                      self.wikidata_redirects))
+
         Parallel(
             n_jobs=self.n_jobs,
             backend="threading",
-            verbose=10
-        )(delayed(process_one)(
+            verbose=0
+        )(delayed(tracked)(
             self.collection, self.wikidata_col,
             inst, self.verbose) for inst in institutions)
+        progress.done()
 
     def run(self):
         self.process_wikidata()

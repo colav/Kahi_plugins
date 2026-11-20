@@ -91,6 +91,8 @@ def create_indexes(db):
     # H-index
     db["person"].create_index({"h_index": -1, "_id": 1})
     db["person"].create_index({"h5_index": -1, "_id": 1})
+    db["person"].create_index({"topics.id": 1})
+    db["person"].create_index({"primary_topic.id": 1})
 
     # =========================================================
     # SOURCES COLLECTION

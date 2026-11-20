@@ -1,12 +1,89 @@
+from kahi_impactu_utils.Mongo import insert_only_update
+from kahi_impactu_utils.Affiliations import get_units_affiliations
+from kahi_impactu_utils.Work import (
+    canonical_work_doi, claim_work_doi, find_work_by_doi,
+    insert_work_by_doi, merge_work_identifiers, prepare_work_doi, skip_work_doi_conflicts,
+)
 from kahi_scienti_works.parser import parse_scienti
-from kahi_impactu_utils.Utils import lang_poll, doi_processor, compare_author, split_names, split_names_fix, check_date_format
+from kahi_impactu_utils.Utils import lang_poll, doi_processor, compare_author, split_names, split_names_fix, check_date_format, normalize_publication_year
 import re
 from time import time
 from bson import ObjectId
 from threading import Lock
+from copy import deepcopy
 
 
 _INSERT_LOCKS = tuple(Lock() for _ in range(256))
+# TPO_PARTICIPACION of a directed work: tutor, advisor, co-tutor; ORI is the student.
+ADVISOR_ROLES = ("TUT", "ASE", "COT")
+STUDENT_ROLE = "ORI"
+
+
+def thesis_roles(scienti_reg):
+    """Return ``{COD_RH: "advisor" | "author"}`` for the people of a directed work."""
+    roles = {}
+    for participant in scienti_reg.get("re_author_others") or []:
+        role = participant.get("TPO_PARTICIPACION")
+        if role in ADVISOR_ROLES:
+            kind = "advisor"
+        elif role == STUDENT_ROLE:
+            kind = "author"
+        else:
+            continue
+        cod_rh = None
+        if participant.get("author_others"):
+            cod_rh = participant["author_others"][0].get("COD_RH_REF")
+        if not cod_rh and participant.get("author"):
+            cod_rh = participant["author"][0].get("COD_RH")
+        if cod_rh and roles.get(cod_rh) != "advisor":
+            roles[cod_rh] = kind
+    return roles
+
+
+def apply_thesis_roles(scienti_reg, authors, db, owner_affiliations=None):
+    """
+    Make the advisors and the student of a directed work authors of the work.
+
+    A thesis already inserted by another source usually lists only the student, so
+    the owner of the CvLAC (its advisor) matches no existing author; without this
+    the advisor would be lost. An author type set by another source is kept.
+
+    Returns
+    -------
+    bool
+        True when ``authors`` changed.
+    """
+    roles = thesis_roles(scienti_reg)
+    if "advisor" not in roles.values():
+        return False
+    changed = False
+    for cod_rh, kind in roles.items():
+        person = db["person"].find_one(
+            {"external_ids.id.COD_RH": cod_rh}, {"_id": 1, "full_name": 1})
+        if not person:
+            continue
+        current = next(
+            (author for author in authors if author.get("id") == person["_id"]), None)
+        if current is None:
+            is_owner = cod_rh == scienti_reg.get("COD_RH")
+            authors.append({
+                "id": person["_id"],
+                "full_name": person["full_name"],
+                "affiliations": deepcopy(owner_affiliations or []) if is_owner else [],
+                "type": kind,
+            })
+            changed = True
+        elif not current.get("type"):
+            current["type"] = kind
+            changed = True
+    return changed
+
+
+def _with_type(author, previous):
+    """Keep the author type (advisor, author) when an author entry is rebuilt."""
+    if previous.get("type"):
+        author["type"] = previous["type"]
+    return author
 
 
 def run_es_operation(semaphore, operation, *args, **kwargs):
@@ -15,6 +92,61 @@ def run_es_operation(semaphore, operation, *args, **kwargs):
         return operation(*args, **kwargs)
     with semaphore:
         return operation(*args, **kwargs)
+
+
+def _preferred_source_name(source):
+    names = source.get("names") or []
+    if not names:
+        return ""
+    name = names[0].get("name", "")
+    for language in ("es", "en"):
+        candidate = next((
+            item.get("name", "") for item in names
+            if item.get("lang") == language and item.get("name")
+        ), None)
+        if candidate:
+            return candidate
+    return name
+
+
+def _resolve_source(db, source):
+    if not isinstance(source, dict):
+        return None
+    for external_id in source.get("external_ids") or []:
+        identifier = external_id.get("id")
+        if identifier in (None, ""):
+            continue
+        source_db = db["sources"].find_one({"external_ids.id": identifier})
+        if source_db:
+            return {
+                "id": source_db["_id"],
+                "name": _preferred_source_name(source_db),
+            }
+    return None
+
+
+def merge_missing_core_metadata(colav_reg, entry, db):
+    """Fill trusted publication metadata without overwriting existing data."""
+    changed = {}
+    year = normalize_publication_year(colav_reg.get("year_published"))
+    if year is None:
+        year = normalize_publication_year(entry.get("year_published"))
+    if colav_reg.get("year_published") != year:
+        colav_reg["year_published"] = year
+        changed["year_published"] = year
+    for field in ("doi", "date_published"):
+        current = colav_reg.get(field)
+        incoming = entry.get(field)
+        if current in (None, "", 0) and incoming not in (None, "", 0):
+            colav_reg[field] = incoming
+            changed[field] = incoming
+    current_source = colav_reg.get("source") or {}
+    if not isinstance(current_source.get("id"), ObjectId):
+        source = _resolve_source(db, entry.get("source"))
+        if source:
+            colav_reg["source"] = source
+            changed["source"] = source
+    return changed
 
 
 def scienti_identity(entry):
@@ -194,58 +326,6 @@ def get_doi(reg):
     return False
 
 
-def get_units_affiliations(db, author_db, affiliations):
-    """
-    Method to get the units of an author in a register. ex: faculty, department and group.
-
-    Parameters:
-    ----------
-    db : pymongo.database.Database
-        Database connection to colav database.
-    author_db : dict
-        record from person
-    affiliations : list
-        list of affiliations from the parse_openalex method
-
-    Returns:
-    -------
-    list
-        list of units of an author (entries from using affiliations)
-    """
-    institution_id = None
-    # verifiying univeristy
-    for j, aff in enumerate(affiliations):
-        aff_db = None
-        if "external_ids" in aff.keys():
-            for ext in aff["external_ids"]:
-                aff_db = db["affiliations"].find_one(
-                    {"external_ids.id": ext["id"]}, {"_id": 1, "types": 1})
-                if aff_db:
-                    types = [i["type"] for i in aff_db["types"]]
-                    if "group" in types or "department" in types or "faculty" in types:
-                        aff_db = None
-                        continue
-                    else:
-                        break
-        if aff_db:
-            count = db["person"].count_documents(
-                {"_id": author_db["_id"], "affiliations.id": aff_db["_id"]})
-            if count > 0:
-                institution_id = aff_db["_id"]
-                break
-    units = []
-    for aff in author_db["affiliations"]:
-        if aff["id"] == institution_id:
-            continue
-        count = db["affiliations"].count_documents(
-            {"_id": aff["id"], "relations.id": institution_id})
-        if count > 0:
-            types = [i["type"] for i in aff["types"]]
-            if "department" in types or "faculty" in types:
-                units.append(aff)
-    return units
-
-
 def process_author(entry, colav_reg, db, verbose=0):
     """
     Function to compare the authors of a register from the scienti database with the authors of a register from the colav database.
@@ -285,11 +365,11 @@ def process_author(entry, colav_reg, db, verbose=0):
                     for group in groups:
                         if group not in author["affiliations"]:
                             author["affiliations"].append(group)
-                    colav_reg["authors"][i] = {
+                    colav_reg["authors"][i] = _with_type({
                         "id": author_db["_id"],
                         "full_name": author_db["full_name"],
                         "affiliations": author["affiliations"]
-                    }
+                    }, author)
                     continue
                 author_reg = None
                 if author['id'] == "":
@@ -351,16 +431,17 @@ def process_author(entry, colav_reg, db, verbose=0):
                             author["affiliations"].append(group)
 
                     aff_units = get_units_affiliations(
-                        db, author_db, author["affiliations"])
+                        db, author_db, author["affiliations"],
+                        colav_reg.get("year_published") or entry.get("year_published"))
                     for aff_unit in aff_units:
                         if aff_unit not in author["affiliations"]:
                             author["affiliations"].append(aff_unit)
 
-                    colav_reg["authors"][i] = {
+                    colav_reg["authors"][i] = _with_type({
                         "id": author_db["_id"],
                         "full_name": author_db["full_name"],
                         "affiliations": author["affiliations"]
-                    }
+                    }, author)
                     break
 
                 else:
@@ -372,6 +453,59 @@ def process_author(entry, colav_reg, db, verbose=0):
                             "affiliations": scienti_author["affiliations"]
                         })
                         break
+
+
+def merge_scienti_source_institution(scienti_reg, entry, colav_reg, db):
+    """Keep only the first group institution for the already identified source author."""
+    groups = scienti_reg.get("group") or []
+    if not groups or not groups[0].get("institution"):
+        return False
+
+    source_author = entry["authors"][0]
+    author_db = db["person"].find_one(
+        {"external_ids": {"$elemMatch": {"$or": source_author["external_ids"]}}},
+        {"_id": 1},
+    )
+    if not author_db:
+        return False
+    authors = [author for author in colav_reg["authors"]
+               if author["id"] == author_db["_id"]]
+    if not authors:
+        return False
+
+    # parse_scienti emits the first group followed by its first institution.
+    # On the first update this affiliation has already been normalized.
+    institution = source_author["affiliations"][1]
+    if "id" not in institution:
+        aff_db = None
+        for ext in institution["external_ids"]:
+            aff_db = db["affiliations"].find_one({"external_ids.id": ext["id"]})
+            if aff_db:
+                break
+        if not aff_db:
+            aff_db = db["affiliations"].find_one({"names.name": institution["name"]})
+        if aff_db:
+            name = aff_db["names"][0]["name"]
+            for candidate in aff_db["names"]:
+                if candidate["source"] == "ror":
+                    name = candidate["name"]
+                    break
+                if candidate["lang"] in ("en", "es"):
+                    name = candidate["name"]
+            institution = {"id": aff_db["_id"], "name": name, "types": aff_db["types"]}
+        else:
+            institution = {"id": "", "name": institution["name"], "types": []}
+
+    changed = False
+    for author in authors:
+        if institution["id"]:
+            present = any(aff.get("id") == institution["id"] for aff in author["affiliations"])
+        else:
+            present = any(aff.get("name") == institution["name"] for aff in author["affiliations"])
+        if not present:
+            author["affiliations"].append(deepcopy(institution))
+            changed = True
+    return changed
 
 
 def process_one_update(
@@ -403,6 +537,23 @@ def process_one_update(
     """
     entry = parse_scienti(
         scienti_reg, empty_work.copy(), verbose=verbose)
+    prepare_work_doi(entry, "scienti")
+    core_updates = merge_missing_core_metadata(colav_reg, entry, db)
+    merge_work_identifiers(collection, colav_reg, entry)
+    already_updated = any(
+        update.get("source") == "scienti"
+        for update in colav_reg.get("updated", [])
+    )
+    if already_updated:
+        roles_changed = "authors" in colav_reg and apply_thesis_roles(
+            scienti_reg, colav_reg["authors"], db)
+        if merge_scienti_source_institution(scienti_reg, entry, colav_reg, db) or roles_changed:
+            core_updates["authors"] = colav_reg["authors"]
+            core_updates["author_count"] = len(colav_reg["authors"])
+        if core_updates:
+            collection.update_one(
+                {"_id": colav_reg["_id"]}, {"$set": core_updates})
+        return None
     colav_reg["updated"].append(
         {"source": "scienti", "time": int(time())})
 
@@ -482,6 +633,9 @@ def process_one_update(
 
     # scienti author
     process_author(entry, colav_reg, db, verbose)
+    apply_thesis_roles(
+        scienti_reg, colav_reg["authors"], db, entry["authors"][0].get("affiliations"))
+    merge_scienti_source_institution(scienti_reg, entry, colav_reg, db)
 
     # the first author is the original one always (already inserted)
     # there is a pair (author_others, author) see schema (but it is a list)
@@ -553,25 +707,30 @@ def process_one_update(
 
     colav_reg["author_count"] = len(colav_reg["authors"])
 
+    fields = {
+        "updated": colav_reg["updated"],
+        "titles": colav_reg["titles"],
+        "external_ids": colav_reg["external_ids"],
+        "types": colav_reg["types"],
+        # this is not in the scienti register, but it is in the colav register, so it is not updated, should it be updated with scienti register?
+        # scienti provides poor quality data, so it is better to keep the data from colav
+        "bibliographic_info": colav_reg["bibliographic_info"],
+        "external_urls": colav_reg["external_urls"],
+        "author_count": colav_reg["author_count"],
+        "authors": colav_reg["authors"],
+        "subjects": colav_reg["subjects"],
+        "groups": colav_reg["groups"],
+    }
+    fields.update(core_updates)
+    additions = {field: {"$each": fields.pop(field)}
+                 for field in ("updated", "titles", "external_ids")}
     collection.update_one(
         {"_id": colav_reg["_id"]},
-        {"$set": {
-            "updated": colav_reg["updated"],
-            "titles": colav_reg["titles"],
-            "external_ids": colav_reg["external_ids"],
-            "types": colav_reg["types"],
-            # this is not in the scienti register, but it is in the colav register, so it is not updated, should it be updated with scienti register?
-            # scienti provides poor quality data, so it is better to keep the data from colav
-            "bibliographic_info": colav_reg["bibliographic_info"],
-            "external_urls": colav_reg["external_urls"],
-            "author_count": colav_reg["author_count"],
-            "authors": colav_reg["authors"],
-            "subjects": colav_reg["subjects"],
-            "groups": colav_reg["groups"]
-        }}
+        {"$set": fields, "$addToSet": additions}
     )
 
 
+@skip_work_doi_conflicts
 def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
                        doi=None, verbose=0, es_semaphore=None):
     """
@@ -601,9 +760,10 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
     """
     # parse
     entry = parse_scienti(scienti_reg, empty_work.copy(), doi)
+    prepare_work_doi(entry, "scienti")
     if not entry.get("titles") or not entry["titles"][0].get(
             "title", "").strip():
-        return
+        return "omitidos"
     # link
     source_db = None
     if "external_ids" in entry["source"].keys():
@@ -686,7 +846,9 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
             "full_name": author_db["full_name"],
             "affiliations": author["affiliations"]
         }
-        aff_units = get_units_affiliations(db, author_db, author["affiliations"])
+        aff_units = get_units_affiliations(
+            db, author_db, author["affiliations"],
+            entry.get("year_published"))
         for aff_unit in aff_units:
             if aff_unit not in author["affiliations"]:
                 author["affiliations"].append(aff_unit)
@@ -709,7 +871,8 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
                 "affiliations": author["affiliations"]
             }
             aff_units = get_units_affiliations(
-                db, author_db, author["affiliations"])
+                db, author_db, author["affiliations"],
+                entry.get("year_published"))
             for aff_unit in aff_units:
                 if aff_unit not in author["affiliations"]:
                     author["affiliations"].append(aff_unit)
@@ -817,6 +980,7 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
                 "affiliations": []
             })
 
+    apply_thesis_roles(scienti_reg, entry["authors"], db)
     entry["author_count"] = len(entry["authors"])
 
     # Update date_published if oriented_thesis is available
@@ -834,9 +998,10 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
                 if len(str(month)) == 1:
                     month = f'0{month}'
             if year and month:
-                entry["date_published"] = check_date_format(
-                    f'{month}-{year}')
-                entry["year_published"] = int(year)
+                entry["year_published"] = normalize_publication_year(year)
+                if entry["year_published"] is not None:
+                    entry["date_published"] = check_date_format(
+                        f'{month}-{entry["year_published"]}')
 
     # scienti group
     if "group" in scienti_reg.keys():
@@ -856,15 +1021,23 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
 
     # Insert idempotently so a failed Elasticsearch operation can be retried.
     identity = scienti_identity(entry)
-    if identity:
+    outcome = "nuevos"
+    if canonical_work_doi(entry.get("doi")):
+        inserted_id, existing = insert_work_by_doi(collection, entry)
+        if existing is not None:
+            process_one_update(scienti_reg, existing, db, collection, empty_work, verbose=verbose)
+            outcome = "actualizados"
+    elif identity:
         title = entry["titles"][0]["title"]
         with scienti_insert_lock(identity, title):
             response = collection.update_one(
                 scienti_retry_query(identity, title),
-                {"$setOnInsert": entry},
+                insert_only_update(entry),
                 upsert=True,
             )
             inserted_id = response.upserted_id
+        if inserted_id is None:
+            outcome = "existentes"
     else:
         response = collection.insert_one(entry)
         inserted_id = response.inserted_id
@@ -875,8 +1048,10 @@ def process_one_insert(scienti_reg, db, collection, empty_work, es_handler,
             {"_id": 1})
         inserted_id = existing.get("_id") if existing else None
     ensure_es_work(entry, inserted_id, es_handler, es_semaphore)
+    return outcome
 
 
+@skip_work_doi_conflicts
 def process_one(scienti_reg, db, collection, empty_work, es_handler,
                 similarity, verbose=0, es_semaphore=None):
     """
@@ -897,11 +1072,18 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
         Elasticsearch handler to insert the register in the elasticsearch index, Mohan's Similarity class.
     verbose : int, optional
         Verbosity level. The default is 0.
+
+    Returns
+    -------
+    str
+        Outcome for progress reporting: "nuevos", "actualizados",
+        "existentes" or "omitidos".
     """
     title = scienti_reg.get("TXT_NME_PROD")
     if not isinstance(title, str) or not title.strip():
-        return
+        return "omitidos"
 
+    outcome = "omitidos"
     doi = None
     # register has doi
     if "TXT_DOI" in scienti_reg.keys():
@@ -925,9 +1107,10 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                             f'/{keyword}')[0] if keyword in doi else doi
     if doi:
         # is the doi in colavdb?
-        colav_reg = collection.find_one({"external_ids.id": doi})
+        colav_reg = find_work_by_doi(collection, doi, titles=[{"title": scienti_reg.get("TXT_NME_PROD", "")}])
 
         if colav_reg:  # update the register
+            claim_work_doi(collection, colav_reg, doi)
             process_one_update(
                 scienti_reg,
                 colav_reg,
@@ -935,8 +1118,9 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                 collection,
                 empty_work,
                 verbose=verbose)
+            outcome = "actualizados"
         else:  # insert a new register
-            process_one_insert(
+            outcome = process_one_insert(
                 scienti_reg, db, collection, empty_work, es_handler, doi,
                 verbose=verbose, es_semaphore=es_semaphore)
     elif similarity:  # does not have a doi identifier
@@ -947,15 +1131,18 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                 scienti_reg, empty_work.copy(), verbose=verbose)
             if not entry.get("titles") or not entry["titles"][0].get(
                     "title", "").strip():
-                return
+                return "omitidos"
             identity = scienti_identity(entry)
             existing = (collection.find_one(
-                scienti_retry_query(identity, entry["titles"][0]["title"]),
-                {"_id": 1}) if identity else None)
+                scienti_retry_query(identity, entry["titles"][0]["title"])
+            ) if identity else None)
             if existing:
+                process_one_update(
+                    scienti_reg, existing, db, collection, empty_work,
+                    verbose=verbose)
                 ensure_es_work(
                     entry, existing["_id"], es_handler, es_semaphore)
-                return
+                return "actualizados"
             work = {}
             work["title"] = entry["titles"][0]["title"]
             work["source"] = entry["source"]["name"] if "name" in entry["source"].keys(
@@ -998,7 +1185,7 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                                 entry["external_ids"], colav_reg["external_ids"]):
                             # if they have the same COD_RH  but different COD_PRODUCTO
                             # then insert the new register
-                            process_one_insert(
+                            return process_one_insert(
                                 scienti_reg,
                                 db,
                                 collection,
@@ -1007,7 +1194,6 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                                 doi=None,
                                 verbose=verbose,
                                 es_semaphore=es_semaphore)
-                            return
                     if has_scienti_source(
                             entry["types"]) and has_scienti_source(
                             colav_reg["types"]):
@@ -1016,8 +1202,9 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                                 entry["types"], colav_reg["types"]):
                             process_one_update(scienti_reg, colav_reg, db,
                                                collection, empty_work, verbose)
+                            outcome = "actualizados"
                         else:
-                            process_one_insert(
+                            outcome = process_one_insert(
                                 scienti_reg,
                                 db,
                                 collection,
@@ -1029,6 +1216,7 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                     else:  # there is not scienti types to compare, then update them
                         process_one_update(scienti_reg, colav_reg, db,
                                            collection, empty_work, verbose)
+                        outcome = "actualizados"
 
                 else:
                     if verbose > 4:
@@ -1036,9 +1224,10 @@ def process_one(scienti_reg, db, collection, empty_work, es_handler,
                             response["_id"]))
                         print(response)
             else:  # insert new register
-                process_one_insert(scienti_reg, db, collection,
-                                   empty_work, es_handler, doi=None,
-                                   verbose=verbose, es_semaphore=es_semaphore)
+                outcome = process_one_insert(scienti_reg, db, collection,
+                                             empty_work, es_handler, doi=None,
+                                             verbose=verbose, es_semaphore=es_semaphore)
         else:
             if verbose > 4:
                 print("No elasticsearch index provided")
+    return outcome

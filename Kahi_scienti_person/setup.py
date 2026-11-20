@@ -80,10 +80,10 @@ def main():
         # Dependent packages (distributions)
         # put you packages here
         install_requires=[
-            'kahi',
+            'kahi>=0.1.3',
             'thefuzz',
             'pymongo',
-            'kahi_impactu_utils'
+            'kahi_impactu_utils>=0.1.6'
         ],
     )
 

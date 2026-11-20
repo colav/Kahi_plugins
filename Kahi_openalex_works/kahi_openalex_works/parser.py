@@ -1,8 +1,46 @@
-from kahi_impactu_utils.Utils import lang_poll
-from kahi_impactu_utils.String import parse_mathml, parse_html
+from kahi_impactu_utils.Utils import lang_poll, normalize_publication_year
+from kahi_impactu_utils.String import parse_mathml, parse_html, normalize_dashes
+import re
 from time import time
 from datetime import datetime as dt
 from kahi_impactu_utils.String import inverted_index_to_text, text_to_inverted_index
+from kahi_impactu_utils.Urls import url_source_kind
+
+
+def canonical_orcid_url(value):
+    """Return an ORCID identifier with one valid canonical URL prefix."""
+    value = str(value).strip()
+    value = re.sub(
+        r"^(?:(?:https?)\s*:\s*//)?(?:www\.)?orcid\.org/",
+        "",
+        value,
+        flags=re.IGNORECASE,
+    )
+    return f"https://orcid.org/{value.strip('/')}"
+
+
+OPENALEX_CITED_BY_API = "https://api.openalex.org/works?filter=cites:"
+
+
+def openalex_work_key(value):
+    """Return the bare OpenAlex work key (W...) from an id or URL."""
+    if not value:
+        return ""
+    return str(value).strip().rstrip("/").rsplit("/", 1)[-1]
+
+
+def cited_by_api_url(work_id):
+    """Rebuild the OpenAlex cited_by_api_url, absent from the snapshot."""
+    key = openalex_work_key(work_id)
+    return OPENALEX_CITED_BY_API + key if key else ""
+
+
+def openalex_references(reg):
+    """Map referenced_works (ids of the works this one cites) to references."""
+    return [
+        {"provenance": "openalex", "source": "openalex", "id": ref}
+        for ref in (reg.get("referenced_works") or []) if ref
+    ]
 
 
 def parse_openalex(reg, empty_work, verbose=0):
@@ -31,7 +69,7 @@ def parse_openalex(reg, empty_work, verbose=0):
         entry["external_ids"].append(
             {"provenance": "openalex", "source": source, "id": idx})
     entry["doi"] = reg["doi"]
-    entry["year_published"] = reg["publication_year"]
+    entry["year_published"] = normalize_publication_year(reg.get("publication_year"))
     publication_date = reg.get("publication_date")
     if publication_date:
         try:
@@ -73,6 +111,12 @@ def parse_openalex(reg, empty_work, verbose=0):
 
     entry["citations_count"].append(
         {"source": "openalex", "count": reg["cited_by_count"]})
+    entry["references"] = openalex_references(reg)
+    references_count = reg.get("referenced_works_count")
+    entry["references_count"] = (
+        references_count if isinstance(references_count, int)
+        else len(entry["references"]))
+    entry["cited_by_api_url"] = cited_by_api_url(reg.get("id"))
 
     if "volume" in reg["biblio"]:
         if reg["biblio"]["volume"]:
@@ -97,8 +141,9 @@ def parse_openalex(reg, empty_work, verbose=0):
             entry["open_access"]["has_repository_fulltext"] = reg["open_access"]["any_repository_has_fulltext"]
         if "oa_url" in reg["open_access"].keys():
             if reg["open_access"]["oa_url"]:
+                oa_url = reg["open_access"]["oa_url"]
                 entry["external_urls"].append(
-                    {"provenance": "openalex", "source": "open_access", "url": reg["open_access"]["oa_url"]})
+                    {"provenance": "openalex", "source": url_source_kind(oa_url), "url": oa_url})
     if "apc_paid" in reg.keys():
         if reg["apc_paid"]:
             entry["apc"]["paid"] = {
@@ -120,7 +165,10 @@ def parse_openalex(reg, empty_work, verbose=0):
             entry["abstracts"].append({"abstract": text_to_inverted_index(
                 abstract), "lang": abstract_lang, "source": "openalex", 'provenance': 'openalex'})
 
-    # authors section
+    # authors section. OpenAlex repeats an author when it lists one
+    # authorship per affiliation (e.g. large collaborations): keep one entry
+    # per author id and join its affiliations.
+    authors_by_id = {}
     for author in reg["authorships"]:
         if not author["author"]:
             continue
@@ -138,7 +186,7 @@ def parse_openalex(reg, empty_work, verbose=0):
         author = author["author"]
         author_entry = {
             "external_ids": [],
-            "full_name": author["display_name"],
+            "full_name": normalize_dashes(author["display_name"]) or "",
             "types": [],
             "affiliations": affs
         }
@@ -146,11 +194,19 @@ def parse_openalex(reg, empty_work, verbose=0):
             author_entry["external_ids"].append(
                 {"source": "openalex", "id": author["id"]})
         if author["orcid"]:
-            orcid = author["orcid"]
-            if not orcid.startswith("https://orcid.org/"):
-                orcid = f"https: //orcid.org/{orcid}"
             author_entry["external_ids"].append(
-                {"source": "orcid", "id": orcid})
+                {"source": "orcid", "id": canonical_orcid_url(author["orcid"])})
+        previous = authors_by_id.get(author["id"]) if author["id"] else None
+        if previous is not None:
+            for aff in affs:
+                if aff not in previous["affiliations"]:
+                    previous["affiliations"].append(aff)
+            for ext in author_entry["external_ids"]:
+                if ext not in previous["external_ids"]:
+                    previous["external_ids"].append(ext)
+            continue
+        if author["id"]:
+            authors_by_id[author["id"]] = author_entry
         entry["authors"].append(author_entry)
     # concepts section
     subjects = []
@@ -164,6 +220,6 @@ def parse_openalex(reg, empty_work, verbose=0):
     entry["subjects"].append({"source": "openalex", "subjects": subjects})
 
     # topics section
-    entry["primary_topic"] = reg["primary_topic"]
-    entry["topics"] = reg["topics"]
+    entry["primary_topic"] = reg.get("primary_topic") or {}
+    entry["topics"] = reg.get("topics") or []
     return entry

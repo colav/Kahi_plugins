@@ -80,10 +80,10 @@ def main():
         # Dependent packages (distributions)
         # put you packages here
         install_requires=[
-            'kahi',
+            'kahi>=0.1.4',
             'pymongo',
             'joblib',
-            'kahi_impactu_utils>=0.0.10',
+            'kahi_impactu_utils>=0.1.11',
             'mohan',
             'thefuzz'
         ],

@@ -78,7 +78,7 @@ def prepare_databases(monkeypatch, *, entity_count=6):
         "external_urls": [],
         "external_ids": [{"source": "minciencias", "id": "000000009892"}],
         "subjects": [], "ranking": [], "description": [],
-        "citation_count": [], "products_count": 0,
+        "citation_count": [], "products_count": 0, "campuses": [],
     })
     source.affiliations_final.insert_one(group_snapshot())
     collections = {entity: f"final_{entity}" for entity in ENTITIES}
@@ -111,6 +111,7 @@ def test_consumes_proven_six_entity_snapshot_without_mutating_dam(monkeypatch):
     repeated = Plugin(config()).run()
 
     group = target.affiliations.find_one({"_id": "COL0000001"})
+    assert list(group) == ["_id", *Plugin.empty_affiliation(None)]
     assert summary["source_documents"] == 1
     assert summary["inserted"] == 1
     assert repeated == summary

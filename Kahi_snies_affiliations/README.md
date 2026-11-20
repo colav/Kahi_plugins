@@ -20,7 +20,9 @@ Current mapping:
 
 - `NOMBRE_INSTITUCIÓN` -> `names`, formatted as Spanish title case with `lang: es`; acronym-like suffixes are moved to `abbreviations`.
 - `CÓDIGO_INSTITUCIÓN` -> `external_ids` with `source: snies` and `provenance: snies`.
-- `NÚM_IDENTIFIC_TRIBUTARIA_NIT` -> `external_ids` with `source: nit` and `provenance: snies`, removing punctuation and the verification digit.
+- `NÚM_IDENTIFIC_TRIBUTARIA_NIT` -> `external_ids` with `source: nit` and
+  `provenance: snies`, removing punctuation and the verification digit;
+  malformed lengths, repeated digits and known placeholder values are ignored.
 - `SECTOR` -> `types`, translating `Oficial` to `public` and `Privado` to `private`.
 - `ESTADO` -> `status`, replacing any previous ROR status with `active` or `inactive`.
 - `DEPARTAMENTO_DOMICILIO` and `MUNICIPIO_DOMICILIO` -> `addresses.state` and `addresses.city` only when those fields are missing.
@@ -56,9 +58,14 @@ workflow:
     database_url: localhost:27017
     database_name: snies_institutions
     collection_name: institutions
-    num_jobs: 4
     verbose: 1
 ```
+
+Official sectionals (`CÓDIGO_IES_PADRE` different from
+`CÓDIGO_INSTITUCIÓN`) are stored as compact objects in the principal
+affiliation's `campuses` array. They are not inserted as separate affiliations.
+Groups, authors and scientific products resolve a sectional to the principal
+affiliation; the campus distinction is retained only as institutional metadata.
 
 # License
 

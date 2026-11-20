@@ -1,9 +1,45 @@
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from pymongo import MongoClient, ASCENDING, TEXT
 from time import time
-from kahi_impactu_utils.Utils import check_date_format, get_id_from_url, parse_sex, doi_processor
-from kahi_impactu_utils.String import title_case
+from kahi_impactu_utils.Utils import check_date_format, get_id_from_url, parse_sex, doi_processor, parse_orcid_id_from_url
+from kahi_impactu_utils.String import has_dash, normalize_dashes, title_case
 import re
+
+
+def _clean_scienti_name(value):
+    """Collapse whitespace, drop dots and turn every dash variant into a space."""
+    if not value:
+        return ""
+    return normalize_dashes(re.sub(r'\s+', ' ', str(value).replace(".", " ")).strip()) or ""
+
+
+def scienti_author_names(author):
+    """
+    Build first_names, last_names, initials and the dashed alias of a ScienTI author.
+
+    Hyphens (ASCII or Unicode) are converted to spaces before title casing so
+    "Saenz-ludlow" becomes the last name "Saenz Ludlow". When the raw name had a
+    dash, its lowercase form is returned as `alias` to keep it searchable.
+    """
+    raw_first = author.get("TXT_NME_RH") or author.get("TXT_NAMES_RH") or ""
+    raw_last = [author.get("TXT_PRIM_APELL") or "", author.get("TXT_SEG_APELL") or ""]
+    first_names = title_case(_clean_scienti_name(raw_first)).strip().split()
+    last_names = [title_case(_clean_scienti_name(lname))
+                  for lname in raw_last if _clean_scienti_name(lname)]
+    raw_full = " ".join(str(part).strip() for part in [raw_first] + raw_last if part and str(part).strip())
+    return {
+        "first_names": first_names,
+        "last_names": last_names,
+        "initials": "".join([p[0].upper() for p in first_names]),
+        "alias": raw_full.lower() if has_dash(raw_full) else "",
+    }
+
+
+def normalize_birthdate(value):
+    """Keep the person schema numeric when ScienTI has no usable date."""
+    parsed = check_date_format(value)
+    return parsed if isinstance(parsed, int) else -1
 
 
 class Kahi_scienti_person(KahiBase):
@@ -27,11 +63,23 @@ class Kahi_scienti_person(KahiBase):
 
         self.verbose = config["scienti_person"]["verbose"] if "verbose" in config["scienti_person"].keys(
         ) else 0
+        # Sin progress_interval se usa el estandar de kahi.progress (5%, minimo 1000).
+        progress_interval = config["scienti_person"].get("progress_interval")
+        self.progress_interval = max(1, int(progress_interval)) if progress_interval is not None else None
 
         # checking if the databases and collections are available
         self.check_databases_and_collections()
         # creating indexes for the scienti sources
         self.create_source_indexes()
+
+    def _progress(self, config, phase, total=None):
+        """ProgressLogger por base y fase; silencioso con verbose < 1."""
+        progress = ProgressLogger(
+            "scienti_person:{}:{}".format(config["database_name"], phase),
+            total=total, every=self.progress_interval)
+        if self.verbose < 1:
+            progress.log = lambda message: None
+        return progress.start("coleccion={}".format(config["collection_name"]))
 
     def check_databases_and_collections(self):
         for db_info in self.config["scienti_person"]["databases"]:
@@ -70,6 +118,8 @@ class Kahi_scienti_person(KahiBase):
         client = MongoClient(config["database_url"])
         db = client[config["database_name"]]
         scienti = db[config["collection_name"]]
+        progress = self._progress(
+            config, "actualizar", self.collection.count_documents({}))
         for person in self.collection.find():
             idx = None
             for ext in person["external_ids"]:
@@ -86,36 +136,21 @@ class Kahi_scienti_person(KahiBase):
                     person["external_ids"].append(rec)
                 if "COD_ORCID" in author.keys():
                     if author["COD_ORCID"]:
-                        orcid_id = None
-                        if "orcid" in author["COD_ORCID"]:
-                            orcid_id = get_id_from_url(author["COD_ORCID"])
-                        else:
-                            orcid_id = "https://orcid.org/" + \
-                                author["COD_ORCID"]
+                        orcid_id = parse_orcid_id_from_url(author["COD_ORCID"])
                         if orcid_id:
                             rec = {"provenance": "scienti",
                                    "source": "orcid", "id": orcid_id}
                             if rec not in person["external_ids"]:
                                 person["external_ids"].append(rec)
                 if "staff" not in [source["source"] for source in person["updated"]]:
-                    first_names = re.sub(
-                        r'\s+', ' ', author["TXT_NAMES_RH"].replace(".", " ")).strip()
-                    person["first_names"] = title_case(first_names).strip().split()
-                    person["last_names"] = []
-                    if "TXT_PRIM_APELL" in author.keys():
-                        lname = re.sub(
-                            r'\s+', ' ', author["TXT_PRIM_APELL"].replace(".", " ")).strip()
-                        if lname:
-                            person["last_names"].append(title_case(lname))
-                    if "TXT_SEG_APELL" in author.keys():
-                        if author["TXT_SEG_APELL"] is not None:
-                            lname = re.sub(
-                                r'\s+', ' ', author["TXT_SEG_APELL"].replace(".", " ")).strip()
-                            if lname:
-                                person["last_names"].append(title_case(lname))
+                    names = scienti_author_names(author)
+                    person["first_names"] = names["first_names"]
+                    person["last_names"] = names["last_names"]
                     full_name = " ".join(person["first_names"]) + " " + " ".join(person["last_names"])
                     person["full_name"] = title_case(full_name)
-                    person["initials"] = "".join([p[0].upper() for p in person["first_names"]])
+                    person["initials"] = names["initials"]
+                    if names["alias"] and names["alias"] not in person.setdefault("aliases", []):
+                        person["aliases"].append(names["alias"])
 
                 marital = None
                 if "TPO_ESTADO_CIVIL" in author.keys():
@@ -258,15 +293,20 @@ class Kahi_scienti_person(KahiBase):
                     "birthplace": birthplace,
                     "related_works": person["related_works"],
                 }})
+            progress.step("actualizados" if scienti_reg else "omitidos")
+        progress.done()
 
     def insert_scienti(self, config, verbose=0):
         client = MongoClient(config["database_url"])
         db = client[config["database_name"]]
         scienti = db[config["collection_name"]]
-        for rh in scienti.distinct("author.COD_RH"):
+        authors = scienti.distinct("author.COD_RH")
+        progress = self._progress(config, "insertar", len(authors))
+        for rh in authors:
             author_db = self.collection.find_one(
                 {"external_ids.id.COD_RH": rh})
             if author_db:
+                progress.step("existentes")
                 continue
             author_scienti = scienti.find_one({"author.COD_RH": rh})
             if author_scienti:
@@ -277,13 +317,7 @@ class Kahi_scienti_person(KahiBase):
                 if not author_db:
                     if "COD_ORCID" in author.keys():
                         if author["COD_ORCID"]:
-                            orcid_id = None
-                            if "orcid" in author["COD_ORCID"]:
-                                orcid_id = get_id_from_url(author["COD_ORCID"])
-                            else:
-                                orcid_url = "https://orcid.org/" + \
-                                    author["COD_ORCID"]
-                                orcid_id = get_id_from_url(orcid_url)
+                            orcid_id = parse_orcid_id_from_url(author["COD_ORCID"])
                             if orcid_id:
                                 author_db = self.collection.find_one(
                                     {"external_ids.id": orcid_id})
@@ -327,13 +361,7 @@ class Kahi_scienti_person(KahiBase):
                         {"provenance": "scienti", "source": "scienti", "id": {"COD_RH": author["COD_RH"]}})
                     if "COD_ORCID" in author.keys():
                         if author["COD_ORCID"]:
-                            orcid_id = None
-                            if "orcid" in author["COD_ORCID"]:
-                                orcid_id = get_id_from_url(author["COD_ORCID"])
-                            else:
-                                orcid_url = "https://orcid.org/" + \
-                                    author["COD_ORCID"]
-                                orcid_id = get_id_from_url(orcid_url)
+                            orcid_id = parse_orcid_id_from_url(author["COD_ORCID"])
                             if orcid_id:
                                 entry["external_ids"].append(
                                     {"provenance": "scienti",
@@ -354,21 +382,14 @@ class Kahi_scienti_person(KahiBase):
                                     "provenance": "scienti",
                                     "source": "scopus",
                                     "id": scopus_id})
-                    # implement the right split names here
-                    entry["first_names"] = title_case(
-                        re.sub(r'\s+', ' ', author["TXT_NAMES_RH"].strip())).strip().split()
-                    entry["last_names"] = []
-                    if "TXT_PRIM_APELL" in author.keys():
-                        entry["last_names"].append(
-                            title_case(re.sub(r'\s+', ' ', author["TXT_PRIM_APELL"].strip())))
-                    if "TXT_SEG_APELL" in author.keys():
-                        if author["TXT_SEG_APELL"] is not None:
-                            entry["last_names"].append(
-                                title_case(re.sub(r'\s+', ' ', author["TXT_SEG_APELL"].strip())))
+                    names = scienti_author_names(author)
+                    entry["first_names"] = names["first_names"]
+                    entry["last_names"] = names["last_names"]
                     entry["full_name"] = " ".join(
                         entry["first_names"]) + " " + " ".join(entry["last_names"])
-                    entry["initials"] = "".join(
-                        [p[0].upper() for p in entry["first_names"]])
+                    entry["initials"] = names["initials"]
+                    if names["alias"] and names["alias"] not in entry["aliases"]:
+                        entry["aliases"].append(names["alias"])
                     if "TXT_CITACION_BIBLIO" in author.keys():
                         if author["TXT_CITACION_BIBLIO"] is not None:
                             entry["aliases"].append(
@@ -402,7 +423,7 @@ class Kahi_scienti_person(KahiBase):
                             })
 
                     if "DTA_NACIM" in author.keys():
-                        entry["birthdate"] = check_date_format(
+                        entry["birthdate"] = normalize_birthdate(
                             author["DTA_NACIM"])
 
                     if "TPO_ESTADO_CIVIL" in author.keys():
@@ -523,19 +544,26 @@ class Kahi_scienti_person(KahiBase):
                         entry["ranking"] = rank
 
                     self.collection.insert_one(entry)
+            progress.step(
+                "existentes" if author_db else "nuevos" if author_scienti else "omitidos")
+        progress.done()
 
     def insert_scienti_others(self, config, verbose=0):
         client = MongoClient(config["database_url"])
         db = client[config["database_name"]]
         scienti = db[config["collection_name"]]
-        author_others = scienti.find({
+        author_others_query = {
             "$or": [
                 {
                     "re_author_others.author_others": {"$exists": True},
                     "re_author_others": {"$elemMatch": {"author_others": {"$elemMatch": {"COD_RH_REF": {"$ne": None}}}}}},
                 {
                     "re_author_others.author": {"$exists": True},
-                    "re_author_others": {"$elemMatch": {"author": {"$elemMatch": {"COD_RH": {"$ne": None}}}}}}]}, {
+                    "re_author_others": {"$elemMatch": {"author": {"$elemMatch": {"COD_RH": {"$ne": None}}}}}}]}
+        progress = self._progress(
+            config, "otros_autores", scienti.count_documents(author_others_query))
+        authors = {"autores_actualizados": 0, "autores_nuevos": 0}
+        author_others = scienti.find(author_others_query, {
             "re_author_others": 1,
             "COD_RH": 1,
             "COD_PRODUCTO": 1,
@@ -573,13 +601,7 @@ class Kahi_scienti_person(KahiBase):
 
                     if not author_db and "COD_ORCID" in author.keys():
                         if author["COD_ORCID"]:
-                            orcid_id = None
-                            if "orcid" in author["COD_ORCID"]:
-                                orcid_id = get_id_from_url(author["COD_ORCID"])
-                            else:
-                                orcid_url = "https://orcid.org/" + \
-                                    author["COD_ORCID"]
-                                orcid_id = get_id_from_url(orcid_url)
+                            orcid_id = parse_orcid_id_from_url(author["COD_ORCID"])
                             if orcid_id:
                                 author_db = self.collection.find_one(
                                     {"external_ids.id": orcid_id})
@@ -614,6 +636,7 @@ class Kahi_scienti_person(KahiBase):
                         self.collection.update_one({"_id": author_db["_id"]}, {"$set": {
                             "related_works": author_db["related_works"]
                         }})
+                        authors["autores_actualizados"] += 1
                         continue
 
                     cod_rh = author["COD_RH_REF"] if "COD_RH_REF" in author.keys() else author["COD_RH"]
@@ -648,12 +671,7 @@ class Kahi_scienti_person(KahiBase):
                                     entry["external_ids"].append(rec)
                     if "COD_ORCID" in author.keys():
                         if author["COD_ORCID"]:
-                            orcid_id = None
-                            if "orcid" in author["COD_ORCID"]:
-                                orcid_id = get_id_from_url(author["COD_ORCID"])
-                            else:
-                                orcid_id = "https://orcid.org/" + \
-                                    author["COD_ORCID"]
+                            orcid_id = parse_orcid_id_from_url(author["COD_ORCID"])
                             if orcid_id:
                                 rec = {
                                     "provenance": "scienti",
@@ -731,47 +749,27 @@ class Kahi_scienti_person(KahiBase):
 
                     if entry["external_ids"] == []:
                         continue
-                    if "TXT_NME_RH" in author.keys() and author["TXT_NME_RH"]:
-                        entry["first_names"] = title_case(
-                            author["TXT_NME_RH"]).strip().split()
-                    elif "TXT_NAMES_RH" in author.keys() and author["TXT_NAMES_RH"]:
-                        entry["first_names"] = title_case(
-                            re.sub(r'\s+', ' ', author["TXT_NAMES_RH"].strip())).strip().split()
-                    entry["last_names"] = []
-                    if "TXT_PRIM_APELL" in author.keys():
-                        entry["last_names"].append(
-                            title_case(re.sub(r'\s+', ' ', author["TXT_PRIM_APELL"].strip())))
-                    if "TXT_SEG_APELL" in author.keys():
-                        if author["TXT_SEG_APELL"] is not None:
-                            entry["last_names"].append(
-                                title_case(re.sub(r'\s+', ' ', author["TXT_SEG_APELL"].strip())))
+                    names = scienti_author_names(author)
+                    entry["first_names"] = names["first_names"]
+                    entry["last_names"] = names["last_names"]
                     entry["full_name"] = " ".join(
                         entry["first_names"]) + " " + " ".join(entry["last_names"])
-                    entry["initials"] = "".join(
-                        [p[0].upper() for p in entry["first_names"]])
+                    entry["initials"] = names["initials"]
+                    if names["alias"] and names["alias"] not in entry["aliases"]:
+                        entry["aliases"].append(names["alias"])
 
                     if "DTA_NACIMIENTO" in author.keys():
-                        entry["birthdate"] = check_date_format(
+                        entry["birthdate"] = normalize_birthdate(
                             author["DTA_NACIMIENTO"])
 
                     self.collection.insert_one(entry)
+                    authors["autores_nuevos"] += 1
+            progress.step()
+        progress.done(**authors)
 
     def run(self):
         for config in self.config["scienti_person"]["databases"]:
-            if self.verbose > 0:
-                print("Processing {}.{} database".format(
-                    config["database_name"], config["collection_name"]))
-            if self.verbose > 4:
-                start_time = time()
-                print("Updating already inserted entries")
             self.update_inserted(config, verbose=self.verbose)
-            if self.verbose > 4:
-                print("Inserting new entries")
             self.insert_scienti(config, verbose=self.verbose)
-            if self.verbose > 4:
-                print("Processing authors_others")
             self.insert_scienti_others(config, verbose=self.verbose)
-        if self.verbose > 4:
-            print("Execution time: {} minutes".format(
-                round((time() - start_time) / 60, 2)))
         return 0

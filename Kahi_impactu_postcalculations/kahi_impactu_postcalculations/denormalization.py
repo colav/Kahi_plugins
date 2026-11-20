@@ -1,11 +1,48 @@
 from joblib import Parallel, delayed
-from datetime import datetime
+from datetime import datetime, timedelta
 from pymongo import UpdateOne
 
 PARALLEL_SAFE_COLLECTIONS = {"sources", "person", "affiliations"}
 WORKS_DATES_CHUNK_BUCKETS = 16
 WORKS_DATES_CHUNK_WORKERS = 4
 WORKS_DATES_MIN_DOCS_TO_CHUNK = 100000
+# MongoDB rejects documents over 16 MiB. Copying affiliation data into every author can push
+# consortium papers with thousands of authors past it, so those works skip that copy (the data
+# stays in the affiliations collection). Estimate: current size plus bytes per author-affiliation.
+WORKS_MAX_DENORMALIZED_BYTES = 15_000_000
+AUTHOR_AFFILIATION_COPY_BYTES = 700
+
+
+def _estimated_size_after_affiliation_copy():
+    pairs = {
+        "$sum": {
+            "$map": {
+                "input": {"$ifNull": ["$authors", []]},
+                "as": "author",
+                "in": {"$size": {"$ifNull": ["$$author.affiliations", []]}},
+            }
+        }
+    }
+    return {
+        "$add": [
+            {"$bsonSize": "$$ROOT"},
+            {"$multiply": [pairs, AUTHOR_AFFILIATION_COPY_BYTES]},
+        ]
+    }
+
+
+def works_fitting_affiliation_copy(fits=True):
+    """Filter for works whose estimated size after the affiliation copy fits (or not)."""
+    operator = "$lte" if fits else "$gt"
+    return {
+        "authors.affiliations.id": {"$exists": True},
+        "$expr": {
+            operator: [
+                _estimated_size_after_affiliation_copy(),
+                WORKS_MAX_DENORMALIZED_BYTES,
+            ]
+        },
+    }
 
 
 def _build_objectid_ranges(collection, match_query, buckets):
@@ -1057,12 +1094,14 @@ def set_works_authors_affiliations_external_data(collection) -> None:
     collection : pymongo.collection.Collection
         Collection where the works are stored
     """
+    skipped = collection.count_documents(works_fitting_affiliation_copy(fits=False))
+    if skipped:
+        print(
+            "INFO: set_works_authors_affiliations_external_data omitidos="
+            f"{skipped} (documento estimado > {WORKS_MAX_DENORMALIZED_BYTES} bytes)"
+        )
     pipeline = [
-        {
-            "$match": {
-                "authors.affiliations.id": {"$exists": True}
-            }
-        },
+        {"$match": works_fitting_affiliation_copy()},
         {
             "$lookup": {
                 "from": "affiliations",
@@ -2662,6 +2701,59 @@ def set_person_h_index_metrics(collection) -> None:
     )
 
 
+MIN_PERSON_AGE = 15
+MAX_PERSON_AGE = 100
+EMPTY_BIRTHDATE = -1
+
+
+def completed_years(birthdate, reference: datetime):
+    """
+    Age in completed years of someone born at ``birthdate`` (Unix seconds).
+
+    Returns ``None`` when the value is not a date or the age falls outside
+    ``MIN_PERSON_AGE``..``MAX_PERSON_AGE`` (a typo in the source, not a person).
+    """
+    if isinstance(birthdate, bool) or not isinstance(birthdate, (int, float)):
+        return None
+    if birthdate == EMPTY_BIRTHDATE:
+        return None
+    try:
+        born = datetime(1970, 1, 1) + timedelta(seconds=birthdate)
+    except (OverflowError, ValueError):
+        return None
+    age = reference.year - born.year - ((reference.month, reference.day) < (born.month, born.day))
+    return age if MIN_PERSON_AGE <= age <= MAX_PERSON_AGE else None
+
+
+def set_person_age(collection, reference: datetime | None = None) -> None:
+    """
+    Publish the age instead of the birth date.
+
+    Every person with a ``birthdate`` gets ``age`` (completed years at the run
+    date, ``None`` when the date is not credible) and the birth date is cleared
+    to the empty value of the template. People already processed keep their age,
+    so running it again changes nothing. It must run after person unicity, which
+    still uses the birth date.
+    """
+    target = collection.database["person"] if collection.name in ("works", "person") else collection
+    reference = reference or datetime.now()
+    target.update_many({"age": {"$exists": False}}, {"$set": {"age": None}})
+    bulk_ops = []
+    cursor = target.find({"birthdate": {"$nin": [EMPTY_BIRTHDATE, None]}}, {"birthdate": 1})
+    for person in cursor:
+        bulk_ops.append(UpdateOne(
+            {"_id": person["_id"]},
+            {"$set": {"age": completed_years(person["birthdate"], reference),
+                      "birthdate": EMPTY_BIRTHDATE}},
+        ))
+        if len(bulk_ops) >= 500:
+            target.bulk_write(bulk_ops, ordered=False)
+            bulk_ops = []
+    if bulk_ops:
+        target.bulk_write(bulk_ops, ordered=False)
+    target.update_many({"birthdate": None}, {"$set": {"birthdate": EMPTY_BIRTHDATE}})
+
+
 def set_affiliations_h_index_metrics(collection) -> None:
     target = collection.database["affiliations"] if collection.name in ("works", "affiliations") else collection
     _set_h_index_metrics(
@@ -2703,6 +2795,7 @@ DENORMALIZATION_PIPELINES = {
         clean_person_empty_affiliations_array,
         set_person_citations_count_openalex,
         set_person_h_index_metrics,
+        set_person_age,
     ],
     "affiliations": [
         set_affiliations_citations_count_openalex,

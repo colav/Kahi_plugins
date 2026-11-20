@@ -73,6 +73,20 @@ class ImpactuTypeCatalog:
 
         self.payload = payload
         self._index = index
+        self._scraping_index = {}
+        scraping = payload.get("scraping_mappings", [])
+        if int(source.get("scraping_rows") or 0) != len(scraping):
+            raise ValueError("scraping row count does not match metadata")
+        allowed = {(r["entity"], r["type_impactu"]) for r in mappings}
+        for entry in scraping:
+            if entry.get("source") != "minciencias" or entry.get("origin") != "scraping":
+                raise ValueError("scraping must retain the Minciencias provider")
+            key = (exact_key(entry.get("parent")), exact_key(entry.get("type")))
+            if not key[1] or key in self._scraping_index:
+                raise ValueError("invalid or duplicate scraping type/context")
+            if (entry.get("entity"), entry.get("type_impactu")) not in allowed:
+                raise ValueError("invalid canonical scraping target")
+            self._scraping_index[key] = dict(entry)
         self.version = str(payload.get("catalog_version") or "")
         self.source_sha256 = str(source.get("sha256") or "")
 
@@ -85,6 +99,23 @@ class ImpactuTypeCatalog:
             str(product_class or "").strip(), str(typology or "").strip()
         )
         return self.lookup("minciencias", native_type)
+
+    def lookup_scraping(self, parent: Any, native_type: Any):
+        """Resolve a scraping classification without treating it as a dumps type."""
+        mapping = self._scraping_index.get((exact_key(parent), exact_key(native_type)))
+        return dict(mapping) if mapping else None
+
+    def lookup_context(self, source: Any, origin: Any, parent: Any, native_type: Any):
+        """Explicit origin-aware API; the original lookup remains unchanged."""
+        if exact_key(origin) == "scraping":
+            return self.lookup_scraping(parent, native_type) if exact_key(source) == "minciencias" else None
+        if exact_key(source) == "minciencias" and exact_key(origin) == "socrata":
+            return self.classify_minciencias(parent, native_type)
+        if exact_key(source) in {"scienti", "minciencias"} and exact_key(origin) != "dumps":
+            return None
+        if exact_key(source) == "minciencias":
+            return None
+        return self.lookup(source, native_type)
 
     def __len__(self):
         return len(self._index)

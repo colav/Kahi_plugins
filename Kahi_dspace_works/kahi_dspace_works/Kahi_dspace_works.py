@@ -1,12 +1,17 @@
+import json
+from urllib.parse import urlsplit
 from joblib import Parallel, delayed
 from kahi.KahiBase import KahiBase
+from kahi.progress import ProgressLogger
 from mohan.Similarity import Similarity
 from pymongo import MongoClient
 from threading import BoundedSemaphore
 from elasticsearch import Elasticsearch
+from kahi_impactu_utils.Work import ensure_work_doi_indexes
 
 from kahi_dspace_works.process_one import process_one
 from kahi_dspace_works.utils import (
+    ensure_repository_source,
     get_doi,
     is_similarity_reg,
     is_thesis_work,
@@ -52,6 +57,32 @@ def title_query():
             "#text": {"$exists": True, "$nin": [None, ""]},
         }
     )
+
+
+def counted_records(cursor, accept, progress, foreign_hosts=()):
+    """Yield accepted records; count the rest as skipped and the records
+    harvested from another configured repository as foreign."""
+    for work in cursor:
+        if foreign_hosts and request_host(work) in foreign_hosts:
+            progress.step("foraneos")
+        elif accept(work):
+            yield work
+        else:
+            progress.step("omitidos")
+
+
+def url_host(url):
+    """Host of a URL in lower case ('' when absent)."""
+    try:
+        return (urlsplit(str(url or "")).hostname or "").lower()
+    except ValueError:
+        return ""
+
+
+def request_host(work):
+    """Host of the OAI server that answered the record (OAI-PMH.request)."""
+    request = (work.get("OAI-PMH") or {}).get("request") or {}
+    return url_host(request.get("#text") if isinstance(request, dict) else request)
 
 
 def _dim_query(condition):
@@ -149,6 +180,7 @@ class Kahi_dspace_works(KahiBase):
             collation={"locale": "es", "strength": 1},
         )
         self.collection.create_index("external_ids.id")
+        ensure_work_doi_indexes(self.collection)
 
     def _repositories(self, source_db):
         """Resolve explicit repositories or discover every ``*_records`` collection."""
@@ -173,35 +205,77 @@ class Kahi_dspace_works(KahiBase):
         for collection_name in collection_names:
             identity_name = collection_name[: -len("records")] + "identity"
             identity = source_db[identity_name].find_one(
-                {}, {"base_url": 1}) or {}
+                {}, {"base_url": 1, "ror": 1, "repository_name": 1, "openalex_source": 1}) or {}
+            institution_id = (
+                affiliations[collection_name]
+                if collection_name in affiliations
+                else identity.get("ror")
+            )
             yield {
                 "collection_name": collection_name,
-                "institution_id": affiliations.get(collection_name),
+                "institution_id": institution_id,
                 "repository_url": normalize_repository_url(identity.get("base_url")),
+                "repository_name": identity.get("repository_name") or "",
+                "oai_url": identity.get("base_url") or "",
+                "ror": identity.get("ror") or "",
+                "openalex_source": identity.get("openalex_source") or "",
             }
 
-    def process_repository(self, affiliation, base_url, dspace_collection):
+    def repository_metadata(self, repository, affiliation, base_url):
+        """Register the repository in sources and return the metadata that
+        describes it in works.external_urls[].source_ref."""
+        plugin_config = self.config["dspace_works"]
+        key = repository["collection_name"]
+        if key.endswith("_records"):
+            key = key[: -len("_records")]
+        name = repository.get("repository_name") or key
+        metadata = {
+            "key": key,
+            "name": name,
+            "url": base_url or "",
+            "oai_url": repository.get("oai_url") or "",
+            "ror": repository.get("ror") or "",
+            "affiliation": ({"id": affiliation["id"], "name": affiliation["name"]}
+                            if affiliation else {}),
+        }
+        # The OpenAlex source of the repository lives in its identity document
+        # (persisted by the capture DAG); `repository_sources` only overrides it.
+        openalex_id = ((plugin_config.get("repository_sources") or {}).get(key)
+                       or repository.get("openalex_source") or None)
+        metadata["source_id"] = ensure_repository_source(
+            self.db, metadata, affiliation, self.empty_source(), openalex_id=openalex_id)
+        return metadata
+
+    def process_repository(self, affiliation, base_url, dspace_collection,
+                           repository=None, foreign_hosts=()):
+        query = doi_query() if self.task == "doi" else title_query()
+        progress = ProgressLogger(
+            "dspace_works:{}:{}".format(
+                "doi" if self.task == "doi" else "nodoi", dspace_collection.name),
+            total=dspace_collection.count_documents(query),
+        ).start(f"num_jobs={self.n_jobs}")
         if self.task == "doi":
             cursor = dspace_collection.find(
-                doi_query()).batch_size(
+                query).batch_size(
                 self.batch_size)
-            records = (
-                work
-                for work in cursor
-                if get_doi(work) and not is_thesis_work(work)
+            records = counted_records(
+                cursor,
+                lambda work: get_doi(work) and not is_thesis_work(work),
+                progress,
+                foreign_hosts,
             )
             similarity = False
         else:
             cursor = dspace_collection.find(
-                title_query()).batch_size(
+                query).batch_size(
                 self.batch_size)
-            records = (work for work in cursor if is_similarity_reg(work))
+            records = counted_records(cursor, is_similarity_reg, progress, foreign_hosts)
             similarity = True
 
         try:
             results = Parallel(
                 n_jobs=self.n_jobs,
-                verbose=self.verbose,
+                verbose=0,
                 backend="threading",
                 pre_dispatch="2*n_jobs",
                 return_as="generator_unordered",
@@ -218,13 +292,15 @@ class Kahi_dspace_works(KahiBase):
                     thresholds=self.thresholds,
                     verbose=self.verbose,
                     es_semaphore=self.es_semaphore,
+                    repository=repository,
                 )
                 for work in records
             )
-            for _ in results:
-                pass
+            for outcome in results:
+                progress.step(outcome or "omitidos")
         finally:
             cursor.close()
+        progress.done()
 
     def run(self):
         print(
@@ -232,6 +308,12 @@ class Kahi_dspace_works(KahiBase):
             f"task = {self.task}"
         )
         plugin_config = self.config["dspace_works"]
+        mapping_file = plugin_config.get("repository_sources_file")
+        if mapping_file:
+            with open(mapping_file, encoding="utf-8") as handle:
+                mapping = json.load(handle)
+            plugin_config["repository_sources"] = {
+                **mapping, **(plugin_config.get("repository_sources") or {})}
         source_client = MongoClient(plugin_config["database_url"])
         try:
             source_db = source_client[plugin_config["database_name"]]
@@ -239,9 +321,20 @@ class Kahi_dspace_works(KahiBase):
             if not repositories:
                 raise ValueError("No DSpace *_records collections were found")
 
+            hosts = {
+                repository["collection_name"]: url_host(repository.get("oai_url"))
+                for repository in repositories
+            }
             for repository in repositories:
                 collection_name = repository["collection_name"]
                 institution_id = repository.get("institution_id")
+                # Records answered by the OAI server of another configured
+                # repository are copies (e.g. dspace_uac_records holds the
+                # whole uniatlantico repository); that repository loads them.
+                foreign_hosts = {
+                    host for name, host in hosts.items()
+                    if host and name != collection_name and host != hosts[collection_name]
+                }
                 base_url = normalize_repository_url(
                     repository.get("repository_url"))
                 print(
@@ -258,8 +351,10 @@ class Kahi_dspace_works(KahiBase):
                         "WARNING: Affiliation not found for institution "
                         f"{institution_id} - processing without affiliation"
                     )
+                metadata = self.repository_metadata(repository, affiliation, base_url)
                 self.process_repository(
-                    affiliation, base_url, source_db[collection_name]
+                    affiliation, base_url, source_db[collection_name],
+                    repository=metadata, foreign_hosts=foreign_hosts,
                 )
         finally:
             source_client.close()

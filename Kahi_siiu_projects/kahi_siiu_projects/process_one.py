@@ -1,3 +1,4 @@
+from kahi_impactu_utils.Mongo import insert_only_update
 from kahi_siiu_projects.parser import parse_siiu
 
 
@@ -138,7 +139,7 @@ def process_one_insert(siiu_reg, db, collection, empty_project, es_handler, verb
     code = siiu_reg.get("CODIGO")
     collection.update_one(
         {"external_ids": {"$elemMatch": {"source": "codigo", "id": code}}},
-        {"$setOnInsert": entry}, upsert=True,
+        insert_only_update(entry), upsert=True,
     )
 
 

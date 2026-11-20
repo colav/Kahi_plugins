@@ -55,3 +55,19 @@ def test_remaining_denormalization_lookups_use_indexable_equality_joins():
             "$expr" in stage.get("$match", {})
             for stage in lookup.get("pipeline", [])
         )
+
+
+def test_affiliation_external_data_skips_works_that_would_exceed_the_document_limit():
+    from kahi_impactu_postcalculations.denormalization import (
+        WORKS_MAX_DENORMALIZED_BYTES,
+        works_fitting_affiliation_copy,
+    )
+
+    collection = _Collection()
+    set_works_authors_affiliations_external_data(collection)
+
+    match = collection.pipeline[0]["$match"]
+    assert match == works_fitting_affiliation_copy()
+    assert match["authors.affiliations.id"] == {"$exists": True}
+    assert match["$expr"]["$lte"][1] == WORKS_MAX_DENORMALIZED_BYTES
+    assert "$gt" in works_fitting_affiliation_copy(fits=False)["$expr"]

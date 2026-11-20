@@ -1,4 +1,4 @@
-from pymongo.errors import DuplicateKeyError
+from pymongo.errors import DuplicateKeyError, OperationFailure
 
 
 def persistent_person_id(person, source):
@@ -31,19 +31,26 @@ def persistent_person_id(person, source):
 
 def update_product_references(product_cols, original_id, persistent_id):
     """Idempotently replace an old person id in every product collection."""
+    # Empty identifiers are placeholders shared by unrelated authors.  A
+    # global replacement would therefore assign all of them to one person.
+    if original_id is None or (isinstance(original_id, str)
+                               and not original_id.strip()):
+        return False
     for product_col in product_cols:
         product_col.update_many(
             {"authors.id": original_id},
             {"$set": {"authors.$[author].id": persistent_id}},
             array_filters=[{"author.id": original_id}],
         )
+    return True
 
 
 def recover_person_id_migration(person_col, product_cols, person):
     """Finish references left pending by an interrupted id migration."""
     original_id = person.get("_id_old")
     persistent_id = person.get("_id")
-    if original_id is None or persistent_id is None:
+    if (original_id is None or persistent_id is None
+            or (isinstance(original_id, str) and not original_id.strip())):
         return False
     update_product_references(product_cols, original_id, persistent_id)
     person_col.update_one(
@@ -56,6 +63,10 @@ def recover_person_id_migration(person_col, product_cols, person):
 def process_person_id(client, person_col, product_cols, person, source):
     """Move a person to a persistent id and update product references safely."""
     original_id = person["_id"]
+    if original_id is None or (isinstance(original_id, str)
+                               and not original_id.strip()):
+        print("WARNING: Refusing persistent-id migration from an empty id")
+        return None
     persistent_id = persistent_person_id(person, source)
     if not persistent_id:
         print(
@@ -115,3 +126,27 @@ def process_person_id(client, person_col, product_cols, person, source):
         {"$set": {"_id_migration_complete": True}},
     )
     return persistent_id
+
+
+def finish_person_id_migration(person_col):
+    """Drop the completion flag once no migration is pending.
+
+    The flag only tracks interrupted migrations and is not part of the person
+    schema; ``_id_old`` stays for traceability. Returns the pending count.
+    """
+    pending = person_col.count_documents(
+        {"_id_old": {"$exists": True}, "_id_migration_complete": {"$ne": True}}
+    )
+    if pending:
+        print("WARNING: {} persistent id migrations still pending; keeping the flag".format(pending))
+        return pending
+    print("INFO: Removing _id_migration_complete from person")
+    person_col.update_many(
+        {"_id_migration_complete": {"$exists": True}},
+        {"$unset": {"_id_migration_complete": ""}},
+    )
+    try:
+        person_col.drop_index("_id_migration_complete_1")
+    except OperationFailure:
+        pass
+    return 0

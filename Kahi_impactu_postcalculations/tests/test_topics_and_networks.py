@@ -1,4 +1,5 @@
 from kahi_impactu_postcalculations import topics
+import pytest
 from kahi_impactu_postcalculations import process_one
 from kahi_impactu_postcalculations.process_one import (
     split_network_edges,
@@ -56,7 +57,9 @@ def test_topic_inference_updates_and_deduplicates(monkeypatch):
     assert topics.process_topic(works, _OpenAlexTopics(), work)
     assert len(works.operations) == 1
     operation = works.operations[0]
-    assert operation._filter == {"_id": "w1", "primary_topic": {}}
+    assert operation._filter == {
+        "_id": "w1", "primary_topic": {"$in": [{}, None]}
+    }
     saved = operation._doc["$set"]
     assert saved["primary_topic"]["id"] == "https://openalex.org/T123"
     assert len(saved["topics"]) == 1
@@ -103,6 +106,28 @@ def test_topic_batch_uses_one_request_and_one_bulk_write(monkeypatch):
     assert len(works.operations) == 2
 
 
+def test_topic_inference_accepts_null_primary_topic(monkeypatch):
+    monkeypatch.setattr(
+        topics, "request_topic_inference_batch", lambda *a, **k: _Response()
+    )
+    works = _Works()
+    work = {
+        "_id": "w-null",
+        "titles": [{"title": "A title"}],
+        "abstracts": [{"abstract": {"word": [0]}}],
+        "primary_topic": None,
+        "topics": [],
+    }
+    cache = {
+        "https://openalex.org/T123": {
+            "id": "https://openalex.org/T123", "display_name": "Topic"
+        }
+    }
+
+    assert topics.process_topic_batch(works, cache, [work]) == 1
+    assert works.operations[0]._filter["primary_topic"] == {"$in": [{}, None]}
+
+
 def test_topic_batch_retries_before_writing(monkeypatch):
     responses = [
         type("Failure", (), {"status_code": 500, "text": "temporary"})(),
@@ -129,6 +154,74 @@ def test_topic_batch_retries_before_writing(monkeypatch):
 
     assert topics.process_topic_batch(works, cache, [work], retries=2) == 1
     assert not responses
+
+
+def test_topic_endpoint_pool_processes_each_batch_once(monkeypatch):
+    from threading import Barrier
+
+    calls = []
+    startup = Barrier(2)
+
+    def fake_process(col, cache, batch, endpoint, timeout, retries):
+        calls.append((batch[0]["_id"], endpoint))
+        if len(calls) <= 2:
+            startup.wait()
+        return 1
+
+    monkeypatch.setattr(
+        topics, "process_topic_batch_resilient",
+        lambda *args: (fake_process(*args), 0),
+    )
+    batches = [[{"_id": f"w{index}"}] for index in range(8)]
+    progress = topics.process_topic_batches_pool(
+        object(), {}, iter(batches),
+        ["http://model-1/invocations", "http://model-2/invocations"],
+        progress_interval=0,
+    )
+
+    assert {work_id for work_id, _ in calls} == {f"w{i}" for i in range(8)}
+    assert {endpoint for _, endpoint in calls} == {
+        "http://model-1/invocations", "http://model-2/invocations"
+    }
+    assert progress == {
+        "batches": 8, "works": 8, "modified": 8, "failed": 0
+    }
+
+
+def test_topic_batch_resilient_isolates_bad_work(monkeypatch):
+    calls = []
+
+    def fake_process(col, cache, batch, endpoint, timeout, retries):
+        ids = [work["_id"] for work in batch]
+        calls.append(ids)
+        if "bad" in ids:
+            raise topics.TopicBatchRejected("invalid model input")
+        return len(batch)
+
+    monkeypatch.setattr(topics, "process_topic_batch", fake_process)
+    modified, failed = topics.process_topic_batch_resilient(
+        object(), {},
+        [{"_id": "good-1"}, {"_id": "bad"}, {"_id": "good-2"}],
+    )
+
+    assert modified == 2
+    assert failed == 1
+    assert ["bad"] in calls
+
+
+def test_topic_batch_resilient_does_not_split_endpoint_failure(monkeypatch):
+    calls = []
+
+    def unavailable(*args):
+        calls.append(args[2])
+        raise topics.TopicEndpointUnavailable("tunnel disconnected")
+
+    monkeypatch.setattr(topics, "process_topic_batch", unavailable)
+    with pytest.raises(topics.TopicEndpointUnavailable):
+        topics.process_topic_batch_resilient(
+            object(), {}, [{"_id": "w1"}, {"_id": "w2"}]
+        )
+    assert len(calls) == 1
 
 
 def test_network_split_preserves_every_edge():
@@ -248,3 +341,102 @@ def test_works_scan_top_words_keeps_output_schema():
     }
     assert db_out["top_words_person_tmp"].count_documents({}) == 0
     assert db_out["top_words_affiliations_tmp"].count_documents({}) == 0
+
+
+def test_prefer_abstract_langs_reorders_in_memory_only():
+    patent = {"_id": 1, "abstracts": [
+        {"abstract": {"a": [0]}, "lang": "es"},
+        {"abstract": {"b": [0]}, "lang": "fr"},
+        {"abstract": {"c": [0]}, "lang": "en"},
+    ]}
+    [result] = topics.prefer_abstract_langs([patent], ["en", "es"])
+    assert [item["lang"] for item in result["abstracts"]] == ["en", "es", "fr"]
+    [same] = topics.prefer_abstract_langs([{"abstracts": [{"lang": "es"}]}], [])
+    assert same["abstracts"] == [{"lang": "es"}]
+
+
+def test_process_topics_covers_configured_collections(monkeypatch):
+    import mongomock
+
+    db = mongomock.MongoClient().kahi
+    db.works.insert_one({"_id": "w", "titles": [{"title": "Work"}],
+                         "abstracts": [{"abstract": {"x": [0]}, "lang": "en"}],
+                         "primary_topic": {}})
+    db.patents.insert_many([
+        {"_id": "p", "titles": [{"title": "Patente"}], "primary_topic": {},
+         "abstracts": [{"abstract": {"es": [0]}, "lang": "es"},
+                       {"abstract": {"en": [0]}, "lang": "en"}]},
+        {"_id": "done", "titles": [{"title": "Ya"}], "primary_topic": {"id": "T1"},
+         "abstracts": [{"abstract": {"x": [0]}, "lang": "es"}]},
+        {"_id": "empty", "titles": [{"title": "Sin abstract"}], "primary_topic": {},
+         "abstracts": []},
+    ])
+    db.openalex_topics.insert_one({"id": "https://openalex.org/T1", "display_name": "T"})
+    seen = {}
+
+    def fake_pool(col, cache, batches, *args):
+        seen[col.name] = [doc for batch in batches for doc in batch]
+        return {"works": len(seen[col.name]), "modified": 0, "failed": 0}
+
+    monkeypatch.setattr(
+        "kahi_impactu_postcalculations.Kahi_impactu_postcalculations."
+        "process_topic_batches_pool", fake_pool)
+    plugin = object.__new__(Kahi_impactu_postcalculations)
+    plugin.topic_inference_mode = "remote"
+    plugin.inference_endpoints = ["http://topics/invocations"]
+    plugin.topic_request_timeout = plugin.topic_request_retries = 1
+    plugin.topic_progress_interval = 10
+    plugin.topic_batch_size = 2
+    plugin.topic_collections = ["works", "patents"]
+    plugin.topic_abstract_langs = {"patents": ["en"]}
+
+    plugin.process_topics(db, {"topics": db.openalex_topics})
+
+    assert [doc["_id"] for doc in seen["works"]] == ["w"]
+    assert [doc["_id"] for doc in seen["patents"]] == ["p"]
+    assert seen["patents"][0]["abstracts"][0]["lang"] == "en"
+    assert db.patents.find_one({"_id": "p"})["abstracts"][0]["lang"] == "es"
+
+
+def test_project_payload_uses_the_plain_abstract_then_topic_text_then_only_the_title():
+    title = [{"title": "Biomasa residual y biocombustibles"}]
+    with_abstract = topics._topic_payload(
+        {"titles": title, "abstract": "Caracterización de la biomasa de la biomasa",
+         "topic_text": "No se usa"})
+    assert with_abstract["title"] == "Biomasa residual y biocombustibles"
+    assert with_abstract["inverted"] is True
+    assert with_abstract["abstract_inverted_index"] == {
+        "Caracterización": [0], "de": [1, 4], "la": [2, 5], "biomasa": [3, 6]}
+    with_topic_text = topics._topic_payload(
+        {"titles": title, "abstract": "", "topic_text": "Evaluar la conectividad"})
+    assert with_topic_text["abstract_inverted_index"] == {
+        "Evaluar": [0], "la": [1], "conectividad": [2]}
+    only_title = topics._topic_payload({"titles": title, "abstract": ""})
+    assert only_title["abstract_inverted_index"] == {} and only_title["title"]
+    assert topics._topic_payload({"titles": [], "abstract": "Texto"}) is None
+    assert topics._topic_payload({"titles": [{"title": "  "}], "abstract": "Texto"}) is None
+
+
+def test_works_and_patents_still_need_an_abstract():
+    title = [{"title": "Título"}]
+    assert topics._topic_payload({"titles": title, "abstracts": []}) is None
+    assert topics._topic_payload({"titles": title}) is None
+    assert topics._topic_payload({"titles": title, "abstracts": [{"abstract": {}}]}) is None
+    # A document with the list schema never falls back to plain-text fields.
+    assert topics._topic_payload({"titles": title, "abstracts": [], "abstract": "x"}) is None
+    assert topics._topic_payload(
+        {"titles": title, "abstracts": [{"abstract": {"a": [0]}}]}
+    )["abstract_inverted_index"] == {"a": [0]}
+
+
+def test_topic_query_per_collection():
+    pending = {"$in": [{}, None]}
+    assert topics.topic_query("works") == {
+        "primary_topic": pending, "abstracts.0": {"$exists": True}}
+    assert topics.topic_query("patents") == topics.topic_query("works")
+    assert topics.topic_query("projects") == {
+        "primary_topic": pending, "titles.0": {"$exists": True}}
+    assert topics.topic_projection("projects") == {
+        "titles": 1, "source": 1, "primary_topic": 1, "topics": 1,
+        "abstract": 1, "topic_text": 1}
+    assert "abstracts" in topics.topic_projection("works")

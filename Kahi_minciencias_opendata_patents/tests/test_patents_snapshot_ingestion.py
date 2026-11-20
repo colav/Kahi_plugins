@@ -9,6 +9,7 @@ plugin_module = importlib.import_module(
     "kahi_minciencias_opendata_patents.Kahi_minciencias_opendata_patents"
 )
 Plugin = plugin_module.Kahi_minciencias_opendata_patents
+legacy_module = importlib.import_module("kahi_minciencias_opendata_patents.legacy")
 ENTITIES = ("works", "projects", "patents", "events", "persons", "affiliations")
 
 
@@ -109,7 +110,9 @@ def test_imports_snapshot_resolves_references_and_is_idempotent(monkeypatch):
     assert patent["authors"][0]["affiliations"][0]["id"] == "group-canonical"
     assert patent["groups"] == [{"id": "group-canonical", "name": "Grupo canónico"}]
     assert "source_metadata" not in patent
-    assert set(patent) == {"_id"} | plugin_module.PATENT_FIELDS
+    assert set(patent) == {"_id"} | set(Plugin.empty_patent(None))
+    assert patent["abstracts"] == [] and patent["topics"] == []
+    assert patent["primary_topic"] == {}
     assert list(target.person.find()) == people_before
     assert source.patents_final.index_information() == indexes
 
@@ -129,6 +132,23 @@ def test_merge_preserves_existing_values_and_adds_scienti_metadata(monkeypatch):
 
     assert {item["source"] for item in patent["titles"]} == {"otro", "scienti"}
     assert patent["authors"][0]["id"] == "person-canonical"
+
+
+def test_reimport_keeps_lens_abstracts_and_topics(monkeypatch):
+    target, _ = prepare(monkeypatch)
+    Plugin(config()).run()
+    abstract = {"abstract": {"a": [0]}, "lang": "es", "source": "lens",
+                "provenance": "lens"}
+    topic = {"id": "T1", "display_name": "Topic"}
+    target.patents.update_one({"_id": "patent-1"}, {"$set": {
+        "abstracts": [abstract], "primary_topic": topic, "topics": [topic]}})
+    target.minciencias_opendata_patents_runs.delete_many({})
+
+    Plugin(config()).run()
+    patent = target.patents.find_one({"_id": "patent-1"})
+
+    assert patent["abstracts"] == [abstract]
+    assert patent["primary_topic"] == topic and patent["topics"] == [topic]
 
 
 def test_checkpoint_resumes_after_missing_group_is_added(monkeypatch):
@@ -163,3 +183,18 @@ def test_rejects_legacy_options_current_and_four_entity_release(monkeypatch):
     prepare(monkeypatch, entity_count=4)
     with pytest.raises(RuntimeError, match="six-entity patent snapshot"):
         Plugin(config())
+
+
+def test_explicit_legacy_mode_uses_gruplac_production(monkeypatch):
+    captured = {}
+
+    class DummyLegacy:
+        def __init__(self, value):
+            captured.update(value["minciencias_opendata_patents"])
+
+        def run(self):
+            return "legacy"
+
+    monkeypatch.setattr(legacy_module, "Kahi_minciencias_opendata_patents", DummyLegacy)
+    assert Plugin(config(source_mode="legacy")).run() == "legacy"
+    assert captured["collection_name"] == "gruplac_production_data"

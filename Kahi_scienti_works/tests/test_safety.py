@@ -3,6 +3,7 @@ from threading import BoundedSemaphore, Lock
 from time import sleep
 from unittest.mock import MagicMock
 
+from bson import ObjectId
 import kahi_scienti_works.process_one as process_module
 
 
@@ -80,16 +81,20 @@ def test_existing_scienti_identity_skips_search_and_insert(monkeypatch):
     es_handler.es_index = "works"
     es_handler.es.exists.return_value = True
     insert = MagicMock()
+    update = MagicMock()
     monkeypatch.setattr(process_module, "parse_scienti", lambda *_args, **_kwargs: parsed_entry())
     monkeypatch.setattr(process_module, "process_one_insert", insert)
+    monkeypatch.setattr(process_module, "process_one_update", update)
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         {"TXT_NME_PROD": "Work"}, MagicMock(), collection, {}, es_handler, similarity=True,
         es_semaphore=BoundedSemaphore(1),
     )
 
+    assert outcome == "actualizados"
     es_handler.search_work.assert_not_called()
     insert.assert_not_called()
+    update.assert_called_once()
 
 
 def test_existing_mongo_work_is_reindexed_when_missing_from_es(monkeypatch):
@@ -98,7 +103,9 @@ def test_existing_mongo_work_is_reindexed_when_missing_from_es(monkeypatch):
     es_handler = MagicMock()
     es_handler.es_index = "works"
     es_handler.es.exists.return_value = False
+    update = MagicMock()
     monkeypatch.setattr(process_module, "parse_scienti", lambda *_args, **_kwargs: parsed_entry())
+    monkeypatch.setattr(process_module, "process_one_update", update)
 
     process_module.process_one(
         {"TXT_NME_PROD": "Work"}, MagicMock(), collection, {}, es_handler, similarity=True,
@@ -108,6 +115,45 @@ def test_existing_mongo_work_is_reindexed_when_missing_from_es(monkeypatch):
     es_handler.insert_work.assert_called_once()
     assert es_handler.insert_work.call_args.kwargs["_id"] == "mongo-id"
     es_handler.search_work.assert_not_called()
+    update.assert_called_once()
+
+
+def test_rerun_repairs_missing_core_metadata(monkeypatch):
+    source_id = ObjectId()
+    entry = parsed_entry()
+    entry.update({
+        "doi": "10.1000/scienti",
+        "date_published": 123456,
+        "year_published": 2024,
+        "source": {"external_ids": [{"id": "1234-5678"}]},
+    })
+    work = {
+        "_id": ObjectId(),
+        "updated": [{"source": "scienti", "time": 1}],
+        "doi": "",
+        "date_published": None,
+        "year_published": None,
+        "source": {},
+    }
+    sources = MagicMock()
+    sources.find_one.return_value = {
+        "_id": source_id,
+        "names": [{"name": "Revista", "lang": "es"}],
+    }
+    collection = MagicMock()
+    monkeypatch.setattr(
+        process_module, "parse_scienti", lambda *_args, **_kwargs: entry)
+
+    process_module.process_one_update(
+        {}, work, {"sources": sources}, collection, {})
+
+    fields = collection.update_one.call_args.args[1]["$set"]
+    assert fields == {
+        "doi": "https://doi.org/10.1000/scienti",
+        "date_published": 123456,
+        "year_published": 2024,
+        "source": {"id": source_id, "name": "Revista"},
+    }
 
 
 def test_search_normalizes_missing_year_and_uses_parsed_pages(monkeypatch):
@@ -137,11 +183,12 @@ def test_empty_parsed_title_skips_search(monkeypatch):
     es_handler = MagicMock()
     monkeypatch.setattr(process_module, "parse_scienti", lambda *_args, **_kwargs: entry)
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         {"TXT_NME_PROD": "Work"}, MagicMock(), MagicMock(), {}, es_handler, similarity=True,
         es_semaphore=BoundedSemaphore(1),
     )
 
+    assert outcome == "omitidos"
     es_handler.search_work.assert_not_called()
 
 
@@ -149,9 +196,10 @@ def test_blank_raw_title_skips_before_parser(monkeypatch):
     parser = MagicMock()
     monkeypatch.setattr(process_module, "parse_scienti", parser)
 
-    process_module.process_one(
+    outcome = process_module.process_one(
         {"TXT_NME_PROD": "   "}, MagicMock(), MagicMock(), {},
         MagicMock(), similarity=True, es_semaphore=BoundedSemaphore(1),
     )
 
+    assert outcome == "omitidos"
     parser.assert_not_called()
