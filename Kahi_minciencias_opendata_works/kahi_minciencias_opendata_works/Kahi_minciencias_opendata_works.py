@@ -316,7 +316,10 @@ class Kahi_minciencias_opendata_works(KahiBase):
         ) or {}
         config = audit.get("config") or {}
         source = config.get("source") or {}
-        digest = lambda value: sha256(BSON.encode(value)).hexdigest()
+
+        def digest(value):
+            return sha256(BSON.encode(value)).hexdigest()
+
         valid = all((
             publication.get("release_name") == self.release_name,
             publication.get("audit") == publication.get("run_name") == audit.get("_id") == run.get("_id"),

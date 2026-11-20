@@ -226,7 +226,7 @@ def affiliation_merge_expression(incoming):
     }, "in": {"$concatArrays": [
         {"$map": {"input": "$$existing", "as": "aff", "in": {"$let": {
             "vars": {"matches": {"$filter": {"input": "$$incoming", "as": "new",
-                         "cond": {"$eq": ["$$new.id", "$$aff.id"]}}}},
+                                             "cond": {"$eq": ["$$new.id", "$$aff.id"]}}}},
             "in": {"$cond": [{"$and": [
                 {"$gt": [{"$size": "$$matches"}, 0]},
                 {"$or": [

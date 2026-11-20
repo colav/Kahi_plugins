@@ -9,7 +9,7 @@ def test_no_avalado_fallback_is_equivalent_only_with_exact_authoritative_name():
     provisional = {"_id": identifier, "names": [{"name": name}],
                    "external_ids": [{"source": "minciencias", "id": identifier}]}
     canonical = {"_id": "ror-id", "names": [{"name": "Universidad de la Costa"},
-                                          {"name": "CORPORACION UNIVERSIDAD DE LA COSTA"}],
+                                            {"name": "CORPORACION UNIVERSIDAD DE LA COSTA"}],
                  "external_ids": [{"source": "ror", "id": "ror-id"}]}
     assert audit.canonical_provisional_equivalent(plugin, provisional, canonical)
     provisional["_id"] = "IUA_unrelated"

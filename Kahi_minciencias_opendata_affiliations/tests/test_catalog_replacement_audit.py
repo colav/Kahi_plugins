@@ -21,7 +21,7 @@ def fixture():
                                   {"source": "nit", "id": "900382516"}]}
     db.affiliations.insert_one(canonical)
     catalog = {"000000000241": {"NME_INST": "INTER-TELCO S.A.S", "ID_INSTITUCION": 1182,
-                                 "TXT_NIT": "900382516"}}
+                                "TXT_NIT": "900382516"}}
     reader = audit.verification_reader(db, "run", "resolutions", catalog)
     group = {"_id": "COL0159366", "relations": [{"id": canonical["_id"]}]}
     source = {"relations": [{"name": "FUERZA AÉREA COLOMBIANA; INTERTELCO S.A.S"}]}

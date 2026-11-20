@@ -19,7 +19,7 @@ def current_year_2026(monkeypatch):
 
 
 @pytest.mark.parametrize('value, expected', [(1799, None), (1800, 1800),
-    (2028, 2028), (2029, None), (2030, None), (None, None)])
+                                             (2028, 2028), (2029, None), (2030, None), (None, None)])
 @pytest.mark.parametrize('source', ['openalex', 'scienti', 'ciarp', 'scholar', 'dspace', 'wos', 'scopus'])
 def test_importer_year(source, value, expected, monkeypatch):
     module_name = (f'kahi_{source}_works.Kahi_{source}_works'
@@ -28,29 +28,29 @@ def test_importer_year(source, value, expected, monkeypatch):
     monkeypatch.setattr(module, 'lang_poll', lambda *args, **kwargs: 'es')
     records = {
         'openalex': {'title': 'Example', 'publication_year': value, 'doi': None,
-            'ids': {}, 'type': 'article', 'counts_by_year': [], 'primary_location': None,
-            'biblio': {}, 'cited_by_count': 0, 'authorships': [], 'concepts': []},
+                     'ids': {}, 'type': 'article', 'counts_by_year': [], 'primary_location': None,
+                     'biblio': {}, 'cited_by_count': 0, 'authorships': [], 'concepts': []},
         'scienti': {'TXT_NME_PROD': 'Example', 'TXT_RESUMEN_PROD': None,
-            'COD_RH': '1', 'COD_PRODUCTO': '2', 'NRO_ANO_PRESENTA': value,
-            'NRO_MES_PRESENTA': None, 'product_type': [{'TXT_NME_TIPO_PRODUCTO': 'Article',
-                'NRO_NIVEL': 0, 'TPO_CLASE': 'A', 'COD_TIPO_PRODUCTO': '111'}],
-            'author': [{'TXT_TOTAL_NAMES': 'Ana Perez', 'COD_RH': '1', 'TPO_DOCUMENTO_IDENT': None}]},
+                    'COD_RH': '1', 'COD_PRODUCTO': '2', 'NRO_ANO_PRESENTA': value,
+                    'NRO_MES_PRESENTA': None, 'product_type': [{'TXT_NME_TIPO_PRODUCTO': 'Article',
+                                                                'NRO_NIVEL': 0, 'TPO_CLASE': 'A', 'COD_TIPO_PRODUCTO': '111'}],
+                    'author': [{'TXT_TOTAL_NAMES': 'Ana Perez', 'COD_RH': '1', 'TPO_DOCUMENTO_IDENT': None}]},
         'ciarp': {'título': 'Example', 'idioma': 'es', 'doi': None, 'issn': None,
-            'isbn': None, 'revista': '', 'año': value, 'volumen': None,
-            'issue': None, 'primera_página': None, 'última_página': None,
-            'ranking': None, 'identificación': '1', 'código_unidad_académica': None,
-            'código_subunidad_académica': None, 'index': '1'},
+                  'isbn': None, 'revista': '', 'año': value, 'volumen': None,
+                  'issue': None, 'primera_página': None, 'última_página': None,
+                  'ranking': None, 'identificación': '1', 'código_unidad_académica': None,
+                  'código_subunidad_académica': None, 'index': '1'},
         'scholar': {'title': 'Example', 'year': value},
         'dspace': {'_id': 'oai:example.edu:123/456', 'OAI-PMH': {'GetRecord': {'record': {'metadata': {
             'dim:dim': {'dim:field': [{'@element': 'date', '@qualifier': 'issued',
-                '#text': f'{value}-01-01'}]}}}}}},
+                                       '#text': f'{value}-01-01'}]}}}}}},
         'wos': {'PY': value},
         'scopus': {'Title': 'Example', 'Year': value, 'ISBN': None},
     }
     if source == 'ciarp':
         document = module.parse_ciarp(records[source],
-            {'_id': 'institution', 'names': [{'name': 'Example', 'lang': 'es'}], 'types': []},
-            KahiBase().empty_work())
+                                      {'_id': 'institution', 'names': [{'name': 'Example', 'lang': 'es'}], 'types': []},
+                                      KahiBase().empty_work())
     elif source == 'dspace':
         document = module.parse_dspace(records[source], KahiBase().empty_work(), 'https://example.edu')
     else:
@@ -85,7 +85,7 @@ def test_dspace_ignores_bad_year_when_multiple_dates(monkeypatch):
     module = importlib.import_module('kahi_dspace_works.parser')
     reg = {'_id': 'oai:example.edu:123/456', 'OAI-PMH': {'GetRecord': {'record': {'metadata': {
         'dim:dim': {'dim:field': [{'@element': 'date', '@qualifier': 'issued',
-            '#text': f'{year}-01-01'} for year in [1799, 2029, 2024, 2022]]}}}}}}
+                                   '#text': f'{year}-01-01'} for year in [1799, 2029, 2024, 2022]]}}}}}}
     assert module.parse_dspace(reg, KahiBase().empty_work(), 'https://example.edu')['year_published'] == 2022
 
 
@@ -94,8 +94,8 @@ def test_minciencias_related_work_year(year, expected, monkeypatch):
     module = importlib.import_module('kahi_minciencias_opendata_works.related_works')
     monkeypatch.setattr(module, 'lang_poll', lambda *args, **kwargs: 'es')
     candidate = {'title': 'Example', 'year': year, 'authors': [], 'keywords': [],
-        'areas': [], 'dois': [], 'identifiers': [], 'isbn': [], 'issn': [],
-        'fingerprint': 'abc', 'oriented_people': []}
+                 'areas': [], 'dois': [], 'identifiers': [], 'isbn': [], 'issn': [],
+                 'fingerprint': 'abc', 'oriented_people': []}
     document = module.candidate_to_work(candidate, KahiBase().empty_work())
     assert document['year_published'] == expected
 

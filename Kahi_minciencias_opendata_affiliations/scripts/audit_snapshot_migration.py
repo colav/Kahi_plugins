@@ -436,7 +436,7 @@ def audit(args, stage):
         proof = next((item for item in explained_relation_replacements
                       if item["removed_id"] == identifier and item.get("replacement_id") in snapshot_ids
                       and item["reason"] in {"catalog_verified_punctuation_replacement",
-                                              "exact_name_authoritative_replacement"}), None)
+                                             "exact_name_authoritative_replacement"}), None)
         if proof:
             missing_institutions.remove(identifier)
             explained_institution_replacements.append(proof)

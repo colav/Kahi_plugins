@@ -24,7 +24,6 @@ from kahi_impactu_postcalculations.topics import (
     _topic_payload,
     load_openalex_topics,
     prefer_abstract_langs,
-    process_topic_batch,
     topic_projection,
     topic_query,
     process_topic_batches_pool,

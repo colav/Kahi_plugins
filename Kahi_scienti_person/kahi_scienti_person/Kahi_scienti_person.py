@@ -36,7 +36,6 @@ def scienti_author_names(author):
     }
 
 
-
 def normalize_birthdate(value):
     """Keep the person schema numeric when ScienTI has no usable date."""
     parsed = check_date_format(value)

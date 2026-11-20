@@ -70,7 +70,7 @@ def test_document_text_per_collection():
         "Title: Trampa para Aedes\nVenue: (unknown)"
     assert topics_v2.document_text(patent, "patents", title_only=[]) is None
     bilingual = {"titles": [{"title": "P"}], "abstracts": [{"abstract": {"es": [0]}, "lang": "es"},
-                                                          {"abstract": {"en": [0]}, "lang": "en"}]}
+                                                           {"abstract": {"en": [0]}, "lang": "en"}]}
     assert "Abstract: en" in topics_v2.document_text(bilingual, "patents", ["en", "es"])
     project = {"titles": [{"title": "Proyecto"}], "abstract": "", "topic_text": "texto libre"}
     assert topics_v2.document_text(project, "projects", title_only=["projects"]) == \

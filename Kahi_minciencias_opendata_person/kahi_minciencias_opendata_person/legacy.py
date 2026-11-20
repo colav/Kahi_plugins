@@ -1254,7 +1254,7 @@ class Kahi_minciencias_opendata_person(KahiBase):
         if (not re.fullmatch(r"\d{10}", code) or code == "0000000000"
                 or len(document) < 5 or document.casefold() in {
                     "none", "null", "nan", "no registra",
-                }):
+        }):
             counters["invalid"] += 1
             return
         source = recognized_document_source(record.get("tipo_consolidado"))

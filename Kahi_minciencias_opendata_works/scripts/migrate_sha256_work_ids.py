@@ -36,7 +36,6 @@ def migrate(collection, batch_size):
     try:
         batch = []
         for document in cursor:
-            legacy_id = document["_id"]
             batch.append(document)
             if len(batch) >= batch_size:
                 done, recovered = migrate_batch(collection, batch)

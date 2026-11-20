@@ -544,7 +544,7 @@ class Kahi_minciencias_opendata_person(KahiBase):
 
         orcids_by_code = {code: person_orcids(source) for code, source in codes.items()}
         lookup_orcids = set().union(*(values for code, values in orcids_by_code.items()
-                                     if code not in existing_by_code))
+                                      if code not in existing_by_code))
         orcid_candidates = {}
         if lookup_orcids:
             variants = sorted(set().union(*(orcid_variants(value) for value in lookup_orcids)))

@@ -326,7 +326,7 @@ def test_snapshot_source_id_collision_cannot_merge_distinct_titles(monkeypatch):
     assert target.works.find_one({"_id": WORK_1}) == before
     # Reprocess the source batch independently of the run checkpoint.
     plugin._process_batch(list(source.works_final.find()), {"inserted": 0, "updated": 0,
-                                                         "unresolved_institution_evidence": 0})
+                                                            "unresolved_institution_evidence": 0})
     assert target.works.count_documents({}) == 2
 
 

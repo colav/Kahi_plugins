@@ -36,8 +36,8 @@ def test_origin_and_parent_disambiguate_scraping_from_other_vocabularies():
     assert catalog.lookup_context("scienti", "scraping", parent, native) is None
     assert catalog.lookup_context("minciencias", "dumps", parent, native) is None
     assert catalog.lookup_context("minciencias", "socrata",
-        "Apropiación social del conocimiento y divulgación pública de la ciencia",
-        "Artículos")["type_impactu"] == "Publicaciones editoriales no especializadas"
+                                  "Apropiación social del conocimiento y divulgación pública de la ciencia",
+                                  "Artículos")["type_impactu"] == "Publicaciones editoriales no especializadas"
     assert catalog.lookup_scraping("Otro contexto", native) is None
     returned = catalog.lookup_scraping(parent, native)
     returned["type_impactu"] = "Libro"

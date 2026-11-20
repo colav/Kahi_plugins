@@ -4,7 +4,7 @@ import importlib
 import pytest
 
 from kahi_impactu_utils.Work import work_titles_match
-from test_work_doi_importers import (
+from test_work_doi_importers import (  # noqa: F401 (pytest fixture)
     db, empty_work, invoke, make_record, seed_work, source_identifier,
 )
 
@@ -49,7 +49,7 @@ def import_work(plugin, database, monkeypatch, title, index=0):
                      types=[{"source": plugin, "type": "article"}],
                      source={"name": "", "external_ids": []})
         entry["authors"] = [{"full_name": "Source Author", "affiliations": [],
-                              "external_ids": [{"source": "scienti", "id": {"COD_RH": "0000000001"}}]}]
+                             "external_ids": [{"source": "scienti", "id": {"COD_RH": "0000000001"}}]}]
         return entry
 
     monkeypatch.setattr(module, "parse_scienti", parser)
@@ -59,7 +59,7 @@ def import_work(plugin, database, monkeypatch, title, index=0):
 
 
 @pytest.mark.parametrize("plugin", IMPORTERS)
-def test_distinct_publications_with_same_doi_do_not_contaminate_each_other(db, monkeypatch, plugin):
+def test_distinct_publications_with_same_doi_do_not_contaminate_each_other(db, monkeypatch, plugin):  # noqa: F811
     original_id = seed_work(db, doi=DOI, title=COCHRANE)
     before = db.works.find_one({"_id": original_id})
     import_work(plugin, db, monkeypatch, EXTRACTS)
@@ -74,7 +74,7 @@ def test_distinct_publications_with_same_doi_do_not_contaminate_each_other(db, m
 
 @pytest.mark.parametrize("plugin", IMPORTERS)
 @pytest.mark.parametrize("title", [COCHRANE.upper(), COCHRANE.replace("randomised", "randomized")])
-def test_equivalent_titles_update_an_existing_doi_work(db, monkeypatch, plugin, title):
+def test_equivalent_titles_update_an_existing_doi_work(db, monkeypatch, plugin, title):  # noqa: F811
     original_id = seed_work(db, doi=DOI, title=COCHRANE)
     import_work(plugin, db, monkeypatch, title)
     assert db.works.count_documents({}) == 1
@@ -83,7 +83,7 @@ def test_equivalent_titles_update_an_existing_doi_work(db, monkeypatch, plugin, 
 
 
 @pytest.mark.parametrize("plugin", ("openalex", "ciarp", "scholar", "dspace"))
-def test_source_id_fallback_cannot_bypass_an_incompatible_title(db, monkeypatch, plugin):
+def test_source_id_fallback_cannot_bypass_an_incompatible_title(db, monkeypatch, plugin):  # noqa: F811
     source, identifier = (("openalex", "https://openalex.org/W0") if plugin == "openalex"
                           else source_identifier(plugin, 0))
     original_id = seed_work(db, doi=DOI, title=COCHRANE,
@@ -95,7 +95,7 @@ def test_source_id_fallback_cannot_bypass_an_incompatible_title(db, monkeypatch,
     assert db.works.find_one({"_id": original_id}) == before
 
 
-def test_minciencias_related_works_do_not_group_different_titles_by_doi(db, monkeypatch):
+def test_minciencias_related_works_do_not_group_different_titles_by_doi(db, monkeypatch):  # noqa: F811
     module = importlib.import_module("kahi_minciencias_opendata_works.related_works")
     monkeypatch.setattr(module, "lang_poll", lambda *_a, **_k: "en")
     db.person.insert_one({"_id": "person", "full_name": "Source author", "affiliations": [],
@@ -110,9 +110,10 @@ def test_minciencias_related_works_do_not_group_different_titles_by_doi(db, monk
     assert {work["titles"][0]["title"] for work in db.works.find()} == {COCHRANE, EXTRACTS}
 
 
-def test_minciencias_doi_conflict_does_not_fall_back_to_elasticsearch(db, monkeypatch):
+def test_minciencias_doi_conflict_does_not_fall_back_to_elasticsearch(db, monkeypatch):  # noqa: F811
     module = importlib.import_module("kahi_minciencias_opendata_works.related_works")
     monkeypatch.setattr(module, "lang_poll", lambda *_a, **_k: "en")
+
     def forbidden(*args, **kwargs):
         pytest.fail("A valid DOI must not fall back to title-only similarity")
     monkeypatch.setattr(module, "_similar_work", forbidden)
@@ -124,7 +125,7 @@ def test_minciencias_doi_conflict_does_not_fall_back_to_elasticsearch(db, monkey
     assert db.works.count_documents({}) == 2
 
 
-def test_ciarp_real_cedulas_are_only_attached_to_the_extracts_work(db):
+def test_ciarp_real_cedulas_are_only_attached_to_the_extracts_work(db):  # noqa: F811
     from kahi_impactu_utils.Utils import split_names
     module = importlib.import_module("kahi_ciarp_works.process_one")
     institution = {"_id": "03bp5hc83", "types": [{"source": "ror", "type": "education"}],
@@ -153,5 +154,3 @@ def test_ciarp_real_cedulas_are_only_attached_to_the_extracts_work(db):
     other = db.works.find_one({"_id": {"$ne": original_id}})
     assert {a["id"] for a in other["authors"]} == {pid for pid, _, _ in people}
     assert all(a["affiliations"][0]["id"] == "03bp5hc83" for a in other["authors"])
-
-

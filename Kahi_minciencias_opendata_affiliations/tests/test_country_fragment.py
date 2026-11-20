@@ -24,7 +24,7 @@ def test_country_fragment_is_excluded_without_losing_real_institutions(monkeypat
     snapshot = group_snapshot()
     snapshot["relations"] = ([{"id": "", "name": "COLOMBIA; CEMENTOS ARGOS SA", "types": []}]
                              if compound else [{"id": "", "name": label, "types": []}
-                                                   for label in ("COLOMBIA", "CEMENTOS ARGOS SA")])
+                                               for label in ("COLOMBIA", "CEMENTOS ARGOS SA")])
     source.affiliations_final.replace_one({}, snapshot)
     cfg = config(mode)
     if mode == "legacy":

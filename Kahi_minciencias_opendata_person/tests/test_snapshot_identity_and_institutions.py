@@ -37,7 +37,7 @@ def test_cod_rh_has_priority_over_a_different_orcid_candidate(monkeypatch):
 
 
 @pytest.mark.parametrize("identifier", [ORCID, "https://orcid.org/" + ORCID,
-                                         "http://www.orcid.org/" + ORCID + "/", ORCID.replace("-", "")])
+                                        "http://www.orcid.org/" + ORCID + "/", ORCID.replace("-", "")])
 def test_orcid_match_preserves_objectid_and_adds_cod_rh(monkeypatch, identifier):
     target, source = prepare(monkeypatch)
     original = existing_person("Áda Lovelace", identifier)

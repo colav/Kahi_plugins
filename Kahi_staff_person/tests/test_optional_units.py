@@ -10,10 +10,10 @@ module = importlib.import_module('kahi_staff_person.Kahi_staff_person')
 
 def staff_record(**changes):
     record = {'identificación': '123', 'tipo_documento': 'cédula de ciudadanía',
-        'nombres': 'Ana', 'primer_apellido': 'Perez', 'segundo_apellido': '',
-        'fecha_inicial_vinculación': '01/01/2020', 'fecha_final_vinculación': '',
-        'fecha_nacimiento': '', 'sexo': '', 'nivel_académico': '',
-        'tipo_contrato': '', 'jornada_laboral': '', 'categoría_laboral': ''}
+              'nombres': 'Ana', 'primer_apellido': 'Perez', 'segundo_apellido': '',
+              'fecha_inicial_vinculación': '01/01/2020', 'fecha_final_vinculación': '',
+              'fecha_nacimiento': '', 'sexo': '', 'nivel_académico': '',
+              'tipo_contrato': '', 'jornada_laboral': '', 'categoría_laboral': ''}
     record.update(changes)
     return record
 
@@ -54,7 +54,7 @@ def test_optional_excel_columns_are_filled_without_relaxing_other_requirements(m
 def test_each_unit_retains_multiple_periods_and_gaps_without_names():
     rows = [staff_record(**{'fecha_inicial_vinculación': start, 'fecha_final_vinculación': end,
             'código_unidad_académica': faculty, 'código_subunidad_académica': department})
-        for start, end, faculty, department in [
+            for start, end, faculty, department in [
             ('01/01/2018', '31/12/2020', 'F', 'D'),
             ('01/01/2022', '31/12/2023', 'F', 'D'),
             ('01/01/2024', '', 'G', '')]]
@@ -62,8 +62,8 @@ def test_each_unit_retains_multiple_periods_and_gaps_without_names():
     for unit, kind in [('institution_F', 'faculty'), ('institution_F_D', 'department'),
                        ('institution_G', 'faculty')]:
         plugin.db.affiliations.insert_one({'_id': unit,
-            'names': [{'name': unit, 'lang': 'es'}],
-            'types': [{'source': 'staff', 'type': kind}], 'relations': [{'id': 'institution'}]})
+                                           'names': [{'name': unit, 'lang': 'es'}],
+                                           'types': [{'source': 'staff', 'type': kind}], 'relations': [{'id': 'institution'}]})
     plugin.process_staff()
     person = plugin.collection.find_one()
     affs = {aff['id']: aff for aff in person['affiliations']}
@@ -79,8 +79,8 @@ def test_each_unit_retains_multiple_periods_and_gaps_without_names():
 def test_existing_person_without_new_units_keeps_other_source_affiliations():
     plugin = instance([staff_record()])
     old = {'_id': 'person', 'full_name': 'Ana Perez',
-        'external_ids': [{'source': 'Cédula de Ciudadanía', 'id': '123'}],
-        'affiliations': [{'id': 'foreign', 'years': [2019]}]}
+           'external_ids': [{'source': 'Cédula de Ciudadanía', 'id': '123'}],
+           'affiliations': [{'id': 'foreign', 'years': [2019]}]}
     plugin.collection.insert_one(deepcopy(old))
     plugin.process_staff()
     assert plugin.collection.find_one()['affiliations'][0] == old['affiliations'][0]

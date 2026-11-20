@@ -47,9 +47,9 @@ def orcid_variants(identifier):
         value
         for item in identifiers
         for value in (item, *(prefix + item + suffix
-                             for prefix in ("https://orcid.org/", "http://orcid.org/",
-                                            "https://www.orcid.org/", "http://www.orcid.org/")
-                             for suffix in ("", "/")))
+                              for prefix in ("https://orcid.org/", "http://orcid.org/",
+                                             "https://www.orcid.org/", "http://www.orcid.org/")
+                              for suffix in ("", "/")))
     }
 
 

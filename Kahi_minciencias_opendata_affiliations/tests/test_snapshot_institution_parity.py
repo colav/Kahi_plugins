@@ -2,7 +2,7 @@ import copy
 
 import pytest
 
-from test_snapshot_ingestion import Plugin, config, group_snapshot, prepare_databases
+from test_snapshot_ingestion import Plugin, config, prepare_databases
 
 
 ROOT_CODE = "625100000880"

@@ -7,7 +7,7 @@ from kahi_impactu_utils.Work import (
 )
 from kahi_impactu_utils.Utils import compare_author, normalize_publication_year
 from kahi_dspace_works.parser import parse_dspace
-from kahi_dspace_works.utils import set_source, get_doi, check_work, str_normilize, title_similarity
+from kahi_dspace_works.utils import set_source, get_doi, check_work, str_normilize
 from bson import ObjectId
 from unidecode import unidecode
 from threading import Lock

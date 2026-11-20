@@ -29,21 +29,21 @@ def environment():
             ('department', 'department', 'institution'),
             ('faculty', 'foreign-faculty', 'other-institution')]:
         db.affiliations.insert_one({'_id': identifier,
-            'names': [{'name': identifier, 'lang': 'es'}],
-            'types': [{'type': kind}], 'relations': [{'id': parent}]})
+                                    'names': [{'name': identifier, 'lang': 'es'}],
+                                    'types': [{'type': kind}], 'relations': [{'id': parent}]})
     person = {'_id': 'person', 'full_name': 'Ana Perez',
-        'external_ids': [{'source': 'Cédula de Ciudadanía', 'id': '123'}],
-        'affiliations': [affiliation('education', 'institution', [2022, 2023, 2024])],
-    }
+              'external_ids': [{'source': 'Cédula de Ciudadanía', 'id': '123'}],
+              'affiliations': [affiliation('education', 'institution', [2022, 2023, 2024])],
+              }
     return db, institution, person
 
 
 def record(year=2024):
     return {'título': 'Example work', 'idioma': 'es', 'doi': '', 'issn': '',
-        'isbn': '', 'revista': '', 'año': year, 'volumen': '', 'issue': '',
-        'primera_página': '', 'última_página': '', 'ranking': '', 'identificación': '123',
-        'index': 'row-1', 'source_record_id': 'source-row-1',
-        'código_unidad_académica': 'wrong-faculty', 'código_subunidad_académica': 'wrong-department'}
+            'isbn': '', 'revista': '', 'año': year, 'volumen': '', 'issue': '',
+            'primera_página': '', 'última_página': '', 'ranking': '', 'identificación': '123',
+            'index': 'row-1', 'source_record_id': 'source-row-1',
+            'código_unidad_académica': 'wrong-faculty', 'código_subunidad_académica': 'wrong-department'}
 
 
 def selected_ids(environment, year=2024):
@@ -57,14 +57,14 @@ def selected_ids(environment, year=2024):
 def test_current_units_preferred_over_previous_year(environment):
     person = environment[2]
     person['affiliations'] += [affiliation('faculty', 'old-faculty', [2023]),
-        affiliation('faculty', 'current-faculty', [2024]),
-        affiliation('department', 'department', [2024])]
+                               affiliation('faculty', 'current-faculty', [2024]),
+                               affiliation('department', 'department', [2024])]
     assert selected_ids(environment) == ['institution', 'current-faculty', 'department']
 
 
 def test_previous_year_units_are_eligible(environment):
     environment[2]['affiliations'] += [affiliation('faculty', 'old-faculty', [2023]),
-        affiliation('department', 'department', [2023])]
+                                       affiliation('department', 'department', [2023])]
     assert selected_ids(environment) == ['institution', 'old-faculty', 'department']
 
 
@@ -108,7 +108,7 @@ def test_real_write_paths_use_staff_units_not_ciarp_codes(environment, mode, wit
     db, institution, person = environment
     if with_units:
         person['affiliations'] += [affiliation('faculty', 'current-faculty', [2024]),
-            affiliation('department', 'department', [2023])]
+                                   affiliation('department', 'department', [2023])]
     db.person.insert_one(deepcopy(person))
     expected = ['institution', 'current-faculty', 'department'] if with_units else ['institution']
     if mode == 'insert':
@@ -138,7 +138,7 @@ def test_real_write_paths_use_staff_units_not_ciarp_codes(environment, mode, wit
 def test_update_selects_units_using_preserved_publication_year(environment):
     db, institution, person = environment
     person['affiliations'] += [affiliation('faculty', 'old-faculty', [2022]),
-                             affiliation('faculty', 'current-faculty', [2024])]
+                               affiliation('faculty', 'current-faculty', [2024])]
     db.person.insert_one(person)
     work = KahiBase().empty_work()
     work.update(year_published=2023, authors=[{'id': 'person', 'full_name': 'Ana Perez', 'affiliations': []}])
